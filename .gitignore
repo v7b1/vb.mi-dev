@@ -1,0 +1,16 @@
+sysbuild
+*.sdf
+*.suo
+*.sln
+*.opensdf
+log.txt
+externals
+support
+build
+*.o
+*.dylib
+tmp
+
+package-info.json
+xxx
+xxx-projects

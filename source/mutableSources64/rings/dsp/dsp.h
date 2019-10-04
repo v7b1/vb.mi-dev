@@ -1,0 +1,66 @@
+// Copyright 2015 Olivier Gillet.
+//
+// Author: Olivier Gillet (ol.gillet@gmail.com)
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+// 
+// See http://creativecommons.org/licenses/MIT/ for more information.
+//
+// -----------------------------------------------------------------------------
+//
+// Utility DSP routines.
+
+#ifndef RINGS_DSP_DSP_H_
+#define RINGS_DSP_DSP_H_
+
+#include "stmlib/stmlib.h"
+
+// #define MIC_W
+#define BRYAN_CHORDS
+
+namespace rings {
+    // original SR
+    //static const double kSampleRate = 48000.0;
+    //const double a3 = 440.0 / kSampleRate;
+    const size_t kMaxBlockSize = 1024;            // was: 24
+    
+    // vb: don't know if this is the best way, to make these parameters
+    // set- and getable, but it seems to work...
+    class Dsp {
+    private:
+        static double sr;
+        static double a3;
+        static size_t maxBlockSize;
+        
+    public:
+        static double getSr() {return sr;}
+        static double getA3() {return a3;}
+        static void setSr(double newsr) {
+            sr = newsr;
+            a3 = 440.0 / sr;
+        }
+        static size_t getBlockSize() {return maxBlockSize;}
+        static void setBlockSize(int newBlockSize) {
+            maxBlockSize = static_cast<size_t>(newBlockSize);
+        }
+    };
+
+}  // namespace rings
+
+#endif  // RINGS_DSP_DSP_H_

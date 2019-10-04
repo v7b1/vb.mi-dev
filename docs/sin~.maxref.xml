@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+
+<?xml-stylesheet href="./_c74_ref.xsl" type="text/xsl"?>
+
+<c74object name="sin~" module="msp" category="MSP Operators, MSP Synthesis">
+	<digest>
+		Signal sine function (0-1 range)
+	</digest>
+	<description>
+		Use the <o>sin~</o> object to calculate and output a signal that is the cosine function of each sample of the input signal.
+	</description>
+	
+	
+	<!--METADATA-->
+	<metadatalist>
+		<metadata name="author">
+			Cycling '74
+		</metadata>
+		<metadata name="tag">
+			MSP
+		</metadata>
+		<metadata name="tag">
+			MSP Operators
+		</metadata>
+		<metadata name="tag">
+			MSP Synthesis
+		</metadata>
+	</metadatalist>
+	
+	
+	<!--INLETS-->
+	<inletlist>
+		<inlet id="0" type="signal">
+			<digest>
+				(signal) Phase (0-1)
+			</digest>
+			<description>
+				TEXT_HERE
+			</description>
+		</inlet>
+		<inlet id="1" type="signal">
+			<digest>
+			</digest>
+			<description>
+				TEXT_HERE
+			</description>
+		</inlet>
+	</inletlist>
+	
+	
+	<!--OUTLETS-->
+	<outletlist>
+		<outlet id="0" type="signal">
+			<digest>
+				(signal) Sine Output
+			</digest>
+			<description>
+				TEXT_HERE
+			</description>
+		</outlet>
+	</outletlist>
+	
+	
+	<!--ARGUMENTS-->
+	<objarglist>
+		<objarg id="0" name="OBJARG_NAME" type="OBJARG_TYPE" optional="0">
+			<digest>
+				TEXT_HERE
+			</digest>
+			<description>
+				TEXT_HERE
+			</description>
+		</objarg>
+	</objarglist>
+	
+	
+	<!--MESSAGES-->
+	<methodlist>
+		<method name="signal">
+			<arglist />
+			<digest>
+				Input to a sine function
+			</digest>
+			<description>
+				Input to a sine function. The input is stated as a fraction of a cycle (typically in the range from 0 to 1), and is multiplied by 2π before being used in the sine function.
+			</description>
+		</method>
+	</methodlist>
+
+
+	<!--SEEALSO-->
+	<seealsolist>
+		<seealso name="acos~" />
+		<seealso name="acosh~" />
+		<seealso name="asin~" />
+		<seealso name="asinh~" />
+		<seealso name="atan~" />
+		<seealso name="atanh~" />
+		<seealso name="atan2~" />
+		<seealso name="cosh~" />
+		<seealso name="cosx~" />
+		<seealso name="cycle~" />
+		<seealso name="phasor~" />
+		<seealso name="sinh~" />
+		<seealso name="sinx~" />
+		<seealso name="tanh~" />
+		<seealso name="tanx~" />
+		<seealso name="trapezoid~" />
+		<seealso name="triangle~" />
+		<seealso name="wave~" />
+		<seealso name="2d.wave~" />
+	</seealsolist>
+	
+	
+	<misc name="Output">
+		<entry name="signal">
+			<description>
+				The sine of 2π times the input. The method used in this object to calculate the cosine directly is typically less efficient than using the stored cosine in a <o>cycle~</o> object.
+			</description>
+		</entry>
+	</misc>
+</c74object>
