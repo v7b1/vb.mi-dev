@@ -6,8 +6,8 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-api/script/max-pretarget.cmake)
 # paths to our sources
 set(MUTABLE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../mutableSources32")
 set(STMLIB_PATH ${MUTABLE_PATH}/stmlib)
-set(MI_PATH ${MUTABLE_PATH}/braids)
-set(LIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../libs")
+set(MI_PATH ${MUTABLE_PATH}/clouds)
+# set(LIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../libs")
 
 set(STMLIB_SOURCES 
 	${STMLIB_PATH}/stmlib.h
@@ -22,34 +22,50 @@ set(STMLIB_SOURCES
 )
 
 set(MI_SOURCES
-	${MI_PATH}/analog_oscillator.cc
-	${MI_PATH}/analog_oscillator.h
-	${MI_PATH}/digital_oscillator.cc
-	${MI_PATH}/digital_oscillator.h
-	${MI_PATH}/envelope.h
-	${MI_PATH}/excitation.h
-	${MI_PATH}/macro_oscillator.cc
-	${MI_PATH}/macro_oscillator.h
-	${MI_PATH}/parameter_interpolation.h
-	${MI_PATH}/quantizer.cc
-	${MI_PATH}/quantizer.h
-	${MI_PATH}/quantizer_scales.h
+	${MI_PATH}/dsp/audio_buffer.h
+	${MI_PATH}/dsp/correlator.cc
+	${MI_PATH}/dsp/correlator.h
+	${MI_PATH}/dsp/frame.h
+	${MI_PATH}/dsp/fx/diffuser.h
+	${MI_PATH}/dsp/fx/fx_engine.h
+	${MI_PATH}/dsp/fx/pitch_shifter.h
+	${MI_PATH}/dsp/fx/reverb.h
+	${MI_PATH}/dsp/grain.h
+	${MI_PATH}/dsp/granular_processor.cc
+	${MI_PATH}/dsp/granular_processor.h
+	${MI_PATH}/dsp/granular_sample_player.h
+	${MI_PATH}/dsp/looping_sample_player.h
+	${MI_PATH}/dsp/mu_law.cc
+	${MI_PATH}/dsp/mu_law.h
+	${MI_PATH}/dsp/parameters.h
+
+	${MI_PATH}/dsp/pvoc/frame_transformation.cc
+	${MI_PATH}/dsp/pvoc/frame_transformation.h
+	${MI_PATH}/dsp/pvoc/phase_vocoder.cc
+	${MI_PATH}/dsp/pvoc/phase_vocoder.h
+	${MI_PATH}/dsp/pvoc/stft.cc
+	${MI_PATH}/dsp/pvoc/stft.h
+
+	${MI_PATH}/dsp/sample_rate_converter.h
+	${MI_PATH}/dsp/window.h
+	${MI_PATH}/dsp/wsola_sample_player.h
+
 	${MI_PATH}/resources.cc
 	${MI_PATH}/resources.h
-	${MI_PATH}/signature_waveshaper.h
-	${MI_PATH}/vco_jitter_source.h
+#	${MI_PATH}/settings.cc
+#    ${MI_PATH}/settings.h
+#	${MI_PATH}/ui.cc
+#	${MI_PATH}/ui.h
 )
 
 set(BUILD_SOURCES 
 	${PROJECT_NAME}.cpp
-	# ${LIB_PATH}/samplerate.h
 )
 
 
 include_directories( 
 	"${C74_INCLUDES}"
     ${MUTABLE_PATH}
-	${LIB_PATH}
 )
 
 
@@ -69,7 +85,7 @@ source_group(TREE ${MUTABLE_PATH} FILES ${MI_SOURCES} ${STMLIB_SOURCES})
 
 target_link_libraries(${PROJECT_NAME} PUBLIC "-framework Accelerate")
 # target_link_libraries(${PROJECT_NAME} "-framework Accelerate")
-target_link_libraries(${PROJECT_NAME} PUBLIC ${LIB_PATH}/libsamplerate.a)
+# target_link_libraries(${PROJECT_NAME} PUBLIC ${LIB_PATH}/libsamplerate.a)
 # target_link_libraries(${PROJECT_NAME} -lsamplerate)
 
 
