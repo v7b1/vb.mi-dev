@@ -81,7 +81,8 @@ class GranularProcessor {
       void* small_buffer,
       size_t small_buffer_size);
 
-  void Process(ShortFrame* input, ShortFrame* output, size_t size);
+  //void Process(ShortFrame* input, ShortFrame* output, size_t size);
+    void Process(FloatFrame* input, FloatFrame* output, size_t size);
   void Prepare();
   
   inline Parameters* mutable_parameters() {
@@ -154,8 +155,10 @@ class GranularProcessor {
   }
 
   inline float sample_rate() const {
-    return 32000.0f / \
-        (low_fidelity_ ? kDownsamplingFactor : 1);
+    //return 32000.0f / \
+      //  (low_fidelity_ ? kDownsamplingFactor : 1);
+      return 48000.0f / \
+      (low_fidelity_ ? kDownsamplingFactor : 1);
   }
      
   void ResetFilters();
@@ -192,10 +195,10 @@ class GranularProcessor {
   AudioBuffer<RESOLUTION_8_BIT_MU_LAW> buffer_8_[2];
   AudioBuffer<RESOLUTION_16_BIT> buffer_16_[2];
   
-  FloatFrame in_[kMaxBlockSize];
+  //FloatFrame in_[kMaxBlockSize];
   FloatFrame in_downsampled_[kMaxBlockSize / kDownsamplingFactor];
   FloatFrame out_downsampled_[kMaxBlockSize / kDownsamplingFactor];
-  FloatFrame out_[kMaxBlockSize];
+  //FloatFrame out_[kMaxBlockSize];
   FloatFrame fb_[kMaxBlockSize];
   
   int16_t tail_buffer_[2][256];

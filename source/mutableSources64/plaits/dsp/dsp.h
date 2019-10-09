@@ -34,7 +34,7 @@
 
 namespace plaits {
     
-    //const double kSampleRate = 44800.0;      //48000.0;
+    //const double kSampleRate = 48000.0;      //48000.0;
     //static double kSampleRate = 96000.0;
 
 // There is no proper PLL for I2S, only a divider on the system clock to derive

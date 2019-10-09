@@ -622,7 +622,7 @@ void myObj_assist(t_myObj* self, void* unused, t_assist_function io, long index,
 
 
 void ext_main(void* r) {
-    this_class = class_new("vb.mi.elmts~", (method)myObj_new, (method)myObj_free, sizeof(t_myObj), 0, A_GIMME, 0);
+    this_class = class_new("vb.mi.elmnts~", (method)myObj_new, (method)myObj_free, sizeof(t_myObj), 0, A_GIMME, 0);
     
     class_addmethod(this_class, (method)myObj_assist,	"assist",	A_CANT,		0);
     class_addmethod(this_class, (method)myObj_dsp64,	"dsp64",	A_CANT,		0);
@@ -666,6 +666,6 @@ void ext_main(void* r) {
     class_dspinit(this_class);
     class_register(CLASS_BOX, this_class);
     
-    object_post(NULL, "vb.mi.elmts~ by volker böhm --> https://vboehm.net");
+    object_post(NULL, "vb.mi.elmnts~ by volker böhm --> https://vboehm.net");
     object_post(NULL, "a clone of mutable instruments' 'elements' module");
 }

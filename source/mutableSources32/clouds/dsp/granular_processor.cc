@@ -95,13 +95,22 @@ void GranularProcessor::ProcessGranular(
     case PLAYBACK_MODE_GRANULAR:
       // In Granular mode, DENSITY is a meta parameter.
       parameters_.granular.use_deterministic_seed = parameters_.density < 0.5f;
+    /*
       if (parameters_.density >= 0.53f) {
         parameters_.granular.overlap = (parameters_.density - 0.53f) * 2.12f;
       } else if (parameters_.density <= 0.47f) {
         parameters_.granular.overlap = (0.47f - parameters_.density) * 2.12f;
       } else {
         parameters_.granular.overlap = 0.0f;
+      }*/
+          
+//make the dead zone narrower, vb
+          if (parameters_.density >= 0.5f) {
+              parameters_.granular.overlap = (parameters_.density - 0.5f) * 2.0f;
+          } else if (parameters_.density < 0.5f) {
+              parameters_.granular.overlap = (0.5f - parameters_.density) * 2.0f;
       }
+          
       // And TEXTURE too.
       parameters_.granular.window_shape = parameters_.texture < 0.75f
           ? parameters_.texture * 1.333f : 1.0f;
@@ -155,29 +164,37 @@ void GranularProcessor::ProcessGranular(
       break;
   }
 }
-
+/*
 void GranularProcessor::Process(
     ShortFrame* input,
     ShortFrame* output,
-    size_t size) {
+    size_t size) {*/
+void GranularProcessor::Process(
+                                    FloatFrame* in_,
+                                    FloatFrame* out_,
+                                    size_t size) {
   // TIC
   if (bypass_) {
-    copy(&input[0], &input[size], &output[0]);
+    //copy(&input[0], &input[size], &output[0]);
+      copy(&in_[0], &in_[size], &out_[0]);
     return;
   }
   
   if (silence_ || reset_buffers_ ||
       previous_playback_mode_ != playback_mode_) {
-    short* output_samples = &output[0].l;
-    fill(&output_samples[0], &output_samples[size << 1], 0);
+    //short* output_samples = &output[0].l;
+    //fill(&output_samples[0], &output_samples[size << 1], 0);
+      float* output_samples = &out_[0].l;
+      fill(&output_samples[0], &output_samples[size << 1], 0);
     return;
   }
   
+    /*
   // Convert input buffers to float, and mixdown for mono processing.
   for (size_t i = 0; i < size; ++i) {
     in_[i].l = static_cast<float>(input[i].l) / 32768.0f;
     in_[i].r = static_cast<float>(input[i].r) / 32768.0f;
-  }
+  }*/
   if (num_channels_ == 1) {
     for (size_t i = 0; i < size; ++i) {
       in_[i].l = (in_[i].l + in_[i].r) * 0.5f;
@@ -277,12 +294,20 @@ void GranularProcessor::Process(
     float dry_wet = dry_wet_mod.Next();
     float fade_in = Interpolate(lut_xfade_in, dry_wet, 16.0f);
     float fade_out = Interpolate(lut_xfade_out, dry_wet, 16.0f);
+      /*
     float l = static_cast<float>(input[i].l) / 32768.0f * fade_out;
     float r = static_cast<float>(input[i].r) / 32768.0f * fade_out;
     l += out_[i].l * post_gain * fade_in;
     r += out_[i].r * post_gain * fade_in;
     output[i].l = SoftConvert(l);
     output[i].r = SoftConvert(r);
+       */
+      float l = in_[i].l * fade_out;
+      float r = in_[i].r * fade_out;
+      l += out_[i].l * post_gain * fade_in;
+      r += out_[i].r * post_gain * fade_in;
+      out_[i].l = SoftLimit(l * 0.5f);
+      out_[i].r = SoftLimit(r * 0.5f);
   }
 }
 
