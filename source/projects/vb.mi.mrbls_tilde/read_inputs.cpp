@@ -21,6 +21,27 @@ namespace marbles {
     /* static */
     const CvReaderChannel::Settings ReadInputs::channel_settings_[] = {
         // cv_lp | pot_scale | pot_offset | pot_lp | min | max | hysteresis
+        // ADC_CHANNEL_T_RATE,
+        { 0.2f, 120.0f, -60.0f, 0.05f, -120.0f, 120.0f, 0.001f },       // pot_lp: 0.01
+        //{ 0.2f, 1.0f, 0.0f, 0.05f, 10.0f, 500.0f, 0.001f },
+        // ADC_CHANNEL_T_BIAS,
+        { 0.05f, 1.05f, -0.025f, 0.01f, 0.0f, 1.0f, 0.00f },
+        // ADC_CHANNEL_T_JITTER,
+        { 0.05f, 1.0f, 0.0f, 0.01f, 0.0f, 1.0f, 0.00f },
+        // ADC_CHANNEL_DEJA_VU_AMOUNT,
+        { 0.05f, 1.0f, 0.0f, 0.01f, 0.0f, 1.0f, 0.00f },
+        // ADC_CHANNEL_X_SPREAD_2 / ADC_CHANNEL_DEJA_VU_LENGTH,
+        { 0.05f, 1.0f, 0.0f, 0.01f, 0.0f, 1.0f, 0.00f },
+        // ADC_CHANNEL_X_SPREAD,
+        { 0.1f, 1.0f, 0.0f, 0.01f, 0.0f, 1.0f, 0.01f },
+        // ADC_CHANNEL_X_BIAS,
+        { 0.1f, 1.0f, 0.0f, 0.01f, 0.0f, 1.0f, 0.02f },
+        // ADC_CHANNEL_X_STEPS,
+        { 0.05f, 1.0f, 0.0f, 0.01f, 0.0f, 1.0f, 0.02f },
+    };
+    /*
+    const CvReaderChannel::Settings ReadInputs::channel_settings_[] = {
+        // cv_lp | pot_scale | pot_offset | pot_lp | min | max | hysteresis
         // ADC_CHANNEL_DEJA_VU_AMOUNT,
         { 0.05f, 1.0f, 0.0f, 0.01f, 0.0f, 1.0f, 0.00f },
         // ADC_CHANNEL_X_SPREAD_2 / ADC_CHANNEL_DEJA_VU_LENGTH,
@@ -38,7 +59,7 @@ namespace marbles {
         { 0.1f, 1.0f, 0.0f, 0.01f, 0.0f, 1.0f, 0.02f },
         // ADC_CHANNEL_X_STEPS,
         { 0.05f, 1.0f, 0.0f, 0.01f, 0.0f, 1.0f, 0.02f },
-    };
+    };*/
     
     
     void ReadInputs::Init(CalibrationData* calibration_data) {
@@ -84,6 +105,7 @@ namespace marbles {
         //std::cout << "t_rate: " << output[ADC_CHANNEL_T_RATE] << "\n";
     }
     
+    // TODO: hier stimmt etwas nicht! --------------------
     /* external clock input */
     void ReadInputs::ReadClocks(Block *block, size_t size, uint8_t* inClocks) {
         for (int i = 0; i < CLOCK_INPUT_LAST; ++i) {

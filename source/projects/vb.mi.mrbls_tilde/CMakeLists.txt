@@ -24,6 +24,7 @@ set(MARBLES_SOURCES
 	${MARBLES_PATH}/scale_recorder.h
 	${MARBLES_PATH}/settings.cc
 	${MARBLES_PATH}/settings.h
+	${MARBLES_PATH}/cv_reader_channel.h
 	${MARBLES_PATH}/ramp/ramp_extractor.cc
 	${MARBLES_PATH}/ramp/ramp_divider.h
 	${MARBLES_PATH}/ramp/ramp_extractor.h

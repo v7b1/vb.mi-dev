@@ -62,6 +62,9 @@ void GranularProcessor::Init(
   previous_playback_mode_ = PLAYBACK_MODE_LAST;
   reset_buffers_ = true;
   dry_wet_ = 0.0f;
+    
+    sr_ = 48000.f;      // vb, init sample rate
+
 }
 
 void GranularProcessor::ResetFilters() {
@@ -431,6 +434,8 @@ void GranularProcessor::Prepare() {
       
       workspace_size = buffer_size_[0] - buffer_size_[1];
       workspace = static_cast<uint8_t*>(buffer[0]) + buffer_size[0];
+        //vb
+        printf("workspace_size: %zu\n", workspace_size);
     }
     float sr = sample_rate();
 
@@ -453,17 +458,22 @@ void GranularProcessor::Prepare() {
           num_channels_, resolution(), sr);
     } else {
       for (int32_t i = 0; i < num_channels_; ++i) {
+          //vb
+          printf("---> bufsize[%d]: %zu\n", i, buffer_size[i]);
         if (resolution() == 8) {
           buffer_8_[i].Init(
               buffer[i],
               (buffer_size[i]),
               tail_buffer_[i]);
+            printf("bufsize_8[%d]: %d\n", i, buffer_8_[i].size());
         } else {
           buffer_16_[i].Init(
               buffer[i],
               ((buffer_size[i]) >> 1),
               tail_buffer_[i]);
+            printf("bufsize_16[%d]: %d\n", i, buffer_16_[i].size());
         }
+          
       }
       int32_t num_grains = (num_channels_ == 1 ? 40 : 32) * \
           (low_fidelity_ ? 23 : 16) >> 4;

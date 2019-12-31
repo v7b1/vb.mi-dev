@@ -28,6 +28,8 @@
 
 #include "plaits/dsp/voice.h"
 
+#include <iostream>
+
 namespace plaits {
 
 using namespace std;
@@ -80,6 +82,8 @@ void Voice::Render(
     Frame* frames,
     size_t size) {
   // Trigger, LPG, internal envelope.
+    
+    //std::cout << "sr: " << kSampleRate << "\n";
       
   // Delay trigger by 1ms to deal with sequencers or MIDI interfaces whose
   // CV out lags behind the GATE out.

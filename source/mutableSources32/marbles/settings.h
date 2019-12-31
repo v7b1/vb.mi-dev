@@ -39,7 +39,7 @@
 #include "marbles/random/quantizer.h"
 
 namespace marbles {
-    
+    /*
     enum AdcParameter {
         ADC_CHANNEL_DEJA_VU_AMOUNT,
         ADC_CHANNEL_DEJA_VU_LENGTH,
@@ -50,7 +50,20 @@ namespace marbles {
         ADC_CHANNEL_X_SPREAD,
         ADC_CHANNEL_X_BIAS,
         ADC_CHANNEL_X_STEPS,
-        ADC_CHANNEL_LAST        // 8
+        ADC_CHANNEL_LAST
+    };*/
+    
+    enum AdcParameter {
+        ADC_CHANNEL_T_RATE,
+        ADC_CHANNEL_T_BIAS,
+        ADC_CHANNEL_T_JITTER,
+        ADC_CHANNEL_DEJA_VU_AMOUNT,
+        ADC_CHANNEL_DEJA_VU_LENGTH,
+        ADC_CHANNEL_X_SPREAD_2 = ADC_CHANNEL_DEJA_VU_LENGTH,
+        ADC_CHANNEL_X_SPREAD,
+        ADC_CHANNEL_X_BIAS,
+        ADC_CHANNEL_X_STEPS,
+        ADC_CHANNEL_LAST
     };
   
     enum DacChannel {

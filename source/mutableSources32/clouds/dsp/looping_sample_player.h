@@ -96,9 +96,10 @@ class LoopingSamplePlayer {
         float error = (target_delay - current_delay_);
         float delay = current_delay_ + 0.00005f * error;
         current_delay_ = delay;
-        int32_t delay_int = (buffer->head() - 4 - size + buffer->size()) << 12;
-        delay_int -= static_cast<int32_t>(delay * 4096.0f);
-        
+          //int32_t delay_int = (buffer->head() - 4 - size + buffer->size()) << 12;
+          //delay_int -= static_cast<int32_t>(delay * 4096.0f);
+        int64_t delay_int = (int64_t)(buffer->head() - 4 - size + buffer->size()) << 12;
+        delay_int -= static_cast<int64_t>(delay * 4096.0f);
         float l = buffer[0].ReadHermite((delay_int >> 12), delay_int << 4);
         if (num_channels_ == 1) {
           *out++ = l;
@@ -148,9 +149,23 @@ class LoopingSamplePlayer {
           gain = phase_ / tail_duration_;
           CONSTRAIN(gain, 0.0f, 1.0f);
         }
-        int32_t delay_int = (buffer->head() - 4 + buffer->size()) << 12;
-        int32_t position = delay_int - static_cast<int32_t>(
+          //int32_t delay_int = (buffer->head() - 4 + buffer->size()) << 12;
+          //int32_t position = delay_int - static_cast<int32_t>((loop_duration_ - phase_ + loop_point_) * 4096.0f);
+        int64_t delay_int = (int64_t)(buffer->head() - 4 + buffer->size()) << 12;
+        int64_t position = delay_int - static_cast<int32_t>(
               (loop_duration_ - phase_ + loop_point_) * 4096.0f);
+          // vb
+          if(position < 0) {
+              printf("-------------\n");
+              printf("buffer_head: %d\n", buffer->head());
+              printf("buffer_size: %d\n", buffer->size());
+              printf("delay_int: %lld\n", delay_int);
+              printf("position: %lld\n", position);
+              printf("calc delay: %lld\n", ((buffer->head() - 4 + buffer->size()) << 12));
+              
+          }
+          
+          
         float l = buffer[0].ReadHermite((position >> 12), position << 4);
         if (num_channels_ == 1) {
           out[0] = l * gain;

@@ -86,9 +86,11 @@ void XYGenerator::Process(
       {
         Ratio r = { 1, 1 };
         ramp_extractor_.Process(r, false, external_clock, ramps.slave[0], size);
+          // skip normalization, vb
+        /*
         if (external_clock_stabilization_counter_) {
           fill(&ramps.slave[0][0], &ramps.slave[0][size], 0.0f);
-        }
+        }*/
       }
       channel_ramp[0] = ramps.slave[0];
       channel_ramp[1] = ramps.slave[0];

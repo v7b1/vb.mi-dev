@@ -71,7 +71,6 @@ struct t_myObj {
     ReadInputs          read_inputs;
     Block               block;
     ScaleRecorder       scale_recorder;
-    stmlib::HysteresisQuantizer deja_vu_length_quantizer;
     Settings            settings;
     RandomGenerator     random_generator;
     RandomStream        random_stream;
@@ -88,11 +87,12 @@ struct t_myObj {
     short               clock_connected[2];     // observe if clock inputs receive a signal
     
     float               parameters[kNumParameters];
-    float               dejavu_length;      // the only one which has no cv input
+    int                 dejavu_length;      // the only one which has no cv input
     
     float               sr;
     int                 sigvs;      // signal vector size
     short               blockCounter;
+    void                *info_out;
 };
 
 unsigned long long rdtsc() {
@@ -105,7 +105,7 @@ void Init(t_myObj *self)
 {
     self->settings.Init();
     
-    self->deja_vu_length_quantizer.Init();
+    //self->deja_vu_length_quantizer.Init();
     self->read_inputs.Init(self->settings.mutable_calibration_data());
     self->scale_recorder.Init();
 
@@ -130,14 +130,14 @@ void Init(t_myObj *self)
 
 #pragma mark --------- NEW -----------
 
-void* myObj_new(void) {
+void* myObj_new(t_symbol *s, long argc, t_atom *argv) {
     t_myObj* self = (t_myObj*)object_alloc(this_class);
     
     if(self)
     {
         dsp_setup((t_pxobject*)self, 10);
         
-        outlet_new(self, "signal");
+        self->info_out = outlet_new(self, NULL);
         outlet_new(self, "signal");
         outlet_new(self, "signal");
         outlet_new(self, "signal");
@@ -162,6 +162,8 @@ void* myObj_new(void) {
 
         Init(self);
         
+        
+        attr_args_process(self, argc, argv);            // process attributes
 
     }
     else {
@@ -179,26 +181,29 @@ void* myObj_new(void) {
 
 // plug / unplug patch chords...
 
-void myObj_int(t_myObj *self, long value)
+void myObj_int(t_myObj *self, long m)
 {
     long innum = proxy_getinlet((t_object *)self);
     
     switch (innum) {
         case 0:
-            self->block.input_patched[0] = (value != 0);        // use external clock
-            //object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
+            self->block.input_patched[0] = (m != 0);        // use external clock
             break;
         case 1:
             object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
             break;
         case 2:
-            //self->modulations.frequency_patched = value != 0;
+            object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
             break;
         case 3:
             object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
             break;
+        case 5:
+            // set deja_vu sequence length
+            self->dejavu_length = clamp((int)m, 1, 16);
+            break;
         case 9:
-            self->block.input_patched[1] = (value != 0);        // use external clock
+            self->block.input_patched[1] = (m != 0);        // use external clock
             break;
         default:
             break;
@@ -207,20 +212,76 @@ void myObj_int(t_myObj *self, long value)
 
 
 // read float inputs at corresponding inlet as attenuverter levels
-void myObj_float(t_myObj *self, double f)
+void myObj_float(t_myObj *self, double m)
 {
     long innum = proxy_getinlet((t_object *)self);
+    float *adc_value = self->block.adc_value;
     //object_post(NULL, "innum: %ld", innum);
-    f = clamp(f, -1., 1.);
     
     switch (innum) {
-
+        case 0:
+            break;
+        case 1:
+            // set rate
+            adc_value[ADC_CHANNEL_T_RATE] = clamp(m, 0., 1.);
+            break;
+        case 2:
+            // set bias
+            adc_value[ADC_CHANNEL_T_BIAS] = clamp(m, 0., 1.);
+            break;
+        case 3:
+            // jitter amount
+            adc_value[ADC_CHANNEL_T_JITTER] = clamp(m, 0., 1.);
+        case 4:
+            // deja_vu amount
+            adc_value[ADC_CHANNEL_DEJA_VU_AMOUNT] = clamp(m, 0., 1.);
+            break;
+        case 5:
+            // deja_vu sequence length (round float to int)
+            self->dejavu_length = clamp(m, 1.0, 16.0) + 0.5;
+            break;
+        case 6:
+            // set x_spread
+            adc_value[ADC_CHANNEL_X_SPREAD] = clamp(m, 0., 1.);
+            break;
+        case 7:
+            // set x_bias
+            adc_value[ADC_CHANNEL_X_BIAS] = clamp(m, 0., 1.);
+            break;
+        case 8:
+            // set x_steps
+            adc_value[ADC_CHANNEL_X_STEPS] = clamp(m, 0., 1.);
+            break;
         default:
             object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
             break;
     }
 
 }
+
+void myObj_info(t_myObj *self)
+{
+    float *p = self->parameters;
+    object_post((t_object*)self, "PARAMETERS:::::::");
+    object_post((t_object*)self, "dejavu amount: \t%f", p[ADC_CHANNEL_DEJA_VU_AMOUNT]);
+    object_post((t_object*)self, "dejavu length: \t%d", self->dejavu_length);
+    object_post((t_object*)self, "x_ext_input: \t%f", p[ADC_CHANNEL_X_SPREAD_2]);
+    object_post((t_object*)self, "t_rate: \t%f", p[ADC_CHANNEL_T_RATE]);
+    float bpm = powf(2.0f, p[ADC_CHANNEL_T_RATE] / 12.0f) * 120.f;
+    object_post((t_object*)self, "bpm: \t%f", bpm);
+    object_post((t_object*)self, "t_bias: \t%f", p[ADC_CHANNEL_T_BIAS]);
+    object_post((t_object*)self, "t_jitter: \t%f", p[ADC_CHANNEL_T_JITTER]);
+    object_post((t_object*)self, "x_spread: \t%f", p[ADC_CHANNEL_X_SPREAD]);
+    object_post((t_object*)self, "x_bias: \t%f", p[ADC_CHANNEL_X_BIAS]);
+    object_post((t_object*)self, "x_steps: \t%f", p[ADC_CHANNEL_X_STEPS]);
+    
+    object_post((t_object*)self, ".......");
+    object_post(NULL, "ADC_GROUP_CV: %d", ADC_GROUP_CV);
+    
+}
+
+
+#pragma mark ----------- scales --------------
 
 
 void myObj_record_scale(t_myObj *self, long a)
@@ -241,6 +302,7 @@ void myObj_record_scale(t_myObj *self, long a)
     }
 
 }
+
 
 void myObj_set_scale(t_myObj *self, t_symbol *mess, short argc, t_atom *argv) {
     
@@ -270,10 +332,13 @@ void myObj_set_scale(t_myObj *self, t_symbol *mess, short argc, t_atom *argv) {
     float note_input;
     for(int i=0; i<argc; ++i) {
         note_input = noteList[i];
-        object_post(NULL, "note_input: %f", note_input);
-        float u = 0.5f * (note_input + 1.0f);
-        float voltage = (u - 0.5f) * 10.0f;
+        //object_post(NULL, "note_input: %f", note_input);
+        //float u = 0.5f * (note_input + 1.0f);
+        //float voltage = (u - 0.5f) * 10.0f;
+        //object_post(NULL, "note_input: %f -- voltage: %f", note_input, voltage);
+        float voltage = note_input / 12.0f;
         self->scale_recorder.NewNote(voltage);
+        self->scale_recorder.UpdateVoltage(voltage);
         self->scale_recorder.AcceptNote();
     }
     
@@ -287,7 +352,7 @@ void myObj_set_scale(t_myObj *self, t_symbol *mess, short argc, t_atom *argv) {
 
 
 
-void myObj_bang(t_myObj *self) {
+void myObj_scale_info(t_myObj *self) {
     int scale_index = self->settings.state().x_scale;
     Scale *scale = self->settings.mutable_scale(scale_index);
     int numDeg = scale->num_degrees;
@@ -354,30 +419,11 @@ void myObj_x_scale(t_myObj *self, long b) {
 }
 
 
+// enable sampling of external cv input
+
 void myObj_x_ext(t_myObj *self, long b) {
     State* state = self->settings.mutable_state();
     state->x_register_mode = (b != 0);
-}
-
-void myObj_info(t_myObj *self)
-{
-    float *p = self->parameters;
-    object_post((t_object*)self, "PARAMETERS:::::::");
-    object_post((t_object*)self, "dejavu amount: \t%f", p[ADC_CHANNEL_DEJA_VU_AMOUNT]);
-    object_post((t_object*)self, "dejavu length: \t%f", self->dejavu_length);
-    object_post((t_object*)self, "x_ext_input: \t%f", p[ADC_CHANNEL_X_SPREAD_2]);
-    object_post((t_object*)self, "t_rate: \t%f", p[ADC_CHANNEL_T_RATE]);
-    float bpm = powf(2.0f, p[ADC_CHANNEL_T_RATE] / 12.0f) * 120.f;
-    object_post((t_object*)self, "bpm: \t%f", bpm);
-    object_post((t_object*)self, "t_bias: \t%f", p[ADC_CHANNEL_T_BIAS]);
-    object_post((t_object*)self, "t_jitter: \t%f", p[ADC_CHANNEL_T_JITTER]);
-    object_post((t_object*)self, "x_spread: \t%f", p[ADC_CHANNEL_X_SPREAD]);
-    object_post((t_object*)self, "x_bias: \t%f", p[ADC_CHANNEL_X_BIAS]);
-    object_post((t_object*)self, "x_steps: \t%f", p[ADC_CHANNEL_X_STEPS]);
-    
-    
-    object_post((t_object*)self, ".......");
-    
 }
 
 
@@ -415,16 +461,37 @@ void myObj_jitter(t_myObj* self, double m) {
 }
 
 
+// set pulse width of t1 and t3 gates
+
+void myObj_pulse_width_mean(t_myObj *self, double m) {
+    State* state = self->settings.mutable_state();
+    m = clamp(m, 0.0, 1.0);
+    state->t_pulse_width_mean = int(m*255.0);
+}
+
+void myObj_pulse_width_std(t_myObj *self, double m) {
+    State* state = self->settings.mutable_state();
+    m = clamp(m, 0.0, 1.0);
+    state->t_pulse_width_std = int(m*255.0);
+}
+
+
+
 #pragma mark -------- seq pots --------
 
 void myObj_dejavu(t_myObj* self, double m) {
     m = clamp(m, 0., 1.);
     self->block.adc_value[ADC_CHANNEL_DEJA_VU_AMOUNT] = m;
 }
-
+/*
 void myObj_length(t_myObj* self, double m) {
     m = clamp(m, 0., 1.);
     //block.adc_value[ADC_CHANNEL_DEJA_VU_LENGTH] = m;
+    self->dejavu_length = m;
+}
+*/
+void myObj_length(t_myObj* self, long m) {
+    m = clamp((int)m, 1, 16);
     self->dejavu_length = m;
 }
 
@@ -449,7 +516,13 @@ void myObj_xbias(t_myObj* self, double m) {
 }
 
 
+#pragma mark -------- Y functions --------
 
+void myObj_y_divider(t_myObj* self, double m) {
+    m = clamp(m, 0., 1.);
+    int div = int(m*255.0 + 0.5);
+    self->settings.mutable_state()->y_divider = div;
+}
 
 
 #pragma mark ----- dsp loop -----
@@ -489,6 +562,7 @@ void dsp_loop(t_myObj* self, double** ins, double** outs, long blockSize, long o
     // clock input ----------------
     // Determine the clock source for the XY section
     ClockSource xy_clock_source = CLOCK_SOURCE_INTERNAL_T1_T2_T3;
+    //ClockSource xy_clock_source = CLOCK_SOURCE_INTERNAL_T1;
     uint8_t inClocks[2] = {0,0};
     double vectorsum, *clock_input;
     
@@ -503,7 +577,10 @@ void dsp_loop(t_myObj* self, double** ins, double** outs, long blockSize, long o
         vectorsum = 0.0;
         clock_input = ins[ADC_CHANNEL_LAST+1]+offset;
         vDSP_sveD(clock_input, 1, &vectorsum, size);
-        if(vectorsum > 0.5) inClocks[1] = 255;
+        if(vectorsum > 0.5) {
+            inClocks[1] = 255;
+            //object_post(NULL, "ping! - clockSrc: %d", xy_clock_source);
+        }
     }
     
     self->read_inputs.ReadClocks(block, size, inClocks);
@@ -532,10 +609,14 @@ void dsp_loop(t_myObj* self, double** ins, double** outs, long blockSize, long o
     ramps.slave[1] = &ramp_buffer[kBlockSize * 3];
     
     const State& state = self->settings.state();
+    /*
     int deja_vu_length = self->deja_vu_length_quantizer.Lookup(
                                                          loop_length,
                                                          self->dejavu_length,
                                                          sizeof(loop_length) / sizeof(int));
+     */
+    
+    int deja_vu_length = self->dejavu_length;
     
     t_generator->set_model(TGeneratorModel(state.t_model));
     t_generator->set_range(TGeneratorRange(state.t_range));
@@ -686,12 +767,7 @@ void myObj_dsp64(t_myObj* self, t_object* dsp64, short* count, double samplerate
 
 void myObj_free(t_myObj* self) {
     dsp_free((t_pxobject*)self);
-    //self->part->elements::Part::~Part();
-    //delete self->part;
-    //self->read_inputs->elements::ReadInputs::~ReadInputs();
-    //delete self->read_inputs;
-    //if(self->block)
-      //  sysmem_freeptr(self->block);
+
     if(self->voltages)
         sysmem_freeptr(self->voltages);
     if(self->ramp_buffer)
@@ -705,22 +781,23 @@ void myObj_assist(t_myObj* self, void* unused, t_assist_function io, long index,
     if (io == ASSIST_INLET) {
         switch (index) {
             case 0:
-                strncpy(string_dest,"(signal) external clock", ASSIST_STRING_MAXSIZE);
+                strncpy(string_dest,"(signal) external clock(1)", ASSIST_STRING_MAXSIZE);
                 break;
             case 1:
-                strncpy(string_dest,"(signal) DEJA_VU_AMOUNT", ASSIST_STRING_MAXSIZE);
-                break;
-            case 2:
-                strncpy(string_dest,"(signal) DEJA_VU_LENGTH / X_SPREAD_2", ASSIST_STRING_MAXSIZE);
-                break;
-            case 3:
                 strncpy(string_dest,"(signal) T_RATE", ASSIST_STRING_MAXSIZE);
                 break;
-            case 4:
+            case 2:
                 strncpy(string_dest,"(signal) T_BIAS", ASSIST_STRING_MAXSIZE);
                 break;
+            case 3:
+                strncpy(string_dest,"(signal) T_JITTER",
+                 ASSIST_STRING_MAXSIZE);
+                break;
+            case 4:
+                strncpy(string_dest,"(signal) DEJA_VU_AMOUNT", ASSIST_STRING_MAXSIZE);
+                break;
             case 5:
-                strncpy(string_dest,"(signal) T_JITTER", ASSIST_STRING_MAXSIZE);
+                strncpy(string_dest,"(signal) external sampling source, (int) deja_vu length (1-16)", ASSIST_STRING_MAXSIZE);
                 break;
             case 6:
                 strncpy(string_dest,"(signal) X_SPREAD", ASSIST_STRING_MAXSIZE);
@@ -732,7 +809,7 @@ void myObj_assist(t_myObj* self, void* unused, t_assist_function io, long index,
                 strncpy(string_dest,"(signal) X_STEPS", ASSIST_STRING_MAXSIZE);
                 break;
             case 9:
-                strncpy(string_dest,"(signal) MALLET, (float) attenuvert", ASSIST_STRING_MAXSIZE);
+                strncpy(string_dest,"(signal) external clock(2) - for XY outputs", ASSIST_STRING_MAXSIZE);
                 break;
         }
     }
@@ -776,7 +853,7 @@ void ext_main(void* r) {
     class_addmethod(this_class, (method)myObj_rate,  "rate",        A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_bpm,  "bpm",        A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_t_bias,	"t_bias",         A_FLOAT, 0);
-    class_addmethod(this_class, (method)myObj_length,     "length",        A_FLOAT, 0);
+    class_addmethod(this_class, (method)myObj_length,     "length",        A_LONG, 0);
     class_addmethod(this_class, (method)myObj_jitter,     "jitter",    A_FLOAT, 0);
     
     class_addmethod(this_class, (method)myObj_spread,   "spread",    A_FLOAT, 0);
@@ -790,6 +867,8 @@ void ext_main(void* r) {
     class_addmethod(this_class, (method)myObj_x,  "x",  A_LONG, 0);
     class_addmethod(this_class, (method)myObj_t_range,  "t_range",  A_LONG, 0);
     class_addmethod(this_class, (method)myObj_x_range,  "x_range",  A_LONG, 0);
+    class_addmethod(this_class, (method)myObj_pulse_width_mean,  "pw_mean",    A_FLOAT, 0);
+    class_addmethod(this_class, (method)myObj_pulse_width_std,  "pw_std",      A_FLOAT, 0);
     
     class_addmethod(this_class, (method)myObj_x_mode,  "x_mode",  A_LONG, 0);
     class_addmethod(this_class, (method)myObj_x_scale,  "x_scale",  A_LONG, 0);
@@ -800,10 +879,19 @@ void ext_main(void* r) {
     class_addmethod(this_class, (method)myObj_set_scale,  "set_scale",      A_GIMME, 0);
     class_addmethod(this_class, (method)myObj_record_scale,  "record_scale",      A_LONG, 0);
     class_addmethod(this_class, (method)myObj_info,	"info", 0);
-    class_addmethod(this_class, (method)myObj_bang,    "bang", 0);
+    class_addmethod(this_class, (method)myObj_scale_info,    "scale_info", 0);
     
     class_dspinit(this_class);
     class_register(CLASS_BOX, this_class);
+    
+    CLASS_ATTR_CHAR(this_class, "y_div", 0, t_myObj, settings.mutable_state()->y_divider);
+    CLASS_ATTR_SAVE(this_class, "y_div", 0);
+    CLASS_ATTR_CHAR(this_class, "y_spread", 0, t_myObj, settings.mutable_state()->y_spread);
+    CLASS_ATTR_SAVE(this_class, "y_spread", 0);
+    CLASS_ATTR_CHAR(this_class, "y_bias", 0, t_myObj, settings.mutable_state()->y_bias);
+    CLASS_ATTR_SAVE(this_class, "y_bias", 0);
+    CLASS_ATTR_CHAR(this_class, "y_steps", 0, t_myObj, settings.mutable_state()->y_steps);
+    CLASS_ATTR_SAVE(this_class, "y_steps", 0);
     
     object_post(NULL, "vb.mi.mrbls~ by volker böhm --> https://vboehm.net");
     object_post(NULL, "a clone of mutable instruments' 'marbles' module");

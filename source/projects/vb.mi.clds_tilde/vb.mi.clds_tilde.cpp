@@ -1,39 +1,22 @@
 #include "c74_msp.h"
 
-//#include "stmlib/utils/dsp.h"
-
 #include "clouds/dsp/granular_processor.h"
 #include "clouds/resources.h"
-//#include "clouds/drivers/adc.h"
-
-#include "read_inputs.hpp"
 
 #include "Accelerate/Accelerate.h"
 
+// original sample rate is 32 kHz
 
-//#define    BUFFER_LEN            1024
-#define     SAMPLERATE          96000.0
-#define     BLOCK_SIZE          16
-#define     SAMP_SCALE          (float)(1.0 / 32767.0)
+// Dezember 2019
+// author: volker böhm, https://vboehm.net
+//
+// TODO: save and load audio data to buffer, make size of internal memory settable, make lofi bit depth settable
 
-//const uint32_t kSampleRate = 96000;
-const uint16_t kAudioBlockSize = 32;
+const uint16_t kAudioBlockSize = 32;        // sig vs can't be smaller than this!
+
+
 
 using namespace c74::max;
-/*
-enum AdcChannel {
-    ADC_POSITION_POTENTIOMETER_CV,
-    ADC_DENSITY_POTENTIOMETER_CV,
-    ADC_SIZE_POTENTIOMETER,
-    ADC_SIZE_CV,
-    ADC_PITCH_POTENTIOMETER,
-    ADC_V_OCT_CV,
-    ADC_BLEND_POTENTIOMETER,
-    ADC_BLEND_CV,
-    ADC_TEXTURE_POTENTIOMETER,
-    ADC_TEXTURE_CV,
-    ADC_CHANNEL_LAST
-};*/
 
 enum ModParams {
     PARAM_PITCH,
@@ -58,28 +41,15 @@ struct t_myObj {
     uint8_t     *small_buffer;
     
     // parameters
-    float       position;
-    float       size;
-    float       pitch;
-    float       density;
-    float       texture;
-    float       dry_wet;
-    float       stereo_spread;
-    float       feedback;
-    float       reverb;
     float       in_gain;
-    
     bool        freeze;
     bool        trigger, previous_trig;
     bool        gate;
     
-    uint8_t     mode;
     float       pot_value_[PARAM_CHANNEL_LAST];
     float       smoothed_value_[PARAM_CHANNEL_LAST];
-    float       coef;      // smoothing coefficient
+    float       coef;      // smoothing coefficient for parameter changes
     
-    //clouds::ShortFrame  input[kAudioBlockSize];
-    //clouds::ShortFrame  output[kAudioBlockSize];
     clouds::FloatFrame  input[kAudioBlockSize];
     clouds::FloatFrame  output[kAudioBlockSize];
     
@@ -91,7 +61,8 @@ struct t_myObj {
     
 };
 
-void* myObj_new(t_symbol *s, long argc, t_atom *argv) {
+//void* myObj_new(t_symbol *s, long argc, t_atom *argv) {
+void* myObj_new(long size_in_ms) {
 	t_myObj* self = (t_myObj*)object_alloc(this_class);
 	
     if(self)
@@ -102,28 +73,55 @@ void* myObj_new(t_symbol *s, long argc, t_atom *argv) {
 
         self->sr = sys_getsr();
         
-        self->large_buffer = (uint8_t*)sysmem_newptr(118784 * sizeof(uint8_t));
-        self->small_buffer = (uint8_t*)sysmem_newptr((65536-128) * sizeof(uint8_t));
+        // check channel arg
+        /*
+        if(chns <= 0)
+            chns = 2;
+        else if(chns >= 2)
+            chns = 2;
+        else
+            chns = 1;
+        */
+        
+        int largeBufSize = 118784;
+        int smallBufSize = 65536-128;
+        
+        // check size arg
+        if(size_in_ms > 1000) {
+            if(size_in_ms > 4000) size_in_ms = 4000;
+            smallBufSize = size_in_ms * self->sr * 0.002 + 128;
+            largeBufSize = smallBufSize + 65536;
+        }
+        self->large_buffer = (uint8_t*)sysmem_newptrclear(largeBufSize * sizeof(uint8_t));
+        self->small_buffer = (uint8_t*)sysmem_newptrclear(smallBufSize * sizeof(uint8_t));
         
         self->processor = new clouds::GranularProcessor;
         memset(self->processor, 0, sizeof(*t_myObj::processor));
-        self->processor->Init(self->large_buffer, 118784, self->small_buffer, (65536-128));
-        self->processor->set_num_channels(2);
+        self->processor->Init(self->large_buffer, largeBufSize, self->small_buffer, smallBufSize);
+        self->processor->set_sample_rate(self->sr);
+        self->processor->set_num_channels(2);       // always use stereo setup (?)
         self->processor->set_low_fidelity(false);
         self->processor->set_playback_mode(clouds::PLAYBACK_MODE_GRANULAR);
         
-        // init values, TODO: init granulator parameters correctly!
-        for(auto i=0; i<PARAM_CHANNEL_LAST; ++i) {
-            self->pot_value_[i] = 0.0f;
-            self->smoothed_value_[i] = 0.0f;
-        }
+        // init values
+        self->pot_value_[PARAM_PITCH] = self->smoothed_value_[PARAM_PITCH] = 0.f;
+        self->pot_value_[PARAM_POSITION] = self->smoothed_value_[PARAM_POSITION] = 0.f;
+        self->pot_value_[PARAM_SIZE] = self->smoothed_value_[PARAM_SIZE] = 0.5f;
+        self->pot_value_[PARAM_DENSITY] = self->smoothed_value_[PARAM_DENSITY] = 0.1f;
+        self->pot_value_[PARAM_TEXTURE] = self->smoothed_value_[PARAM_TEXTURE] = 0.5f;
+        
+        self->pot_value_[PARAM_DRYWET] = self->smoothed_value_[PARAM_DRYWET] = 1.f;
+        self->processor->mutable_parameters()->stereo_spread = 0.5f;
+        self->processor->mutable_parameters()->reverb = 0.f;
+        self->processor->mutable_parameters()->feedback = 0.f;
+        
         self->in_gain = 1.0f;
         self->coef = 0.1f;
         self->previous_trig = false;
 
         
         // process attributes
-        attr_args_process(self, argc, argv);
+        //attr_args_process(self, argc, argv);
         
     }
     else {
@@ -139,7 +137,6 @@ void* myObj_new(t_symbol *s, long argc, t_atom *argv) {
 
 void myObj_freeze(t_myObj* self, long m) {
     self->freeze = m != 0;
-    //self->processor->mutable_parameters()->freeze = m != 0;
 }
 
 void myObj_bang(t_myObj* self) {
@@ -148,28 +145,28 @@ void myObj_bang(t_myObj* self) {
 
 void myObj_position(t_myObj* self, double m) {
     m = clamp(m, 0., 1.);
-    self->position = m;
+    //self->position = m;
     //self->processor->mutable_parameters()->position = m;
     self->pot_value_[PARAM_POSITION] = m;
 }
 
 void myObj_size(t_myObj* self, double m) {
     m = clamp(m, 0., 1.);
-    self->size = m;
+    //self->size = m;
     //self->processor->mutable_parameters()->size = m;
     self->pot_value_[PARAM_SIZE] = m;
 }
 
 void myObj_pitch(t_myObj* self, double m) {
     //m = clamp(m, 0., 1.);
-    self->pitch = m;
-    self->processor->mutable_parameters()->pitch = m;
+    //self->pitch = m;
+    //self->processor->mutable_parameters()->pitch = m;  // ???
     self->pot_value_[PARAM_PITCH] = m;
 }
 
 void myObj_density(t_myObj* self, double m) {
     m = clamp(m, 0., 1.);
-    self->density = m;
+    //self->density = m;
     //self->processor->mutable_parameters()->density = m;
     self->pot_value_[PARAM_DENSITY] = m;
 }
@@ -177,8 +174,7 @@ void myObj_density(t_myObj* self, double m) {
 
 void myObj_texture(t_myObj* self, double m) {
     m = clamp(m, 0., 1.);
-    self->texture = m;
-    //self->processor->mutable_parameters()->texture = m;
+    //self->texture = m;
     self->pot_value_[PARAM_TEXTURE] = m;
 }
 
@@ -187,27 +183,27 @@ void myObj_texture(t_myObj* self, double m) {
 
 void myObj_drywet(t_myObj *self, double m) {
     m = clamp(m, 0., 1.);
-    self->dry_wet = m;
+    //self->dry_wet = m;
     //self->processor->mutable_parameters()->dry_wet = m;
     self->pot_value_[PARAM_DRYWET] = m;
 }
 
 void myObj_spread(t_myObj *self, double m) {
     m = clamp(m, 0., 1.);
-    self->stereo_spread = m;
+    //self->stereo_spread = m;
     self->processor->mutable_parameters()->stereo_spread = m;
     //self->pot_value_[POT_SPREAD] = m;
 }
 void myObj_reverb(t_myObj *self, double m) {
     m = clamp(m, 0., 1.);
-    self->reverb = m;
+    //self->reverb = m;
     self->processor->mutable_parameters()->reverb = m;
     //self->pot_value_[POT_REVERB] = m;
 }
 
 void myObj_feedback(t_myObj *self, double m) {
     m = clamp(m, 0., 1.);
-    self->feedback = m;
+    //self->feedback = m;
     self->processor->mutable_parameters()->feedback = m;
     //self->pot_value_[POT_FEEDBACK] = m;
 }
@@ -230,7 +226,7 @@ void myObj_in_gain(t_myObj* self, double m) {
  */
 void myObj_mode(t_myObj *self, long n) {
     CONSTRAIN(n, 0, clouds::PLAYBACK_MODE_LAST - 1);
-    self->mode = n;
+    //self->mode = n;
     self->processor->set_playback_mode(static_cast<clouds::PlaybackMode>(n));
 }
 
@@ -239,14 +235,13 @@ void myObj_lofi(t_myObj *self, long m) {
 }
 
 void myObj_bypass(t_myObj *self, long n) {
-    //self->mode = n != 0;
     self->processor->set_bypass(n != 0);
 }
 
 
 void myObj_coef(t_myObj *self, double m) {
-    m = clamp(m, 0.0, 1.0);
-    self->coef = m;
+    m = 1.f - clamp(m, 0., 1.0) * 0.9;
+    self->coef = m*m*m*m;
 }
 
 void myObj_info(t_myObj *self) {
@@ -265,6 +260,7 @@ void myObj_info(t_myObj *self) {
     object_post((t_object*)self, "trigger: %d", p->trigger);
     object_post((t_object*)self, "gate: %d", p->gate);
     object_post((t_object*)self, "in_gain: %f", self->in_gain);
+    object_post((t_object*)self, "coef: %f", self->coef);
     object_post(NULL, "---------------------");
 }
 
@@ -275,7 +271,7 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
 {
     double  *inL = ins[0];      // audio in L
     double  *inR = ins[1];      // audio in R
-    double  *gate_in = ins[8];  // gate input (inlet 8)
+    double  *gate_in = ins[8];  // freeze input (inlet 8)
     double  *trig_in = ins[9];  // trigger input (inlet 9)
     
     double  *outL = outs[0];
@@ -287,8 +283,6 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
         return;
     
     
-    //clouds::ShortFrame  *input = self->input;
-    //clouds::ShortFrame  *output = self->output;
     clouds::FloatFrame  *input = self->input;
     clouds::FloatFrame  *output = self->output;
     float       *pot_value = self->pot_value_;
@@ -297,26 +291,19 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     float       value;
     float       coef = self->coef;
     float       in_gain = self->in_gain;
-    /*
-    float       *samples, *output;
-    int16_t     timbre, color, count;
-    double      ratio, timbre_pot, color_pot;
-    uint8_t     shape_offset, shape, root, drift;
-    int32_t     midi_pitch, pitch = 0;
-     */
+
     bool        gate_connected = self->gate_connected;
     bool        trig_connected = self->trig_connected;
-    
-    
     
     clouds::GranularProcessor   *gp = self->processor;
     clouds::Parameters   *p = gp->mutable_parameters();
     
+    
     for(count = 0; count < vs; count += kAudioBlockSize) {
         
         for(auto i=0; i<kAudioBlockSize; ++i) {
-            input[i].l = inL[i + count] * in_gain; // * 32767.0;
-            input[i].r = inR[i + count] * in_gain; // * 32767.0;
+            input[i].l = inL[i + count] * in_gain;
+            input[i].r = inR[i + count] * in_gain;
         }
         
         // combine pot and cv inputs
@@ -365,11 +352,10 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
             p->trigger = false;
         
         for(auto i=0; i<kAudioBlockSize; ++i) {
-            outL[i + count] = output[i].l; // / 32767.0;
-            outR[i + count] = output[i].r; // / 32767.0;
+            outL[i + count] = output[i].l;
+            outR[i + count] = output[i].r;
         }
     }
-    //gp->Prepare();
     
 }
 
@@ -380,7 +366,7 @@ void myObj_dsp64(t_myObj* self, t_object* dsp64, short* count, double samplerate
     // is a signal connected to the trigger input?
     self->gate_connected = count[8];
     self->trig_connected = count[9];
-    /*
+    
     if(maxvectorsize < kAudioBlockSize) {
         object_error((t_object*)self, "vector size can't be smaller than %d samples, sorry!", kAudioBlockSize);
         return;
@@ -388,12 +374,9 @@ void myObj_dsp64(t_myObj* self, t_object* dsp64, short* count, double samplerate
     
     if(samplerate != self->sr) {
         self->sr = samplerate;
-        // ratio: output_sample_rate / input_sample_rate.
-        self->ratio = self->sr / SAMPLERATE;
-        
+        self->processor->set_sample_rate(samplerate);
     }
-    */
-
+    
         object_method_direct(void, (t_object*, t_object*, t_perfroutine64, long, void*),
                          dsp64, gensym("dsp_add64"), (t_object*)self, (t_perfroutine64)myObj_perform64, 0, NULL);
     
@@ -454,7 +437,7 @@ void myObj_assist(t_myObj* self, void* unused, t_assist_function io, long index,
 
 
 void ext_main(void* r) {
-	this_class = class_new("vb.mi.clds~", (method)myObj_new, (method)myObj_free, sizeof(t_myObj), 0, A_GIMME, 0);
+	this_class = class_new("vb.mi.clds~", (method)myObj_new, (method)myObj_free, sizeof(t_myObj), 0, A_DEFLONG, 0);
 
 	class_addmethod(this_class, (method)myObj_assist,	"assist",	A_CANT,		0);
 	class_addmethod(this_class, (method)myObj_dsp64,	"dsp64",	A_CANT,		0);
@@ -475,7 +458,7 @@ void ext_main(void* r) {
     class_addmethod(this_class, (method)myObj_lofi,   "lofi",  A_LONG, 0);
     class_addmethod(this_class, (method)myObj_bypass,   "bypass",  A_LONG, 0);
     class_addmethod(this_class, (method)myObj_info,   "info", 0);
-    class_addmethod(this_class, (method)myObj_coef,    "coef",  A_FLOAT, 0);
+    class_addmethod(this_class, (method)myObj_coef,    "smooth",  A_FLOAT, 0);
 	
 	class_dspinit(this_class);
 	class_register(CLASS_BOX, this_class);
@@ -485,19 +468,6 @@ void ext_main(void* r) {
     CLASS_ATTR_CHAR(this_class,"drift", 0, t_myObj, drift);
     CLASS_ATTR_SAVE(this_class, "drift", 0);
     CLASS_ATTR_FILTER_CLIP(this_class, "drift", 0, 15);
-    
-    CLASS_ATTR_CHAR(this_class,"auto_trig", 0, t_myObj, auto_trig);
-    CLASS_ATTR_SAVE(this_class, "auto_trig", 0);
-    CLASS_ATTR_STYLE(this_class, "auto_trig", 0, "onoff");
-    //CLASS_ATTR_FILTER_CLIP(this_class, "auto_trig", 0, 1);
-    
-    CLASS_ATTR_CHAR(this_class,"root", 0, t_myObj, root);
-    CLASS_ATTR_SAVE(this_class, "root", 0);
-    CLASS_ATTR_FILTER_CLIP(this_class, "root", 0, 11);
-    
-    CLASS_ATTR_CHAR(this_class,"resamp", 0, t_myObj, resamp);
-    CLASS_ATTR_SAVE(this_class, "resamp", 0);
-    CLASS_ATTR_STYLE(this_class, "resamp", 0, "onoff");
     */
     
     object_post(NULL, "vb.mi.clds~ by volker boehm -- https://vboehm.net");

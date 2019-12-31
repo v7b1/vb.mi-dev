@@ -39,6 +39,31 @@
 		"subpatcher_template" : "vb01",
 		"boxes" : [ 			{
 				"box" : 				{
+					"format" : 6,
+					"id" : "obj-45",
+					"maxclass" : "flonum",
+					"numinlets" : 1,
+					"numoutlets" : 2,
+					"outlettype" : [ "", "bang" ],
+					"parameter_enable" : 0,
+					"patching_rect" : [ 494.0, 353.0, 50.0, 23.0 ]
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-28",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 1,
+					"outlettype" : [ "signal" ],
+					"patching_rect" : [ 497.0, 418.0, 33.0, 23.0 ],
+					"text" : "sig~"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-22",
 					"maxclass" : "spectroscope~",
 					"numinlets" : 2,
@@ -276,7 +301,7 @@
 									"maxclass" : "inlet",
 									"numinlets" : 0,
 									"numoutlets" : 1,
-									"outlettype" : [ "signal" ],
+									"outlettype" : [ "" ],
 									"patching_rect" : [ 108.0, 65.0, 30.0, 30.0 ]
 								}
 
@@ -1087,11 +1112,11 @@
 					"patching_rect" : [ 173.0, 341.0, 44.0, 48.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
+							"parameter_mmax" : 1.0,
 							"parameter_shortname" : "lpg",
 							"parameter_type" : 0,
 							"parameter_unitstyle" : 1,
-							"parameter_longname" : "live.dial[9]",
-							"parameter_mmax" : 1.0
+							"parameter_longname" : "live.dial[9]"
 						}
 
 					}
@@ -1111,11 +1136,11 @@
 					"patching_rect" : [ 106.5, 341.0, 44.0, 48.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
+							"parameter_mmax" : 1.0,
 							"parameter_shortname" : "decay",
 							"parameter_type" : 0,
 							"parameter_unitstyle" : 1,
-							"parameter_longname" : "live.dial[8]",
-							"parameter_mmax" : 1.0
+							"parameter_longname" : "live.dial[8]"
 						}
 
 					}
@@ -1135,11 +1160,11 @@
 					"patching_rect" : [ 37.5, 341.0, 44.0, 48.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
+							"parameter_mmax" : 1.0,
 							"parameter_shortname" : "oct",
 							"parameter_type" : 0,
 							"parameter_unitstyle" : 1,
-							"parameter_longname" : "live.dial[7]",
-							"parameter_mmax" : 1.0
+							"parameter_longname" : "live.dial[7]"
 						}
 
 					}
@@ -1237,11 +1262,11 @@
 					"patching_rect" : [ 205.714279000000005, 565.5, 15.0, 15.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
+							"parameter_mmax" : 1,
 							"parameter_shortname" : "live.button",
 							"parameter_enum" : [ "off", "on" ],
 							"parameter_type" : 2,
-							"parameter_longname" : "live.button",
-							"parameter_mmax" : 1
+							"parameter_longname" : "live.button"
 						}
 
 					}
@@ -1889,12 +1914,12 @@
 					"patching_rect" : [ 31.0, 132.5, 44.0, 48.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
+							"parameter_mmax" : 1.0,
 							"parameter_shortname" : "FREQ",
 							"parameter_type" : 0,
 							"parameter_unitstyle" : 1,
 							"parameter_mmin" : -1.0,
-							"parameter_longname" : "live.dial[6]",
-							"parameter_mmax" : 1.0
+							"parameter_longname" : "live.dial[6]"
 						}
 
 					}
@@ -1914,11 +1939,11 @@
 					"patching_rect" : [ 313.0, 132.5, 44.0, 48.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
+							"parameter_mmax" : 1.0,
 							"parameter_shortname" : "MORPH",
 							"parameter_type" : 0,
 							"parameter_unitstyle" : 1,
-							"parameter_longname" : "live.dial[5]",
-							"parameter_mmax" : 1.0
+							"parameter_longname" : "live.dial[5]"
 						}
 
 					}
@@ -1938,11 +1963,11 @@
 					"patching_rect" : [ 218.0, 132.5, 44.0, 48.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
+							"parameter_mmax" : 1.0,
 							"parameter_shortname" : "TIMBRE",
 							"parameter_type" : 0,
 							"parameter_unitstyle" : 1,
-							"parameter_longname" : "live.dial[4]",
-							"parameter_mmax" : 1.0
+							"parameter_longname" : "live.dial[4]"
 						}
 
 					}
@@ -1988,11 +2013,11 @@
 					"patching_rect" : [ 125.0, 132.5, 44.0, 48.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
+							"parameter_mmax" : 1.0,
 							"parameter_shortname" : "HARMO",
 							"parameter_type" : 0,
 							"parameter_unitstyle" : 1,
-							"parameter_longname" : "live.dial[3]",
-							"parameter_mmax" : 1.0
+							"parameter_longname" : "live.dial[3]"
 						}
 
 					}
@@ -2254,14 +2279,14 @@
 					"patching_rect" : [ 34.5, 549.5, 40.5, 36.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
+							"parameter_mmax" : 1.0,
 							"parameter_initial" : [ 0.0 ],
 							"parameter_shortname" : "tmbr",
 							"parameter_type" : 0,
 							"parameter_unitstyle" : 1,
 							"parameter_mmin" : -1.0,
 							"parameter_longname" : "live.dial[2]",
-							"parameter_initial_enable" : 1,
-							"parameter_mmax" : 1.0
+							"parameter_initial_enable" : 1
 						}
 
 					}
@@ -2295,14 +2320,14 @@
 					"patching_rect" : [ 97.5, 549.5, 35.5, 36.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
+							"parameter_mmax" : 1.0,
 							"parameter_initial" : [ 0.0 ],
 							"parameter_shortname" : "fm",
 							"parameter_type" : 0,
 							"parameter_unitstyle" : 1,
 							"parameter_mmin" : -1.0,
 							"parameter_longname" : "live.dial[1]",
-							"parameter_initial_enable" : 1,
-							"parameter_mmax" : 1.0
+							"parameter_initial_enable" : 1
 						}
 
 					}
@@ -2336,14 +2361,14 @@
 					"patching_rect" : [ 157.5, 549.5, 35.5, 36.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
+							"parameter_mmax" : 1.0,
 							"parameter_initial" : [ 0.0 ],
 							"parameter_shortname" : "mrph",
 							"parameter_type" : 0,
 							"parameter_unitstyle" : 1,
 							"parameter_mmin" : -1.0,
 							"parameter_longname" : "live.dial",
-							"parameter_initial_enable" : 1,
-							"parameter_mmax" : 1.0
+							"parameter_initial_enable" : 1
 						}
 
 					}
@@ -2439,14 +2464,14 @@
 					"patching_rect" : [ 526.5, 613.0, 48.0, 136.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
+							"parameter_mmax" : 6.0,
 							"parameter_initial" : [ -12 ],
 							"parameter_shortname" : "AUX",
 							"parameter_type" : 0,
 							"parameter_unitstyle" : 4,
 							"parameter_mmin" : -70.0,
 							"parameter_longname" : "live.gain~[1]",
-							"parameter_initial_enable" : 1,
-							"parameter_mmax" : 6.0
+							"parameter_initial_enable" : 1
 						}
 
 					}
@@ -2598,14 +2623,14 @@
 					"patching_rect" : [ 464.5, 613.0, 48.0, 136.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
+							"parameter_mmax" : 6.0,
 							"parameter_initial" : [ -12 ],
 							"parameter_shortname" : "OUT",
 							"parameter_type" : 0,
 							"parameter_unitstyle" : 4,
 							"parameter_mmin" : -70.0,
 							"parameter_longname" : "live.gain~",
-							"parameter_initial_enable" : 1,
-							"parameter_mmax" : 6.0
+							"parameter_initial_enable" : 1
 						}
 
 					}
@@ -3077,7 +3102,7 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-38", 0 ],
+					"destination" : [ "obj-20", 1 ],
 					"source" : [ "obj-2", 0 ]
 				}
 
@@ -3100,6 +3125,13 @@
 				"patchline" : 				{
 					"destination" : [ "obj-4", 0 ],
 					"source" : [ "obj-27", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 1 ],
+					"source" : [ "obj-28", 0 ]
 				}
 
 			}
@@ -3214,6 +3246,13 @@
 			}
 , 			{
 				"patchline" : 				{
+					"destination" : [ "obj-28", 0 ],
+					"source" : [ "obj-45", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
 					"destination" : [ "obj-3", 0 ],
 					"hidden" : 1,
 					"source" : [ "obj-5", 0 ]
@@ -3271,7 +3310,7 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-38", 0 ],
+					"destination" : [ "obj-20", 0 ],
 					"source" : [ "obj-6", 0 ]
 				}
 
@@ -3383,19 +3422,19 @@
 			}
  ],
 		"parameters" : 		{
-			"obj-129" : [ "live.dial[8]", "decay", 0 ],
-			"obj-128" : [ "live.dial[7]", "oct", 0 ],
 			"obj-62" : [ "live.dial[1]", "fm", 0 ],
-			"obj-6" : [ "live.gain~", "OUT", 0 ],
-			"obj-60" : [ "live.dial", "mrph", 0 ],
 			"obj-24" : [ "live.dial[3]", "HARMO", 0 ],
+			"obj-2" : [ "live.gain~[1]", "AUX", 0 ],
 			"obj-64" : [ "live.dial[2]", "tmbr", 0 ],
 			"obj-97" : [ "live.dial[6]", "FREQ", 0 ],
+			"obj-130" : [ "live.dial[9]", "lpg", 0 ],
 			"obj-96" : [ "live.dial[5]", "MORPH", 0 ],
 			"obj-95" : [ "live.dial[4]", "TIMBRE", 0 ],
-			"obj-2" : [ "live.gain~[1]", "AUX", 0 ],
-			"obj-130" : [ "live.dial[9]", "lpg", 0 ],
+			"obj-129" : [ "live.dial[8]", "decay", 0 ],
+			"obj-128" : [ "live.dial[7]", "oct", 0 ],
 			"obj-116" : [ "live.button", "live.button", 0 ],
+			"obj-6" : [ "live.gain~", "OUT", 0 ],
+			"obj-60" : [ "live.dial", "mrph", 0 ],
 			"parameterbanks" : 			{
 
 			}

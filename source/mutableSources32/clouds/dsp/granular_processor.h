@@ -144,6 +144,10 @@ class GranularProcessor {
     if (low_fidelity_) quality |= 2;
     return quality;
   }
+    
+    void set_sample_rate(float sr) {
+        sr_ = sr;       // vb, make sample rate settable
+    }
   
   void GetPersistentData(PersistentBlock* block, size_t *num_blocks);
   bool LoadPersistentData(const uint32_t* data);
@@ -155,9 +159,9 @@ class GranularProcessor {
   }
 
   inline float sample_rate() const {
-    //return 32000.0f / \
+    //return 32000.0f / \       // vb original sr fixed to 32 kHz
       //  (low_fidelity_ ? kDownsamplingFactor : 1);
-      return 48000.0f / \
+      return sr_ / \
       (low_fidelity_ ? kDownsamplingFactor : 1);
   }
      
@@ -174,6 +178,7 @@ class GranularProcessor {
   bool reset_buffers_;
   float freeze_lp_;
   float dry_wet_;
+    float sr_;          //vb
   
   void* buffer_[2];
   size_t buffer_size_[2];
@@ -204,9 +209,14 @@ class GranularProcessor {
   int16_t tail_buffer_[2][256];
   
   Parameters parameters_;
-  
-  SampleRateConverter<-kDownsamplingFactor, 45, src_filter_1x_2_45> src_down_;
-  SampleRateConverter<+kDownsamplingFactor, 45, src_filter_1x_2_45> src_up_;
+  /*
+  SampleRateConverter<-kDownsamplingFactor, 45, src_filter_1x_4_63> src_down_;
+  SampleRateConverter<+kDownsamplingFactor, 45, src_filter_1x_4_63> src_up_;
+    */
+    
+    SampleRateConverter<-kDownsamplingFactor, 45, src_filter_1x_2_45> src_down_;
+    SampleRateConverter<+kDownsamplingFactor, 45, src_filter_1x_2_45> src_up_;
+   
   
   PersistentState persistent_state_;
   

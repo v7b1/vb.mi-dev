@@ -50,6 +50,9 @@ extern const float* lookup_table_table[];
 
 extern const float src_filter_1x_2_31[];
 extern const float src_filter_1x_2_45[];
+    //vb
+    extern const float src_filter_1x_4_45[];
+    extern const float src_filter_1x_4_63[];
 extern const float src_filter_1x_2_63[];
 extern const float src_filter_1x_2_91[];
 extern const int16_t lut_db[];

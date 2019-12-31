@@ -237,8 +237,9 @@ class AudioBuffer {
     }
     return (x0 + (x1 - x0) * t) * scale;
   }
-  
-  inline float ReadHermite(int32_t integral, uint16_t fractional) const {
+    // vb
+  //inline float ReadHermite(int32_t integral, uint16_t fractional) const {
+  inline float ReadHermite(int64_t integral, uint16_t fractional) const {
     if (integral >= size_) {
       integral -= size_;
     }

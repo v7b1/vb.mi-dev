@@ -9,13 +9,13 @@
 // TODO: check this out! (see: ui.cc)
 //#define ENABLE_LFO_MODE
 
+
+float kSampleRate = 48000.0;
+float a0 = (440.0f / 8.0f) / kSampleRate;
+
 using namespace c74::max;
 
-/*
-double plaits::Dsp::kSampleRate = 48000.0;
-double plaits::Dsp::a0 = (440.0 / 8.0) / 48000.0;
-size_t plaits::Dsp::kBlockSize = 64;
-*/
+
 static t_class* this_class = nullptr;
 
 struct t_myObj {
@@ -24,15 +24,15 @@ struct t_myObj {
     plaits::Voice       *voice_;
     plaits::Modulations modulations;
     plaits::Patch       patch;
-    double              transposition_;
-    double              octave_;
+    float               transposition_;
+    float               octave_;
     short               trigger_connected;
     short               trigger_toggle;
     
     char                *shared_buffer;
     void                *info_out;
     
-    double              sr;
+    float               sr;
     int                 sigvs;
 };
 
@@ -55,7 +55,8 @@ void* myObj_new(void) {
         if(self->sr <= 0)
             self->sr = 44100.0;
         
-        
+        kSampleRate = self->sr;
+        a0 = (440.0f / 8.0f) / kSampleRate;
         //plaits::Dsp::setSr(self->sr);
         //plaits::Dsp::setBlockSize(self->sigvs);
         
@@ -169,22 +170,22 @@ void myObj_int(t_myObj *self, long value)
 void calc_note(t_myObj* self)
 {
 #ifdef ENABLE_LFO_MODE
-    int octave = static_cast<int>(self->octave_ * 10.0);
+    int octave = static_cast<int>(self->octave_ * 10.0f);
     if (octave == 0) {
-        self->patch.note = -48.37 + self->transposition_ * 60.0;
+        self->patch.note = -48.37f + self->transposition_ * 60.0f;
     } else if (octave == 9) {
-        self->patch.note = 60.0 + self->transposition_ * 48.0;
+        self->patch.note = 60.0f + self->transposition_ * 48.0f;
     } else {
-        const double fine = self->transposition_ * 7.0;
-        self->patch.note = fine + static_cast<double>(octave) * 12.0;
+        const float fine = self->transposition_ * 7.0f;
+        self->patch.note = fine + static_cast<double>(octave) * 12.0f;
     }
 #else
-    int octave = static_cast<int>(self->octave_ * 9.0);
+    int octave = static_cast<int>(self->octave_ * 9.0f);
     if (octave < 8) {
-        const double fine = self->transposition_ * 7.0;
-        self->patch.note = fine + static_cast<float>(octave) * 12.0 + 12.0;
+        const float fine = self->transposition_ * 7.0f;
+        self->patch.note = fine + static_cast<float>(octave) * 12.0f + 12.0f;
     } else {
-        self->patch.note = 60.0 + self->transposition_ * 48.0;
+        self->patch.note = 60.0f + self->transposition_ * 48.0f;
     }
 #endif  // ENABLE_LFO_MODE
 }
@@ -270,51 +271,52 @@ void myObj_note(t_myObj* self, double n) {
 void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam)
 {
     double *out = outs[0];
-    double *out2 = outs[1];
+    double *aux = outs[1];
+    double *trig_input = ins[6];
     
-    long vs = sampleframes;
-    size_t size = vs;
-    plaits::Voice::Frame   output[vs];
+    long        vs = sampleframes;
+    size_t      size = plaits::kBlockSize;
+    plaits::Voice::Frame   output[size];
     
-    
-    double pitch_lp_ = 0.;
+    float       pitch_lp_ = 0.;
+    uint16_t    count = 0;
     
     if (self->obj.z_disabled)
         return;
     
     
-    // copy first value of signal inlets into corresponding params
     float* destination = &self->modulations.engine;
-    for(int i=0; i<8; i++) {
-        destination[i] = ins[i][0];
-    }
     
-    if(self->modulations.trigger_patched) {
-        // calc sum of trigger input
-        double vectorsum = 0.0;
-        double *trig_input = ins[6];
+    for(count = 0; count < vs; count += size) {
         
-        //for(int i=0; i<vs; ++i)
-          //  vectorsum += trig[i];
-        vDSP_sveD(trig_input, 1, &vectorsum, vs);
-        self->modulations.trigger = vectorsum;
-    }
-    
-    // smooth out pitch changes
-    ONE_POLE(pitch_lp_, self->modulations.note, 0.7);
-    
-    self->modulations.note = pitch_lp_;
+        for(auto i=0; i<8; i++) {
+            destination[i] = ins[i][count];
+        }
+        
+        if(self->modulations.trigger_patched) {
+            // calc sum of trigger input
+            double vectorsum = 0.0;
+            
+            //for(int i=0; i<vs; ++i)
+              //  vectorsum += trig[i];
+            vDSP_sveD(trig_input+count, 1, &vectorsum, count);
+            self->modulations.trigger = vectorsum;
+        }
+        
+        // smooth out pitch changes
+        ONE_POLE(pitch_lp_, self->modulations.note, 0.7);
+        
+        self->modulations.note = pitch_lp_;
 
-    //self->voice_->Render(self->patch, self->modulations, out, out2, size);
-    self->voice_->Render(self->patch, self->modulations, output, size);
-    
-    for(auto i=0; i<vs; ++i) {
-        out[i] = output[i].out / 32768.f;
-        out2[i] = output[i].aux / 32768.f;
+        self->voice_->Render(self->patch, self->modulations, output, size);
+        
+        for(auto i=0; i<size; ++i) {
+            out[count+i] = output[i].out / 32768.f;
+            aux[count+i] = output[i].aux / 32768.f;
+        }
     }
     
 }
-
 
 
 
@@ -327,9 +329,13 @@ void myObj_dsp64(t_myObj* self, t_object* dsp64, short* count, double samplerate
         object_error((t_object*)self, "vector size can't be larger than 1024 samples, sorry!");
         return;
     }
+    if(samplerate != self->sr) {
+        self->sr = samplerate;
+        kSampleRate = self->sr;
+        a0 = (440.0f / 8.0f) / kSampleRate;
+    }
+    object_post(NULL, "new sr: %f", kSampleRate);
 /*
-    if(samplerate != self->sr)
-        plaits::Dsp::setSr(samplerate);
     if(maxvectorsize != self->sigvs)
         plaits::Dsp::setBlockSize(maxvectorsize);
 */
