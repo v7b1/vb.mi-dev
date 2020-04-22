@@ -194,7 +194,7 @@ class Voice {
       Frame* frames,
       size_t size);
     */
-    // pass output buffer directly into render function, vb
+    // pass output buffers directly into render function, vb
     void Render(
                 const Patch& patch,
                 const Modulations& modulations,

@@ -49,7 +49,7 @@ class SyntheticBassDrumClick {
     lp_ = 0.0;
     hp_ = 0.0;
     filter_.Init();
-      filter_.set_f_q<stmlib::FREQUENCY_FAST>(5000.0 / Dsp::getSr(), 2.0);
+      filter_.set_f_q<stmlib::FREQUENCY_FAST>(5000.0 / kSampleRate, 2.0);
   }
   
   double Process(double in) {
@@ -146,13 +146,13 @@ class SyntheticBassDrum {
     stmlib::ParameterInterpolator f0_mod(&f0_, f0, size);
     
     dirtiness *= std::max(1.0 - 8.0 * f0, 0.0);
-      const double sr = Dsp::getSr();
+      //const double sr = Dsp::getSr();
     const double fm_decay = 1.0 - \
-        1.0 / (0.008 * (1.0 + fm_envelope_decay * 4.0) * sr);
+        1.0 / (0.008 * (1.0 + fm_envelope_decay * 4.0) * kSampleRate);
 
-    const double body_env_decay = 1.0 - 1.0 / (0.02 * sr) * \
+    const double body_env_decay = 1.0 - 1.0 / (0.02 * kSampleRate) * \
         stmlib::SemitonesToRatio(-decay * 60.0);
-    const double transient_env_decay = 1.0 - 1.0 / (0.005 * sr);
+    const double transient_env_decay = 1.0 - 1.0 / (0.005 * kSampleRate);
     const double tone_f = std::min(
         4.0 * f0 * stmlib::SemitonesToRatio(tone * 108.0),
         1.0);
@@ -161,8 +161,8 @@ class SyntheticBassDrum {
     if (trigger) {
       fm_ = 1.0;
       body_env_ = transient_env_ = 0.3 + 0.7 * accent;
-      body_env_pulse_width_ = sr * 0.001;
-      fm_pulse_width_ = sr * 0.0013;
+      body_env_pulse_width_ = kSampleRate * 0.001;
+      fm_pulse_width_ = kSampleRate * 0.0013;
     }
     
     stmlib::ParameterInterpolator sustain_gain(

@@ -42,7 +42,7 @@ void FMEngine::Init(BufferAllocator* allocator) {
   modulator_phase_ = 0;
   sub_phase_ = 0;
 
-    int a0 = plaits::Dsp::getA0();
+    //int a0 = plaits::Dsp::getA0();
   previous_carrier_frequency_ = a0;
   previous_modulator_frequency_ = a0;
   previous_amount_ = 0.0;

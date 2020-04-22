@@ -185,6 +185,10 @@ class Part {
   Limiter limiter_;
   
   static double model_gains_[RESONATOR_MODEL_LAST];
+    
+    // vb
+    double sr_;
+    double a3_;
   
   DISALLOW_COPY_AND_ASSIGN(Part);
 };

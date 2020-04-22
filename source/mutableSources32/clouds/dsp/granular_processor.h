@@ -145,18 +145,37 @@ class GranularProcessor {
     return quality;
   }
     
+    // vb: make sample rate settable
     void set_sample_rate(float sr) {
-        sr_ = sr;       // vb, make sample rate settable
+        sr_ = sr;
     }
   
   void GetPersistentData(PersistentBlock* block, size_t *num_blocks);
   bool LoadPersistentData(const uint32_t* data);
   void PreparePersistentData();
+    
+    
+    //vb: add method to retrieve internal audio buffer
+    /*
+    void* GetAudioBuf() {
+        if(low_fidelity_)
+            return buffer_8_;
+        else
+            return buffer_16_;
+    }*/
+    
+    AudioBuffer<RESOLUTION_16_BIT>* GetAudioBuf16() {
+        return buffer_16_;
+    }
+    AudioBuffer<RESOLUTION_8_BIT_MU_LAW>* GetAudioBuf8() {
+        return buffer_8_;
+    }
+    // vb: make this public
+    inline int32_t resolution() const {
+        return low_fidelity_ ? 8 : 16;
+    }
 
  private:
-  inline int32_t resolution() const {
-    return low_fidelity_ ? 8 : 16;
-  }
 
   inline float sample_rate() const {
     //return 32000.0f / \       // vb original sr fixed to 32 kHz

@@ -2,6 +2,13 @@
 
 #include "clouds/dsp/granular_processor.h"
 #include "clouds/resources.h"
+#include "clouds/dsp/audio_buffer.h"
+#include "clouds/dsp/mu_law.h"
+#include "clouds/dsp/sample_rate_converter.h"
+
+//#include "copy_buffer.h"
+
+//#include "ext_buffer.h"
 
 #include "Accelerate/Accelerate.h"
 
@@ -59,6 +66,12 @@ struct t_myObj {
     bool        gate_connected;
     bool        trig_connected;
     
+    t_buffer_ref *buf_ref;
+    t_symbol    buf_name;
+    
+    clouds::SampleRateConverter<-clouds::kDownsamplingFactor, 45, clouds::src_filter_1x_2_45> src_down_;
+    clouds::SampleRateConverter<+clouds::kDownsamplingFactor, 45, clouds::src_filter_1x_2_45> src_up_;
+    
 };
 
 //void* myObj_new(t_symbol *s, long argc, t_atom *argv) {
@@ -99,7 +112,7 @@ void* myObj_new(long size_in_ms) {
         memset(self->processor, 0, sizeof(*t_myObj::processor));
         self->processor->Init(self->large_buffer, largeBufSize, self->small_buffer, smallBufSize);
         self->processor->set_sample_rate(self->sr);
-        self->processor->set_num_channels(2);       // always use stereo setup (?)
+        self->processor->set_num_channels(2);       // always use stereo setup (!)
         self->processor->set_low_fidelity(false);
         self->processor->set_playback_mode(clouds::PLAYBACK_MODE_GRANULAR);
         
@@ -119,6 +132,8 @@ void* myObj_new(long size_in_ms) {
         self->coef = 0.1f;
         self->previous_trig = false;
 
+        self->src_down_.Init();
+        self->src_up_.Init();
         
         // process attributes
         //attr_args_process(self, argc, argv);
@@ -209,7 +224,8 @@ void myObj_feedback(t_myObj *self, double m) {
 }
 
 
-#pragma mark ----- general pots -----
+
+#pragma mark -------- general pots -----------
 
 void myObj_in_gain(t_myObj* self, double m) {
     m = clamp(m, -18.0, 18.0);
@@ -243,6 +259,14 @@ void myObj_coef(t_myObj *self, double m) {
     m = 1.f - clamp(m, 0., 1.0) * 0.9;
     self->coef = m*m*m*m;
 }
+
+
+t_max_err myObj_notify(t_myObj *self, t_symbol *s, t_symbol *msg, void *sender, void *data)
+{
+    return buffer_ref_notify(self->buf_ref, s, msg, sender, data);
+}
+
+
 
 void myObj_info(t_myObj *self) {
     clouds::Parameters *p = self->processor->mutable_parameters();
@@ -383,6 +407,293 @@ void myObj_dsp64(t_myObj* self, t_object* dsp64, short* count, double samplerate
 }
 
 
+#pragma mark ------------ copy methods --------------
+
+void myObj_copyTo(t_myObj *self, t_symbol *name) {
+    
+    if (!self->buf_ref)
+        self->buf_ref = buffer_ref_new((t_object *)self, name);
+    else
+        buffer_ref_set(self->buf_ref, name);
+    
+    t_buffer_obj    *buf = buffer_ref_getobject(self->buf_ref);
+    
+    if(!buf) {
+        object_error((t_object*)self, "no buffer %s found!", name->s_name);
+        return;
+    }
+    
+    float *tab = buffer_locksamples(buf);
+    if (!tab) {
+        object_error((t_object*)self, "buffer %s: can't access samples!", name->s_name);
+        return;
+    }
+    
+    long frames = buffer_getframecount(buf);
+    long nchns = buffer_getchannelcount(buf);
+    long copy_chans = nchns;
+    if(nchns > 2) {
+        // internal buffer is always 2 channels
+        object_warn((t_object*)self, "destination buffer has more than two channels!");
+        copy_chans = 2;
+    }
+    
+    object_post((t_object*)self, "frames: %ld -- chns: %ld", frames, nchns);
+    int32_t resolution = self->processor->resolution();
+    object_post((t_object*)self, "resolution: %ld", resolution);
+    
+    if(resolution == 16) {
+        clouds::AudioBuffer<clouds::RESOLUTION_16_BIT>* ab = self->processor->GetAudioBuf16();
+        int32_t size = ab->size();
+        object_post((t_object*)self, "ab-size: %d", size);
+        
+        if(size > frames) {
+            // make sure, our msp buffer is large enough
+            // otherwise only copy part of the internal buffer
+            size = frames;
+        }
+        
+        int16_t *ab_chns[2];
+        ab_chns[0] = ab[0].get_buf16();
+        ab_chns[1] = ab[1].get_buf16();
+        
+        for(int k=0; k<copy_chans; k++) {
+            for(int i=0; i<size; i++) {
+                float samp = ab_chns[k][i] / 32768.0f;
+                tab[i*nchns+k] = samp;
+            }
+        }
+    }
+    else if (resolution == 8) {
+        clouds::AudioBuffer<clouds::RESOLUTION_8_BIT_MU_LAW>* ab = self->processor->GetAudioBuf8();
+        int32_t size = ab->size();
+        object_post((t_object*)self, "ab-size: %d -- 8 bit!", size);
+        
+        int8_t factor = clouds::kDownsamplingFactor;
+        int32_t block_size = 4096;
+        size_t upsampled_size = block_size * factor;
+        clouds::FloatFrame block[block_size];
+        clouds::FloatFrame block_out[upsampled_size];
+        
+        if(size*factor > frames) {
+            // make sure, our msp buffer is large enough
+            // otherwise only copy part of the internal buffer
+            size = (frames / factor);
+        }
+        
+        int8_t *ab_chns[2];
+        ab_chns[0] = ab[0].get_buf8();
+        ab_chns[1] = ab[1].get_buf8();
+        
+        
+        int32_t limit = size - block_size;
+        int i = 0;
+        while(i < limit) {
+            for(int b=0; b<block_size; b++) {
+                int16_t pcm_left = clouds::MuLaw2Lin(ab_chns[0][i+b]);
+                int16_t pcm_right = clouds::MuLaw2Lin(ab_chns[1][i+b]);
+                block[b].l = pcm_left / 32768.0f;
+                block[b].r = pcm_right / 32768.0f;
+            }
+            
+            // up sampling to orginal SR
+            self->src_up_.Process(block, block_out, block_size);
+            
+            if(copy_chans==2) {     // our destination buffer is stereo
+                for(int b=0; b<upsampled_size; b++) {
+                    int32_t index = (i*factor*nchns)+b*nchns;
+                    tab[index] = block_out[b].l;
+                    tab[index+1] = block_out[b].r;
+                }
+            } else {                // our destination buffer is mono, only copy left channel
+                for(int b=0; b<upsampled_size; b++) {
+                    int32_t index = (i*factor*nchns)+b*nchns;
+                    tab[index] = block_out[b].l;
+                }
+            }
+            i+=block_size;
+        }
+        
+        // rest.......
+        int32_t rest = frames - (i * factor);
+        int32_t rest_in = rest >> 1;
+        
+        for(int b=0; b<rest_in; b++) {
+            int16_t pcm_left = clouds::MuLaw2Lin(ab_chns[0][i+b]);
+            int16_t pcm_right = clouds::MuLaw2Lin(ab_chns[1][i+b]);
+            block[b].l = pcm_left / 32768.0f;
+            block[b].r = pcm_right / 32768.0f;
+        }
+        self->src_up_.Process(block, block_out, rest_in);
+        
+        int32_t index = (i*factor*nchns);
+        if(copy_chans==2) {     // our destination buffer is stereo
+            for(int b=0; b<rest; b++) {
+                tab[index+(b*nchns)] = block_out[b].l;
+                tab[index+(b*nchns)+1] = block_out[b].r;
+            }
+        } else {                // our destination buffer is mono, only copy left channel
+            for(int b=0; b<rest; b++) {
+                int32_t index = (i*factor*nchns)+b*nchns;
+                tab[index+b] = block_out[b].l;
+            }
+        }
+        
+    }
+    else {
+        object_error(NULL, "bad resolution!");
+    }
+    
+    
+    buffer_unlocksamples(buf);
+    buffer_setdirty(buf);
+}
+
+
+void myObj_copyFrom(t_myObj *self, t_symbol *name) {
+    
+    if (!self->buf_ref)
+        self->buf_ref = buffer_ref_new((t_object *)self, name);
+    else
+        buffer_ref_set(self->buf_ref, name);
+    
+    t_buffer_obj    *buf = buffer_ref_getobject(self->buf_ref);
+    
+    if(!buf) {
+        object_error((t_object*)self, "no buffer %s found!", name->s_name);
+        return;
+    }
+    
+    float *tab = buffer_locksamples(buf);
+    if (!tab) {
+        object_error((t_object*)self, "buffer %s: can't access samples!", name->s_name);
+        return;
+    }
+    
+    long frames = buffer_getframecount(buf);
+    long nchns = buffer_getchannelcount(buf);
+    long copy_chans = nchns;
+    if(nchns > 2) {
+        // internal buffer is always 2 channels
+        object_warn((t_object*)self, "destination buffer has more than two channels!");
+        copy_chans = 2;
+    }
+    
+    object_post((t_object*)self, "frames: %ld -- chns: %ld", frames, nchns);
+    int32_t resolution = self->processor->resolution();
+    object_post((t_object*)self, "resolution: %ld", resolution);
+    
+    if(resolution == 16) {
+        clouds::AudioBuffer<clouds::RESOLUTION_16_BIT>* ab = self->processor->GetAudioBuf16();
+        int32_t size = ab->size();
+        object_post((t_object*)self, "ab-size: %d", size);
+        
+        if(size < frames) {
+            // make sure, our the internal buffer is large enough
+            // otherwise only copy part of the msp buffer
+            frames = size;
+        }
+        
+        int16_t *ab_chns[2];
+        ab_chns[0] = ab[0].get_buf16();
+        ab_chns[1] = ab[1].get_buf16();
+        
+        for(int k=0; k<copy_chans; k++) {
+            for(int i=0; i<frames; i++) {
+                int16_t pcm_val = (tab[i*nchns+k] * 32767.0f + 0.5f);
+                ab_chns[k][i] = pcm_val;
+            }
+        }
+        // set the rest of the internal buffer to zero?
+        
+        ab[0].Resync(0);
+        ab[1].Resync(0);
+    }
+    else if (resolution == 8) {
+        clouds::AudioBuffer<clouds::RESOLUTION_8_BIT_MU_LAW>* ab = self->processor->GetAudioBuf8();
+        int32_t size = ab->size();
+        object_post((t_object*)self, "ab-size: %d -- 8 bit!", size);
+        
+        int8_t factor = clouds::kDownsamplingFactor;
+        int32_t block_size = 4096;
+        size_t downsampled_size = block_size / factor;
+        clouds::FloatFrame block[block_size];
+        clouds::FloatFrame block_out[downsampled_size];
+        
+        // audio samples in internal buffer are downsampled
+        // so we can fit in twice as many input samples
+        if(frames > (size*factor)) {
+            // make sure, our internal buffer is large enough
+            // otherwise only copy part of the msp buffer
+            frames = (size*factor);
+        }
+        
+        int8_t *ab_chns[2];
+        ab_chns[0] = ab[0].get_buf8();
+        ab_chns[1] = ab[1].get_buf8();
+        
+        
+        int32_t limit = frames - block_size;
+        int i = 0;
+        while(i < limit) {
+            if(copy_chans == 2) {
+                for(int b=0; b<block_size; b++) {
+                    block[b].l = tab[(i+b)*nchns]; //clouds::MuLaw2Lin(ab_chns[0][i+b]);
+                    block[b].r = tab[(i+b)*nchns+1];
+                }
+            } else {
+                for(int b=0; b<block_size; b++)
+                    block[b].l = block[b].r = tab[i+b];
+            }
+            
+            // down sampling to half the original SR
+            self->src_down_.Process(block, block_out, block_size);
+            
+            for(int b=0; b<downsampled_size; b++) {
+                int32_t index = (i/factor) + b; // TODO: fix this
+                ab_chns[0][index] = clouds::Lin2MuLaw((int16_t)(block_out[b].l  * 32767.0f));
+                ab_chns[1][index] = clouds::Lin2MuLaw((int16_t)(block_out[b].r  * 32767.0f));
+            }
+            
+            i+=block_size;
+        }
+        /*
+         // rest.......
+         int32_t rest = frames - (i * factor);
+         int32_t rest_in = rest >> 1;
+         
+         for(int b=0; b<rest_in; b++) {
+         int16_t pcm_left = clouds::MuLaw2Lin(ab_chns[0][i+b]);
+         int16_t pcm_right = clouds::MuLaw2Lin(ab_chns[1][i+b]);
+         block[b].l = pcm_left / 32768.0f;
+         block[b].r = pcm_right / 32768.0f;
+         }
+         self->src_up_.Process(block, block_out, rest_in);
+         
+         int32_t index = (i*factor*nchns);
+         if(copy_chans==2) {     // our destination buffer is stereo
+         for(int b=0; b<rest; b++) {
+         tab[index+(b*nchns)] = block_out[b].l;
+         tab[index+(b*nchns)+1] = block_out[b].r;
+         }
+         } else {                // our destination buffer is mono, only copy left channel
+         for(int b=0; b<rest; b++) {
+         int32_t index = (i*factor*nchns)+b*nchns;
+         tab[index+b] = block_out[b].l;
+         }
+         }
+         */
+        
+        ab[0].Resync(0);
+        ab[1].Resync(0);
+    }
+    else {
+        object_error(NULL, "bad resolution!");
+    }
+    
+    buffer_unlocksamples(buf);
+}
+
 
 void myObj_free(t_myObj* self)
 {
@@ -394,6 +705,8 @@ void myObj_free(t_myObj* self)
     
     if(self->small_buffer)
         sysmem_freeptr(self->small_buffer);
+    
+    object_free(self->buf_ref);
     
 }
 
@@ -459,6 +772,9 @@ void ext_main(void* r) {
     class_addmethod(this_class, (method)myObj_bypass,   "bypass",  A_LONG, 0);
     class_addmethod(this_class, (method)myObj_info,   "info", 0);
     class_addmethod(this_class, (method)myObj_coef,    "smooth",  A_FLOAT, 0);
+    class_addmethod(this_class, (method)myObj_copyTo,    "copyTo", A_SYM, 0);
+    class_addmethod(this_class, (method)myObj_copyFrom,  "copyFrom", A_SYM, 0);
+    class_addmethod(this_class, (method)myObj_notify, "notify", A_CANT, 0);
 	
 	class_dspinit(this_class);
 	class_register(CLASS_BOX, this_class);

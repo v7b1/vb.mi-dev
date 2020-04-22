@@ -219,7 +219,8 @@ void Modulator::ProcessEasterEgg(
             quadrature_oscillator_.Render(shape, frequency, carrier_i, carrier_q, size);
         } else {
             for (size_t i = 0; i < size; ++i) {
-                carrier[i] = static_cast<float>(input[i].l) / 32768.0f;
+                //carrier[i] = static_cast<float>(input[i].l) / 32768.0f;
+                carrier[i] = input[i].l;
             }
             quadrature_transform_[0].Process(carrier, carrier_i, carrier_q, size);
             
@@ -594,7 +595,7 @@ void Modulator::Process(ShortFrame* input, ShortFrame* output, size_t size) {
   previous_parameters_ = parameters_;
 }
     
-    void Modulator::Processf(FloatFrame* input, FloatFrame* output, size_t size) {
+void Modulator::Processf(FloatFrame* input, FloatFrame* output, size_t size) {
         if (bypass_) {
             copy(&input[0], &input[size], &output[0]);
             return;
@@ -611,16 +612,17 @@ void Modulator::Process(ShortFrame* input, ShortFrame* output, size_t size) {
         float* oversampled_output = src_buffer_[0];
         
         // 0.0: use cross-modulation algorithms. 1.0f: use vocoder.
-        float vocoder_amount = (
-                                parameters_.modulation_algorithm - 0.7f) * 20.0f + 0.5f;
+        float vocoder_amount = (parameters_.modulation_algorithm - 0.7f) * 20.0f + 0.5f;
         CONSTRAIN(vocoder_amount, 0.0f, 1.0f);
+    
+        //std::cout << "carrier: " << parameters_.carrier_shape << "\n";
+        //std::cout << "vocoder_amount: " << vocoder_amount << "\n";
         
         if (!parameters_.carrier_shape) {
             fill(&aux_output[0], &aux_output[size], 0.0f);
         }
-        
-        //std::cout << "carrier: " << (parameters_.carrier_shape ? 1 : 0)  << "\n";
-        // Convert audio inputs to float and apply VCA/saturation (5.8% per channel)
+    
+        // apply VCA/saturation (5.8% per channel)
         float* input_samples = &input->l;
         for (int32_t i = parameters_.carrier_shape ? 1 : 0; i < 2; ++i) {
             amplifier_[i].Processf(
@@ -637,14 +639,13 @@ void Modulator::Process(ShortFrame* input, ShortFrame* output, size_t size) {
         if (parameters_.carrier_shape) {
             // Scale phase-modulation input.
             for (size_t i = 0; i < size; ++i) {
-                internal_modulation_[i] = static_cast<float>(input[i].l) / 32768.0f;
+                internal_modulation_[i] = input[i].l;
             }
+
             // Xmod: sine, triangle saw.
             // Vocoder: saw, pulse, noise.
-            OscillatorShape xmod_shape = static_cast<OscillatorShape>(
-                                                                      parameters_.carrier_shape - 1);
-            OscillatorShape vocoder_shape = static_cast<OscillatorShape>(
-                                                                         parameters_.carrier_shape + 1);
+            OscillatorShape xmod_shape = static_cast<OscillatorShape>(parameters_.carrier_shape - 1);
+            OscillatorShape vocoder_shape = static_cast<OscillatorShape>(parameters_.carrier_shape + 1);
             
             const float kXmodCarrierGain = 0.5f;
             
@@ -667,6 +668,7 @@ void Modulator::Process(ShortFrame* input, ShortFrame* output, size_t size) {
                                                                 internal_modulation_,
                                                                 aux_output,
                                                                 size);
+                //std::cout << "carrier_gain " << carrier_gain << "\n";
                 for (size_t i = 0; i < size; ++i) {
                     carrier[i] = aux_output[i] * carrier_gain;
                 }
@@ -757,6 +759,7 @@ void Modulator::Process(ShortFrame* input, ShortFrame* output, size_t size) {
         previous_parameters_ = parameters_;
     }
 
+    
     void Modulator::Processff(float** input, float** output, size_t size) {
         if (bypass_) {
             copy(&input[0][0], &input[0][size], &output[0][0]);

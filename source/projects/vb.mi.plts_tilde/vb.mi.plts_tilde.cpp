@@ -6,15 +6,17 @@
 #include "Accelerate/Accelerate.h"
 
 
-// TODO: check this out! (see: ui.cc)
+// author: Volker Boehm, 2019
+
+
 //#define ENABLE_LFO_MODE
 
 using namespace c74::max;
 
 
-double plaits::Dsp::kSampleRate = 48000.0;
-double plaits::Dsp::a0 = (440.0 / 8.0) / 48000.0;
-size_t plaits::Dsp::kBlockSize = 64;
+
+double kSampleRate = 48000.0;
+double a0 = (440.0 / 8.0) / kSampleRate;
 
 static t_class* this_class = nullptr;
 
@@ -37,61 +39,6 @@ struct t_myObj {
 };
 
 
-/*
- struct Patch {
- double note;
- double harmonics;
- double timbre;
- double morph;
- double frequency_modulation_amount;
- double timbre_modulation_amount;
- double morph_modulation_amount;
- 
- int engine;
- double decay;
- double lpg_colour;
- };
- */
-
-/*
- struct Modulations {
- double engine;
- double note;
- double frequency;
- double harmonics;
- double timbre;
- double morph;
- double trigger;
- double level;
- 
- bool frequency_patched;
- bool timbre_patched;
- bool morph_patched;
- bool trigger_patched;
- bool level_patched;
- };
- */
-
-/*
- // available engines -------------
- virtual_analog_engine
- waveshaping_engine
- fm_engine
- grain_engine
- additive_engine
- wavetable_engine
- chord_engine
- speech_engine
- swarm_engine
- noise_engine
- particle_engine
- string_engine
- modal_engine
- bass_drum_engine
- snare_drum_engine
- hi_hat_engine
- */
-
 
 void* myObj_new(void) {
     t_myObj* self = (t_myObj*)object_alloc(this_class);
@@ -104,14 +51,13 @@ void* myObj_new(void) {
         outlet_new(self, "signal"); // 'out' output
         outlet_new(self, "signal"); // 'aux' output
         
-        //plaits::kSampleRate = sys_getsr();
         self->sr = sys_getsr();
         if(self->sr <= 0)
             self->sr = 44100.0;
         
         
-        plaits::Dsp::setSr(self->sr);
-        plaits::Dsp::setBlockSize(self->sigvs);
+        kSampleRate = self->sr;
+        a0 = (440.0f / 8.0f) / kSampleRate;
         
         // init some params
         self->transposition_ = 0.;
@@ -121,6 +67,7 @@ void* myObj_new(void) {
         
         
         // allocate memory
+        // TODO: try with 32768
         self->shared_buffer = sysmem_newptrclear(65536);
         
         if(self->shared_buffer == NULL) {
@@ -324,11 +271,13 @@ void myObj_note(t_myObj* self, double n) {
 void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam)
 {
     double *out = outs[0];
-    double *out2 = outs[1];
+    double *aux = outs[1];
+    double *trig_input = ins[6];
     
-    long vs = sampleframes;
-    size_t size = vs;
-    double pitch_lp_ = 0.;
+    long    vs = sampleframes;
+    size_t  size = plaits::kBlockSize;
+    double  pitch_lp_ = 0.;
+    uint16_t count = 0;
     
     if (self->obj.z_disabled)
         return;
@@ -336,27 +285,28 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     
     // copy first value of signal inlets into corresponding params
     double* destination = &self->modulations.engine;
-    for(int i=0; i<8; i++) {
-        destination[i] = ins[i][0];
-    }
     
-    if(self->modulations.trigger_patched) {
-        // calc sum of trigger input
-        double vectorsum = 0.0;
-        double *trig_input = ins[6];
+    for(count=0; count < vs; count += size) {
         
-        //for(int i=0; i<vs; ++i)
-          //  vectorsum += trig[i];
-        vDSP_sveD(trig_input, 1, &vectorsum, vs);
-        self->modulations.trigger = vectorsum;
+        for(int i=0; i<8; i++) {
+            destination[i] = ins[i][count];
+        }
+        
+        if(self->modulations.trigger_patched) {
+            // calc sum of trigger input
+            double vectorsum = 0.0;
+            
+            vDSP_sveD(trig_input+count, 1, &vectorsum, size);
+            self->modulations.trigger = vectorsum;
+        }
+        
+        // smooth out pitch changes
+        ONE_POLE(pitch_lp_, self->modulations.note, 0.7);
+        
+        self->modulations.note = pitch_lp_;
+        
+        self->voice_->Render(self->patch, self->modulations, out+count, aux+count, size);
     }
-    
-    // smooth out pitch changes
-    ONE_POLE(pitch_lp_, self->modulations.note, 0.7);
-    
-    self->modulations.note = pitch_lp_;
-
-    self->voice_->Render(self->patch, self->modulations, out, out2, size);
     
 }
 
@@ -373,10 +323,15 @@ void myObj_dsp64(t_myObj* self, t_object* dsp64, short* count, double samplerate
         return;
     }
 
-    if(samplerate != self->sr)
-        plaits::Dsp::setSr(samplerate);
-    if(maxvectorsize != self->sigvs)
-        plaits::Dsp::setBlockSize(maxvectorsize);
+    if(samplerate != self->sr) {
+        //plaits::Dsp::setSr(samplerate);
+        self->sr = samplerate;
+        kSampleRate = self->sr;
+        a0 = (440.0f / 8.0f) / kSampleRate;
+    }
+    
+    //if(maxvectorsize != self->sigvs)
+      //  plaits::Dsp::setBlockSize(maxvectorsize);
 
     
     object_method_direct(void, (t_object*, t_object*, t_perfroutine64, long, void*),

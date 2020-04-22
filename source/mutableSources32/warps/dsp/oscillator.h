@@ -38,7 +38,7 @@
 
 namespace warps {
 
-const float kInternalOscillatorSampleRate = 96000.0f;
+    const float kInternalOscillatorSampleRate = 96000.0f;
 
 class Oscillator {
  public:
@@ -59,7 +59,8 @@ class Oscillator {
     pitch = 32768 + stmlib::Clip16(pitch - 20480);
     float increment = lut_midi_to_f_high[pitch >> 8] * \
         lut_midi_to_f_low[pitch & 0xff];
-    return increment;
+    //return increment;     // fix pitch when sr is not 96 kHz
+      return increment * one_hertz_ * kInternalOscillatorSampleRate;
   }
   
   typedef float (Oscillator::*RenderFn)(

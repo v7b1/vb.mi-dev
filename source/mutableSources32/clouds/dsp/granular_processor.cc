@@ -435,7 +435,7 @@ void GranularProcessor::Prepare() {
       workspace_size = buffer_size_[0] - buffer_size_[1];
       workspace = static_cast<uint8_t*>(buffer[0]) + buffer_size[0];
         //vb
-        printf("workspace_size: %zu\n", workspace_size);
+        //printf("workspace_size: %zu\n", workspace_size);
     }
     float sr = sample_rate();
 
@@ -459,19 +459,19 @@ void GranularProcessor::Prepare() {
     } else {
       for (int32_t i = 0; i < num_channels_; ++i) {
           //vb
-          printf("---> bufsize[%d]: %zu\n", i, buffer_size[i]);
+          //printf("---> bufsize[%d]: %zu\n", i, buffer_size[i]);
         if (resolution() == 8) {
           buffer_8_[i].Init(
               buffer[i],
               (buffer_size[i]),
               tail_buffer_[i]);
-            printf("bufsize_8[%d]: %d\n", i, buffer_8_[i].size());
+            //printf("bufsize_8[%d]: %d\n", i, buffer_8_[i].size());
         } else {
           buffer_16_[i].Init(
               buffer[i],
               ((buffer_size[i]) >> 1),
               tail_buffer_[i]);
-            printf("bufsize_16[%d]: %d\n", i, buffer_16_[i].size());
+            //printf("bufsize_16[%d]: %d\n", i, buffer_16_[i].size());
         }
           
       }

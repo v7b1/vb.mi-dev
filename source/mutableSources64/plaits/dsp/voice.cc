@@ -145,9 +145,7 @@ void Voice::Init(BufferAllocator* allocator) {
             p.trigger = TRIGGER_UNPATCHED;
         }
         
-        const int blockSize = Dsp::getBlockSize();
-        const double sr = Dsp::getSr();
-        const double short_decay = (200.0 * blockSize) / sr *
+        const double short_decay = (200.0 * kBlockSize) / kSampleRate *
         SemitonesToRatio(-96.0 * patch.decay);
         
         decay_envelope_.Process(short_decay * 2.0);
@@ -222,13 +220,13 @@ void Voice::Init(BufferAllocator* allocator) {
         // Compute LPG parameters.
         if (!lpg_bypass) {
             const double hf = patch.lpg_colour;
-            const double decay_tail = (20.0 * blockSize) / sr *
+            const double decay_tail = (20.0 * kBlockSize) / kSampleRate *
             SemitonesToRatio(-72.0 * patch.decay + 12.0 * hf) - short_decay;
             
             if (modulations.level_patched) {
                 lpg_envelope_.ProcessLP(compressed_level, short_decay, decay_tail, hf);
             } else {
-                const double attack = NoteToFrequency(p.note) * double(blockSize) * 2.0;
+                const double attack = NoteToFrequency(p.note) * double(kBlockSize) * 2.0;
                 lpg_envelope_.ProcessPing(attack, short_decay, decay_tail, hf);
             }
         }

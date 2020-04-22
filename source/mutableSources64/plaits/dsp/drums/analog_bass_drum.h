@@ -82,12 +82,12 @@ class AnalogBassDrum {
       double self_fm_amount,
       double* out,
       size_t size) {
-      const double sr = Dsp::getSr();
-    const int kTriggerPulseDuration = 1.0e-3 * sr;
-    const int kFMPulseDuration = 6.0e-3 * sr;
-    const double kPulseDecayTime = 0.2e-3 * sr;
-    const double kPulseFilterTime = 0.1e-3 * sr;
-    const double kRetrigPulseDuration = 0.05 * sr;
+      //const double sr = Dsp::getSr();
+    const int kTriggerPulseDuration = 1.0e-3 * kSampleRate;
+    const int kFMPulseDuration = 6.0e-3 * kSampleRate;
+    const double kPulseDecayTime = 0.2e-3 * kSampleRate;
+    const double kPulseFilterTime = 0.1e-3 * kSampleRate;
+    const double kRetrigPulseDuration = 0.05 * kSampleRate;
     
     const double scale = 0.001 / f0;
     const double q = 1500.0 * stmlib::SemitonesToRatio(decay * 80.0);

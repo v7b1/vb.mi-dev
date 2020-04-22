@@ -33,7 +33,7 @@
 
 #include "rings/dsp/onset_detector.h"
 #include "rings/dsp/part.h"
-#include "rings/dsp/dsp.h"
+//#include "rings/dsp/dsp.h"
 
 
 namespace rings {
@@ -61,8 +61,7 @@ class Strummer {
       PerformanceState* performance_state) {
       
     bool has_onset = in && onset_detector_.Process(in, size);
-      
-    bool note_changed = abs(performance_state->note - previous_note_) > 0.4;
+    bool note_changed = fabs(performance_state->note - previous_note_) > 0.4;
 
     int32_t inhibit_timer = inhibit_timer_;
     if (performance_state->internal_strum) {
@@ -73,7 +72,7 @@ class Strummer {
       } else if (has_external_exciter) {
         performance_state->strum = has_onset;
         // Use longer inhibit time for onset detector.
-        inhibit_timer *= 4;
+        inhibit_timer *= 4; 
       } else {
         // Nothing is connected. Should the module play itself in this case?
         performance_state->strum = false;
@@ -88,6 +87,7 @@ class Strummer {
         inhibit_counter_ = inhibit_timer;
       }
     }
+      previous_note_ = performance_state->note;
   }
 
  private:

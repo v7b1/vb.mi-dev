@@ -56,6 +56,7 @@ class GrainEnvelope {
     fm_ = 0.0;
     amplitude_ = 0.5;
     previous_size_ratio_ = 0.0;
+      filter_coefficient_ = 0.5; // vb, add initialization
   }
   
   inline void Step(double rate, bool burst_mode, bool start_burst) {

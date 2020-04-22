@@ -112,7 +112,7 @@ destination = value; \
         ATTENUVERT(patch->position, POSITION, 0.0, 1.0);
         
         double fm = adc_lp_[ADC_CHANNEL_CV_FREQUENCY] * 48.0;
-        /*
+        
         double error = fm - fm_cv_;
         if (fabs(error) >= 0.8) {
             fm_cv_ = fm;
@@ -121,8 +121,8 @@ destination = value; \
         }
         performance_state->fm = fm_cv_ * adc_lp_[ADC_CHANNEL_ATTENUVERTER_FREQUENCY];
         CONSTRAIN(performance_state->fm, -48.0, 48.0);
-         */
-        performance_state->fm = fm;
+        
+        //performance_state->fm = fm;
         
         double transpose = 60.0 * adc_lp_[ADC_CHANNEL_POT_FREQUENCY];
         // vb, we don't care about the quantization...

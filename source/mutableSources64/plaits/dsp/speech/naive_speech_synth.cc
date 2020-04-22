@@ -92,7 +92,7 @@ void NaiveSpeechSynth::Init() {
     filter_[i].Init();
   }
   pulse_coloration_.Init();
-    pulse_coloration_.set_f_q<FREQUENCY_DIRTY>(800.0 / Dsp::getSr(), 0.5);
+    pulse_coloration_.set_f_q<FREQUENCY_DIRTY>(800.0 / kSampleRate, 0.5);
 }
 
 void NaiveSpeechSynth::Render(
@@ -105,7 +105,7 @@ void NaiveSpeechSynth::Render(
     double* output,
     size_t size) {
   if (click) {
-      click_duration_ = Dsp::getSr() * 0.05;
+      click_duration_ = kSampleRate * 0.05;
   }
   click_duration_ -= min(click_duration_, size);
   
@@ -151,7 +151,7 @@ void NaiveSpeechSynth::Render(
       f = 160.0;
     }
     //f = a0 * stmlib::SemitonesToRatio(f - 33.0);
-    f = plaits::Dsp::getA0() * stmlib::SemitonesToRatio(f - 33.0);
+    f = a0 * stmlib::SemitonesToRatio(f - 33.0);
     if (click_duration_ && i == 0) {
       f *= 0.5;
     }

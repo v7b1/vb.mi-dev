@@ -31,6 +31,8 @@
 
 #include "stmlib/stmlib.h"
 
+extern double kSampleRate;
+extern double a0;
 
 namespace plaits {
     
@@ -51,8 +53,9 @@ namespace plaits {
 //const double a0 = (440.0 / 8.0) / kCorrectedSampleRate;
 
     const size_t kMaxBlockSize = 1024;   // was 24;
-    //const size_t kBlockSize = 12;
+    const size_t kBlockSize = 16;       // 12
     
+    /*
     class Dsp {
     private:
         static double kSampleRate;
@@ -71,7 +74,7 @@ namespace plaits {
         static void setBlockSize(int newBlockSize) {
             kBlockSize = static_cast<size_t>(newBlockSize);
         }
-    };
+    };*/
     
 
 }  // namespace plaits

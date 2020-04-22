@@ -17,6 +17,7 @@ set(STMLIB_SOURCES
 	${STMLIB_PATH}/dsp/atan.h
 	${STMLIB_PATH}/dsp/units.cc
 	${STMLIB_PATH}/dsp/units.h
+	${STMLIB_PATH}/dsp/filter.h
 
 )
 

@@ -66,7 +66,7 @@ class ResonatorSvf {
     double state_2[batch_size];
     double gains[batch_size];
     for (int i = 0; i < batch_size; ++i) {
-      g[i] = stmlib::OnePole::tan<stmlib::FREQUENCY_FAST>(f[i]);
+      g[i] = stmlib::OnePole::tangens<stmlib::FREQUENCY_FAST>(f[i]);
       r[i] = 1.0 / q[i];
       h[i] = 1.0 / (1.0 + r[i] * g[i] + g[i] * g[i]);
       r_plus_g[i] = r[i] + g[i];

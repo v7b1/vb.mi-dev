@@ -232,7 +232,7 @@ void myObj_int(t_myObj *self, long value)
             self->performance_state.internal_exciter = (value == 0);
             break;
         case 1:
-            //self->fm_patched = (value != 0);  // brauchts nicht mehr
+            self->fm_patched = (value != 0);
             break;
         case 2:
             object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
@@ -258,39 +258,6 @@ void myObj_int(t_myObj *self, long value)
 }
 
 
-void myObj_float(t_myObj *self, double m)
-{
-    long innum = proxy_getinlet((t_object *)self);
-    
-    switch (innum) {
-        case 0:
-            object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
-            break;
-        case 1:
-            self->cvinputs[rings::ADC_CHANNEL_POT_FREQUENCY] = clamp(m, 0., 1.);
-            break;
-        case 2:
-            self->cvinputs[rings::ADC_CHANNEL_POT_STRUCTURE] = clamp(m, 0., 1.);
-            break;
-        case 3:
-            self->cvinputs[rings::ADC_CHANNEL_POT_BRIGHTNESS] = clamp(m, 0., 1.);
-            break;
-        case 4:
-            self->cvinputs[rings::ADC_CHANNEL_POT_DAMPING] = clamp(m, 0., 1.);
-            break;
-        case 5:
-            self->cvinputs[rings::ADC_CHANNEL_POT_POSITION] = clamp(m, 0., 1.);
-            break;
-        case 6:
-            object_post((t_object*)self, "inlet %ld: nothing to do...", innum); //TODO: good?
-            break;
-        case 7:
-            object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
-            break;
-        default:
-            break;
-    }
-}
 
 
 #pragma mark ----- main pots -----
@@ -318,7 +285,7 @@ void myObj_position(t_myObj* self, double m) {
 
 #pragma mark --------- Attenuverters ----------------
 //accept input from -1. to 1., but scale it to 0. to 1. for internal use
-// TODO: think about these... do we need them at all?
+
 void myObj_freq_mod_amount(t_myObj* self, double m) {
     m = clamp(m, -1., 1.);
     self->cvinputs[rings::ADC_CHANNEL_ATTENUVERTER_FREQUENCY] = (m+1.)*0.5;
@@ -422,8 +389,8 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     }
     // if fm_cv is not patched, set it to a halftone constant (?)
     // so fm_attenuverter can be used as pitch fine control
-    //if(!self->fm_patched)
-      //  cvinputs[0] = 0.0125;
+    if(!self->fm_patched)
+        cvinputs[0] = 0.0125;
     
     // v/oct input, no limits on range
     cvinputs[5] = ins[6][0];
@@ -559,8 +526,8 @@ void ext_main(void* r) {
     
     class_addmethod(this_class, (method)myObj_reset,    "reset", 0);
     class_addmethod(this_class, (method)myObj_int,      "int",      A_LONG, 0);
-    class_addmethod(this_class, (method)myObj_float,    "float",    A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_info,     "info", 0);
+    //class_addmethod(this_class, (method)infoCV,     "cvinfo", 0);
     
     class_addmethod(this_class, (method)myObj_easter,     "easter", A_LONG, 0);
     

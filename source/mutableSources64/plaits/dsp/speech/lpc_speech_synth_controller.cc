@@ -238,7 +238,7 @@ void LPCSpeechSynthController::Render(
   
   // All utterances have been normalized for an average f0 of 100 Hz.
   const double pitch_shift = frequency / \
-    (rate_ratio * kLPCSpeechSynthDefaultF0 / plaits::Dsp::getSr());
+    (rate_ratio * kLPCSpeechSynthDefaultF0 / kSampleRate);
   const double time_stretch = SemitonesToRatio(-speed * 24.0 +
         (formant_shift < 0.4 ? (formant_shift - 0.4) * -45.0
             : (formant_shift > 0.6 ? (formant_shift - 0.6) * -45.0 : 0.0)));
@@ -284,8 +284,7 @@ void LPCSpeechSynthController::Render(
   } else {
     if (remaining_frame_samples_ == 0) {
       synth_.PlayFrame(frames, double(playback_frame_), false);
-        remaining_frame_samples_ = Dsp::getSr() / kLPCSpeechSynthFPS * time_stretch;
-        //remaining_frame_samples_ = kSampleRate / kLPCSpeechSynthFPS * time_stretch;
+      remaining_frame_samples_ = kSampleRate / kLPCSpeechSynthFPS * time_stretch;
       ++playback_frame_;
       if (playback_frame_ >= last_playback_frame_) {
         bool back_to_scan_mode = bank == -1 || free_running;

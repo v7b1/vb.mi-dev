@@ -110,14 +110,13 @@ class RingModNoise {
   }
   
   void Render(double f0, double* temp_1, double* temp_2, double* out, size_t size) {
-      const double sr = Dsp::getSr();
     const double ratio = f0 / (0.01 + f0);
-    const double f1a = 200.0 / sr * ratio;
-    const double f1b = 7530.0 / sr * ratio;
-    const double f2a = 510.0 / sr * ratio;
-    const double f2b = 8075.0 / sr * ratio;
-    const double f3a = 730.0 / sr * ratio;
-    const double f3b = 10500.0 / sr * ratio;
+    const double f1a = 200.0 / kSampleRate * ratio;
+    const double f1b = 7530.0 / kSampleRate * ratio;
+    const double f2a = 510.0 / kSampleRate * ratio;
+    const double f2b = 8075.0 / kSampleRate * ratio;
+    const double f3a = 730.0 / kSampleRate * ratio;
+    const double f3b = 10500.0 / kSampleRate * ratio;
     
     std::fill(&out[0], &out[size], 0.0);
     
@@ -204,10 +203,9 @@ class HiHat {
     metallic_noise_.Render(2.0 * f0, temp_1, temp_2, out, size);
 
     // Apply BPF on the metallic noise.
-      const double sr = Dsp::getSr();
-    double cutoff = 150.0 / sr * stmlib::SemitonesToRatio(
+    double cutoff = 150.0 / kSampleRate * stmlib::SemitonesToRatio(
         tone * 72.0);
-    CONSTRAIN(cutoff, 0.0, 16000.0 / sr);
+    CONSTRAIN(cutoff, 0.0, 16000.0 / kSampleRate);
     noise_coloration_svf_.set_f_q<stmlib::FREQUENCY_ACCURATE>(
         cutoff, resonance ? 3.0 + 6.0 * tone : 1.0);
     noise_coloration_svf_.Process<stmlib::FILTER_MODE_BAND_PASS>(

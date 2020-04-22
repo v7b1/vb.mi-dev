@@ -26,6 +26,7 @@ struct t_myObj {
     double      reverb_lp;
     double      space;
     double      input_gain;
+    bool        freeze;
 };
 
 
@@ -45,7 +46,7 @@ void* myObj_new(void) {
         
         
         // alloc mem
-        self->reverb_buffer = (t_uint16*)sysmem_newptrclear(32768*sizeof(t_uint16)); // 32768 65536
+        self->reverb_buffer = (t_uint16*)sysmem_newptrclear(32768*sizeof(t_uint16)); // 65536
         
         
         if(self->reverb_buffer == NULL) {
@@ -72,6 +73,8 @@ void* myObj_new(void) {
         self->reverb_->set_amount(self->reverb_amount);
         self->reverb_->set_diffusion(self->reverb_diffusion);
         self->reverb_->set_hp(0.995);
+        
+        self->freeze = false;
         
         //attr_args_process(x, argc, argv);            // process attributes
     }
@@ -146,7 +149,7 @@ void myObj_space(t_myObj *self, double input) {
         self->reverb_->set_lp(1.0);
     } else {
         self->reverb_->set_time(self->reverb_time);
-        self->reverb_->set_input_gain(0.2);
+        self->reverb_->set_input_gain(self->input_gain);    // was: 0.2 - why that?
         self->reverb_->set_lp(self->reverb_lp);
     }
     
@@ -159,10 +162,12 @@ void myObj_freeze(t_myObj *self, long input) {
         self->reverb_->set_time(1.0);
         self->reverb_->set_input_gain(0.0);
         self->reverb_->set_lp(1.0);
+        self->freeze = true;
     } else {
         self->reverb_->set_time(self->reverb_time);
-        self->reverb_->set_input_gain(0.2);
+        self->reverb_->set_input_gain(self->input_gain);    // was: 0.2 - why that?
         self->reverb_->set_lp(self->reverb_lp);
+        self->freeze = false;
     }
 }
 
@@ -180,6 +185,7 @@ void myObj_info(t_myObj *self)
     object_post((t_object*)self, "reverb amount: %f", self->reverb_amount);
     object_post((t_object*)self, "reverb_diffusion: %f", self->reverb_diffusion);
     object_post((t_object*)self, "reverb_lp: %f", self->reverb_lp);
+    object_post((t_object*)self, "reverb_gain: %f", self->input_gain);
     object_post((t_object*)self, "<-----------------------");
 }
 
@@ -198,8 +204,8 @@ inline void SoftLimit_block(double *inout, size_t size) {
 void myObj_perform64(t_myObj *self, t_object *dsp64, double **ins, long numins,
                      double **outs, long numouts, long sampleframes, long flags, void *userparam){
     
-    double *inL = ins[0];
-    double *inR = ins[1];
+    //double *inL = ins[0];
+    //double *inR = ins[1];
     double *outL = outs[0];
     double *outR = outs[1];
     long vs = sampleframes;
@@ -210,20 +216,20 @@ void myObj_perform64(t_myObj *self, t_object *dsp64, double **ins, long numins,
     if (self->x_obj.z_disabled)
         return;
     
-    std::copy(&inL[0], &inL[size], &outL[0]);
-    std::copy(&inR[0], &inR[size], &outR[0]);
+    // TODO: can we rely on the fact that input & output vectors are the same?
+    //std::copy(&inL[0], &inL[size], &outL[0]);
+    //std::copy(&inR[0], &inR[size], &outR[0]);
     
     if(self->bypass)
         return;
     
+    // if 'freeze' is on, we want no direct signal
+    if(self->freeze) {
+        memset(outL, 0, size*sizeof(double));
+        memset(outR, 0, size*sizeof(double));
+    }
     
     reverb_->Process(outL, outR, size);
-    
-    /*
-    for (size_t i = 0; i < vs; ++i) {
-        outL[i] = stmlib::SoftLimit(outL[i]);
-        outR[i] = stmlib::SoftLimit(outR[i]);
-    }*/
     
     SoftLimit_block(outL, size);
     SoftLimit_block(outR, size);

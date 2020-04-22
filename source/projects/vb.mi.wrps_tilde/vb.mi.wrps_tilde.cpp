@@ -5,14 +5,12 @@
 #include "warps/settings.h"
 #include "read_inputs.hpp"
 
-
-//#include "Accelerate/Accelerate.h"
-
+// volker böhm, 2019
 
 
 using namespace c74::max;
 
-const size_t kBlockSize = 96;
+const size_t kBlockSize = 96;       // has to stay like that
 
 static t_class* this_class = nullptr;
 
@@ -27,8 +25,8 @@ struct t_myObj {
     short               easterEgg;
     uint8_t             carrier_shape;
     
-    double              **inputs;
-    double              **outputs;
+    warps::FloatFrame   *input;
+    warps::FloatFrame   *output;
     
     long                count;
     double              sr;
@@ -44,9 +42,8 @@ void* myObj_new(void) {
     {
         dsp_setup((t_pxobject*)self, 6);    // six audio inputs
         
-        //self->info_out = outlet_new((t_object *)self, NULL);
-        outlet_new(self, "signal"); // 'out' output
-        outlet_new(self, "signal"); // 'aux' output
+        outlet_new(self, "signal");         // 'out' output
+        outlet_new(self, "signal");         // 'aux' output
         
         self->sr = sys_getsr();
         if(self->sr <= 0)
@@ -72,14 +69,14 @@ void* myObj_new(void) {
         
         for(int i=0; i<warps::ADC_LAST; i++)
             self->adc_inputs[i] = 0.0;
-        
-        self->inputs = (double**)sysmem_newptr(2*sizeof(double*));
-        self->outputs = (double**)sysmem_newptr(2*sizeof(double*));
-        self->inputs[0] = (double*)sysmem_newptrclear(kBlockSize*sizeof(double));
-        self->inputs[1] = (double*)sysmem_newptrclear(kBlockSize*sizeof(double));
-        self->outputs[0] = (double*)sysmem_newptrclear(kBlockSize*sizeof(double));
-        self->outputs[1] = (double*)sysmem_newptrclear(kBlockSize*sizeof(double));
-        
+
+
+        /*
+        self->inputshort = (warps::ShortFrame*)sysmem_newptr(kBlockSize*sizeof(warps::ShortFrame));
+        self->outputshort = (warps::ShortFrame*)sysmem_newptr(kBlockSize*sizeof(warps::ShortFrame));
+        */
+        self->input = (warps::FloatFrame*)sysmem_newptr(kBlockSize*sizeof(warps::FloatFrame));
+        self->output = (warps::FloatFrame*)sysmem_newptrclear(kBlockSize*sizeof(warps::FloatFrame));
     }
     else {
         object_free(self);
@@ -92,25 +89,6 @@ void* myObj_new(void) {
 
 void myObj_info(t_myObj *self)
 {
-    /*
-     double channel_drive[2];
-     double modulation_algorithm;
-     double modulation_parameter;
-     
-     // Easter egg parameters.
-     double frequency_shift_pot;
-     double frequency_shift_cv;
-     double phase_shift;
-     double note;
-     
-     double frequency_shift_pot;
-     double frequency_shift_cv;
-     double phase_shift;
-     double note;
-     
-     int32_t carrier_shape;  // 0 = external
-     */
-    //warps::Modulator *m = self->modulator;
     warps::Parameters *p = self->modulator->mutable_parameters();
 
     object_post((t_object*)self, "Modulator Parameters ----------->");
@@ -126,7 +104,6 @@ void myObj_info(t_myObj *self)
     object_post((t_object*)self, "phaseShift: %d", p->phase_shift);
     object_post((t_object*)self, "note: %f", p->note);
 
-    
 }
 
 
@@ -168,15 +145,18 @@ void myObj_int(t_myObj *self, long value)
 #pragma mark ----- main pots -----
 
 void myObj_modulation_algo(t_myObj* self, double m) {
-    // Selects which signal process- ing operation is performed on the carrier and modulator.
-    self->adc_inputs[warps::ADC_ALGORITHM_POT] = clamp(m, 0., 1.);
-    //object_post(NULL, "algo: %f", self->adc_inputs[warps::ADC_ALGORITHM_POT]);
+    // Selects which signal processing operation is performed on the carrier and modulator.
+    m = clamp(m, 0., 1.);
+    self->adc_inputs[warps::ADC_ALGORITHM_POT] = m;
+    //self->modulator->mutable_parameters()->modulation_algorithm = m;
 }
 
 void myObj_modulation_timbre(t_myObj* self, double m) {
     // Controls the intensity of the high C harmonics created by cross-modulation
     // (or provides another dimension of tone control for some algorithms).
-    self->adc_inputs[warps::ADC_PARAMETER_POT] = clamp(m, 0., 1.);
+    m = clamp(m, 0., 1.);
+    self->adc_inputs[warps::ADC_PARAMETER_POT] = m;
+    //self->modulator->mutable_parameters()->modulation_parameter = m;
 }
 
 
@@ -185,21 +165,12 @@ void myObj_modulation_timbre(t_myObj* self, double m) {
 void myObj_int_osc_shape(t_myObj* self, long t) {
     // Enables the internal oscillator and selects its waveform.
     int shape = clamp((int)t, 0, 3);
-    object_post(NULL, "shape: %d", shape);
+    self->carrier_shape = shape;
     
-    if (!self->easterEgg) {
-        self->carrier_shape = shape;
-        //object_post((t_object *)self, "carrier_shape: %d", self->carrier_shape_);
-    } else {
-        bool easter = !self->modulator->easter_egg();
-        self->modulator->set_easter_egg(easter);
-        self->settings->mutable_state()->boot_in_easter_egg_mode = easter;
-        self->carrier_shape = 1;
-    }
-    //UpdateCarrierShape();
-    self->modulator->mutable_parameters()->carrier_shape = self->carrier_shape;
+    //if (!self->easterEgg) {
+        self->modulator->mutable_parameters()->carrier_shape = self->carrier_shape;
     self->settings->mutable_state()->carrier_shape = self->carrier_shape;
-    
+    //}
 }
 
 
@@ -208,13 +179,16 @@ void myObj_int_osc_shape(t_myObj* self, long t) {
 void myObj_level1(t_myObj* self, double m) {
     // External carrier amplitude or internal oscillator frequency.
     // When the internal oscillator is switched off, this knob controls the amplitude of the carrier, or the amount of amplitude modulation from the channel 1 LEVEL CV input (1). When the internal oscillator is active, this knob controls its frequency.
-    
-    self->adc_inputs[warps::ADC_LEVEL_1_POT] = clamp(m, 0., 1.);
+    m = clamp(m, 0., 1.);
+    self->adc_inputs[warps::ADC_LEVEL_1_POT] = m;
+    //self->modulator->mutable_parameters()->channel_drive[0] = m;
 }
 
 void myObj_level2(t_myObj* self, double m) {
     // This knob controls the amplitude of the modulator, or the amount of amplitude modulation from the channel 2 LEVEL CV input (2). Past a certain amount of gain, the signal soft clips.
-    self->adc_inputs[warps::ADC_LEVEL_2_POT] = clamp(m, 0., 1.);
+    m = clamp(m, 0., 1.);
+    self->adc_inputs[warps::ADC_LEVEL_2_POT] = m;
+    //self->modulator->mutable_parameters()->channel_drive[1] = m;
 }
 
 
@@ -227,6 +201,7 @@ void myObj_note(t_myObj* self, double n) {
         self->adc_inputs[warps::ADC_LEVEL_1_POT] = note;
         //object_post(NULL, "note: %f", note);
     }
+    self->modulator->mutable_parameters()->note = n;
 }
 
 void myObj_bypass(t_myObj* self,long t) {
@@ -234,6 +209,18 @@ void myObj_bypass(t_myObj* self,long t) {
 }
 
 void myObj_easter_egg(t_myObj* self, long t) {
+    /*
+    if(t != 0) {
+        self->easterEgg = true;
+        self->modulator->mutable_parameters()->carrier_shape = 1;
+    }
+    else {
+        self->easterEgg = false;
+        self->modulator->mutable_parameters()->carrier_shape = self->carrier_shape;
+    }
+    self->modulator->set_easter_egg(self->easterEgg);
+     */
+    
     self->easterEgg = (t != 0);
     self->modulator->set_easter_egg(self->easterEgg);
 }
@@ -244,9 +231,9 @@ void myObj_easter_egg(t_myObj* self, long t) {
 
 void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam)
 {
+    warps::FloatFrame  *input = self->input;
+    warps::FloatFrame  *output = self->output;
 
-    double  **inputs = self->inputs;
-    double  **outputs = self->outputs;
     long    vs = sampleframes;
     long    count = self->count;
     double  *adc_inputs = self->adc_inputs;
@@ -258,24 +245,26 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     // read 'cv' input signals, store first value of a sig vector
     for(auto k=0; k<4; k++) {
         // cv inputs are expected in -1. to 1. range
-        adc_inputs[k] = clamp((1.-ins[k+2][0]), 0., 1.);  // leave out first two inlets (which are the audio inputs)
+        //adc_inputs[k] = clamp((1.-ins[k+2][0]), 0., 1.);  // leave out first two inlets (which are the audio inputs)
+        adc_inputs[k] = ins[k+2][0];
     }
     self->read_inputs->Read(self->modulator->mutable_parameters(), adc_inputs, self->patched);
     
+    
     for (auto i=0; i<vs; ++i) {
-        inputs[0][count] = ins[0][i];
-        inputs[1][count] = ins[1][i];
-        
-        outs[0][i] = outputs[0][count];
-        outs[1][i] = outputs[1][count];
+
+        input[count].l = ins[0][i];
+        input[count].r = ins[1][i];
         
         count++;
         if(count >= kBlockSize) {
-            
-            
-            self->modulator->Process(inputs, outputs, kBlockSize);
+            //self->modulator->Process(inputshort, outputshort, kBlockSize);
+            self->modulator->Processf(input, output, kBlockSize);
             count = 0;
         }
+        
+        outs[0][i] = output[count].l;
+        outs[1][i] = output[count].r;
     }
     
     self->count = count;
@@ -284,23 +273,10 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
 
 
 
-
 void myObj_dsp64(t_myObj* self, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags)
 {
-    /*
-    self->trigger_connected = count[6];
-    self->modulations.trigger_patched = self->trigger_toggle && self->trigger_connected;*/
-    /*
-    if(maxvectorsize > plaits::kMaxBlockSize) {
-        object_error((t_object*)self, "vector size can't be larger than 1024 samples, sorry!");
-        return;
-    }
-    */
     if(samplerate != self->sr) {
-        //delete self->modulator;
         self->sr = samplerate;
-        //self->modulator = new warps::Modulator;
-        //memset(self->modulator, 0, sizeof(*t_myObj::modulator));
         self->modulator->Init(self->sr);
     }
     
@@ -316,12 +292,8 @@ void myObj_free(t_myObj* self) {
     dsp_free((t_pxobject*)self);
     delete self->modulator;
 
-    sysmem_freeptr(self->inputs[0]);
-    sysmem_freeptr(self->inputs[1]);
-    sysmem_freeptr(self->outputs[0]);
-    sysmem_freeptr(self->outputs[1]);
-    sysmem_freeptr(self->inputs);
-    sysmem_freeptr(self->outputs);
+    sysmem_freeptr(self->input);
+    sysmem_freeptr(self->output);
 }
 
 

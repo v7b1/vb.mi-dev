@@ -39,7 +39,8 @@ namespace plaits {
 inline double NoteToFrequency(double midi_note) {
   midi_note -= 9.0;
   CONSTRAIN(midi_note, -128.0, 127.0);
-    return plaits::Dsp::getA0() * 0.25 * stmlib::SemitonesToRatio(midi_note);
+    //return plaits::Dsp::getA0() * 0.25 * stmlib::SemitonesToRatio(midi_note);
+    return a0 * 0.25 * stmlib::SemitonesToRatio(midi_note);
 }
 
 enum TriggerState {

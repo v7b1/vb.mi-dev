@@ -34,7 +34,7 @@ namespace warps {
     double ReadInputs::UnwrapPot(double x) const {
         return Interpolate(lut_pot_curve, x, 512.0);        
     }
-    
+ /*
 #define BIND(destination, NAME, unwrap, scale, lp_coefficient, attenuate) \
 { \
     lp_state_[ADC_ ## NAME ## _POT] += 0.33 * lp_coefficient * (adc_inputs[ADC_ ## NAME ## _POT] - lp_state_[ADC_ ## NAME ## _POT]); \
@@ -46,20 +46,32 @@ namespace warps {
     CONSTRAIN(value, 0.0, 1.0); \
     destination = value; \
 }
+   */
+#define BIND(destination, NAME, unwrap, scale, lp_coefficient, attenuate) \
+{ \
+    lp_state_[ADC_ ## NAME ## _POT] += 0.33 * lp_coefficient * (adc_inputs[ADC_ ## NAME ## _POT] - lp_state_[ADC_ ## NAME ## _POT]); \
+    lp_state_[ADC_ ## NAME ## _CV] += lp_coefficient * (adc_inputs[ADC_ ## NAME ## _CV] - lp_state_[ADC_ ## NAME ## _CV]); \
+    double pot = lp_state_[ADC_ ## NAME ## _POT]; \
+    double cv = lp_state_[ADC_ ## NAME ## _CV]; \
+    double value = attenuate ? (pot * pot * cv * scale) : (pot + cv * scale); \
+    CONSTRAIN(value, 0.0, 1.0); \
+    destination = value; \
+}
     
     void ReadInputs::Read(Parameters* p, double *adc_inputs, short* patched) {
         // Modulation parameters.
-        BIND(p->channel_drive[0], LEVEL_1, false, 1.6, 0.08, true);
-        BIND(p->channel_drive[1], LEVEL_2, false, 1.6, 0.08, true);
-        BIND(p->modulation_algorithm, ALGORITHM, false, 2.0, 0.08, false);  // unwrap was true, vb
-        BIND(p->modulation_parameter, PARAMETER, false, 2.0, 0.08, false);
-        /*
-        std::cout << "readInputs algopot: " << lp_state_[ADC_ALGORITHM_POT] << "\n";
-        std::cout << "readInputs algoCalib: " << calibration_data_->offset[ADC_ALGORITHM_CV] << "\n";
-        std::cout << "readInputs algocv: " << lp_state_[ADC_ALGORITHM_CV] << "\n";
-        */
-        //std::cout << "readInputs algo: " << p->modulation_algorithm << "\n";
+        BIND(p->channel_drive[0], LEVEL_1, false, 1.6, 0.08, true);     // unipolar input?
+        BIND(p->channel_drive[1], LEVEL_2, false, 1.6, 0.08, true);     // unipolar input?
+        BIND(p->modulation_algorithm, ALGORITHM, false, 1.0, 0.08, false);  // unwrap was true, vb
+        BIND(p->modulation_parameter, PARAMETER, false, 1.0, 0.08, false);
         
+        /*
+        std::cout << "readInputs pot: " << lp_state_[ADC_LEVEL_1_POT] << "\n";
+        //std::cout << "readInputs algoCalib: " << calibration_data_->offset[ADC_ALGORITHM_CV] << "\n";
+        std::cout << "readInputs cv: " << lp_state_[ADC_LEVEL_1_CV] << "\n";
+        
+        std::cout << "readInputs value: " << p->channel_drive[0] << "\n";
+        */
         // Prevent wavefolder bleed caused by a slight offset in the pot or ADC.
         /*
         if (p->modulation_algorithm <= 0.125) {
@@ -69,17 +81,18 @@ namespace warps {
         
         // Easter egg parameter mappings.
         p->frequency_shift_pot = lp_state_[ADC_ALGORITHM_POT];
-        float frequency_shift_cv = -lp_state_[ADC_ALGORITHM_CV];
-        frequency_shift_cv += calibration_data_->offset[ADC_ALGORITHM_CV];
+        float frequency_shift_cv = lp_state_[ADC_ALGORITHM_CV];
+        //float frequency_shift_cv = -lp_state_[ADC_ALGORITHM_CV];
+        //frequency_shift_cv += calibration_data_->offset[ADC_ALGORITHM_CV];      // 0.495f;
         
-        p->frequency_shift_cv = frequency_shift_cv * 2.0;
+        p->frequency_shift_cv = frequency_shift_cv; // * 2.0;
         CONSTRAIN(p->frequency_shift_cv, -1.0, 1.0);
         
-        double phase_shift = lp_state_[ADC_ALGORITHM_POT] + frequency_shift_cv * 2.0;
+        double phase_shift = lp_state_[ADC_ALGORITHM_POT] + frequency_shift_cv; // * 2.0;
         CONSTRAIN(phase_shift, 0.0, 1.0);
         p->phase_shift = phase_shift;
         
-        // Internal oscillator parameters.
+        // Internal oscillator parameters.  // TODO: check internal oscillator note!
         double note;
         //pitch_offset = 66.67;
         //pitch_scale = -84.26;
@@ -96,22 +109,16 @@ namespace warps {
         note_pot_ += 0.1 * (note - note_pot_);
         p->note = note_pot_ + note_cv_;
         
-        //DetectNormalization();
-        
         // if not patched!
         for (int32_t i = 0; i < 2; ++i) {
-            //if (normalization_detector_[i].normalized()) {
             if (!patched[i]) {
                 double pot = lp_state_[ADC_LEVEL_1_POT + i];
                 p->channel_drive[i] = pot * pot;
             }
         }
-        //if (normalization_detector_[0].normalized()) {
         if (!patched[0]) {
             p->note = note_pot_ ;    // + 24.0;
         }
-        
-        //adc_.Convert();
     }
     
 }

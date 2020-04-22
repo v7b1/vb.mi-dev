@@ -280,6 +280,14 @@ class AudioBuffer {
   
   inline int32_t size() const { return size_; }
   inline int32_t head() const { return write_head_; }
+    
+    //vb
+    int16_t* get_buf16() {
+        return s16_;
+    }
+    int8_t* get_buf8() {
+        return s8_;
+    }
   
  private:
   int16_t* s16_;

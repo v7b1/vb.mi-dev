@@ -24,18 +24,12 @@ set(STMLIB_SOURCES
 
 set(MI_SOURCES
 	${MI_PATH}/dsp/audio_buffer.h
-	${MI_PATH}/dsp/correlator.cc
-	${MI_PATH}/dsp/correlator.h
 	${MI_PATH}/dsp/frame.h
 	${MI_PATH}/dsp/fx/diffuser.h
 	${MI_PATH}/dsp/fx/fx_engine.h
 	${MI_PATH}/dsp/fx/pitch_shifter.h
-	${MI_PATH}/dsp/fx/reverb.h
-	${MI_PATH}/dsp/grain.h
 	${MI_PATH}/dsp/granular_processor.cc
 	${MI_PATH}/dsp/granular_processor.h
-	${MI_PATH}/dsp/granular_sample_player.h
-	${MI_PATH}/dsp/looping_sample_player.h
 	${MI_PATH}/dsp/mu_law.cc
 	${MI_PATH}/dsp/mu_law.h
 	${MI_PATH}/dsp/parameters.h
@@ -47,9 +41,7 @@ set(MI_SOURCES
 	${MI_PATH}/dsp/pvoc/stft.cc
 	${MI_PATH}/dsp/pvoc/stft.h
 
-	${MI_PATH}/dsp/sample_rate_converter.h
 	${MI_PATH}/dsp/window.h
-	${MI_PATH}/dsp/wsola_sample_player.h
 
 	${MI_PATH}/resources.cc
 	${MI_PATH}/resources.h

@@ -58,7 +58,7 @@ void StringEngine::Render(
     double* aux,
     size_t size,
     bool* already_enveloped) {
-  if (parameters.trigger & TRIGGER_RISING_EDGE) {
+  if (parameters.trigger & TRIGGER_RISING_EDGE) { // TODO: do we need this delay?
     // 8 in original firmware version.
     // 05.01.18: mic.w: problem with microbrute.
     f0_[active_string_] = f0_delay_.Read(14);

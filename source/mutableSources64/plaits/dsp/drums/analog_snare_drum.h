@@ -75,10 +75,10 @@ class AnalogSnareDrum {
       double snappy,
       double* out,
       size_t size) {
-      const double sr = Dsp::getSr();
+      //const double sr = Dsp::getSr();
     const double decay_xt = decay * (1.0 + decay * (decay - 1.0));
-    const int kTriggerPulseDuration = 1.0e-3 * sr;
-    const double kPulseDecayTime = 0.1e-3 * sr;
+    const int kTriggerPulseDuration = 1.0e-3 * kSampleRate;
+    const double kPulseDecayTime = 0.1e-3 * kSampleRate;
     const double q = 2000.0 * stmlib::SemitonesToRatio(decay_xt * 84.0);
     const double noise_envelope_decay = 1.0 - 0.0017 * \
         stmlib::SemitonesToRatio(-decay * (50.0 + snappy * 10.0));

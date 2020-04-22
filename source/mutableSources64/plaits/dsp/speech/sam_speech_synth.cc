@@ -90,7 +90,6 @@ void SAMSpeechSynth::InterpolatePhonemeData(
   uint32_t* formant_frequency,
   double* formant_amplitude) {
   MAKE_INTEGRAL_FRACTIONAL(phoneme);
-    double sr = Dsp::getSr();
 
   const Phoneme& p_1 = phonemes_[phoneme_integral];
   const Phoneme& p_2 = phonemes_[phoneme_integral + 1];
@@ -100,7 +99,7 @@ void SAMSpeechSynth::InterpolatePhonemeData(
     double f_1 = p_1.formant[i].frequency;
     double f_2 = p_2.formant[i].frequency;
     double f = f_1 + (f_2 - f_1) * phoneme_fractional;
-    f *= 8.0 * formant_shift * 4294967296.0 / sr;
+    f *= 8.0 * formant_shift * 4294967296.0 / kSampleRate;
     formant_frequency[i] = static_cast<uint32_t>(f);
   
     double a_1 = formant_amplitude_lut[p_1.formant[i].amplitude];
@@ -122,7 +121,7 @@ void SAMSpeechSynth::Render(
   }
   
   if (consonant) {
-      consonant_samples_ = Dsp::getSr() * 0.05;
+      consonant_samples_ = kSampleRate * 0.05;
     int r = (vowel + 3.0 * frequency + 7.0 * formant_shift) * 8.0;
     consonant_index_ = (r % kSAMNumConsonants);
   }

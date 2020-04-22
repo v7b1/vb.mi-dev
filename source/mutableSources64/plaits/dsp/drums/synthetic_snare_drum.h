@@ -78,15 +78,14 @@ class SyntheticSnareDrum {
       double snappy,
       double* out,
       size_t size) {
-      const double sr = Dsp::getSr();
     const double decay_xt = decay * (1.0 + decay * (decay - 1.0));
     fm_amount *= fm_amount;
-    const double drum_decay = 1.0 - 1.0 / (0.015 * sr) * \
+    const double drum_decay = 1.0 - 1.0 / (0.015 * kSampleRate) * \
         stmlib::SemitonesToRatio(
            -decay_xt * 72.0 - fm_amount * 12.0 + snappy * 7.0);
-    const double snare_decay = 1.0 - 1.0 / (0.01 * sr) * \
+    const double snare_decay = 1.0 - 1.0 / (0.01 * kSampleRate) * \
         stmlib::SemitonesToRatio(-decay * 60.0 - snappy * 7.0);
-    const double fm_decay = 1.0 - 1.0 / (0.007 * sr);
+    const double fm_decay = 1.0 - 1.0 / (0.007 * kSampleRate);
     
     snappy = snappy * 1.1 - 0.05;
     CONSTRAIN(snappy, 0.0, 1.0);
@@ -106,7 +105,7 @@ class SyntheticSnareDrum {
       snare_amplitude_ = drum_amplitude_ = 0.3 + 0.7 * accent;
       fm_ = 1.0;
       phase_[0] = phase_[1] = 0.0;
-      hold_counter_ = static_cast<int>((0.04 + decay * 0.03) * sr);
+      hold_counter_ = static_cast<int>((0.04 + decay * 0.03) * kSampleRate);
     }
     
     stmlib::ParameterInterpolator sustain_gain(

@@ -195,7 +195,7 @@ void String::ProcessInternal(
 #ifndef MIC_W
       s = iir_damping_filter_.Process<FILTER_MODE_LOW_PASS>(s);
 #endif  // MIC_W
-      string_.Write(s);
+        string_.Write(s);     // TODO: crashed here
 
       out_sample_[1] = out_sample_[0];
       aux_sample_[1] = aux_sample_[0];

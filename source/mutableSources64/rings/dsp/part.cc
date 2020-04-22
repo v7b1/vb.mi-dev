@@ -33,8 +33,6 @@
 #include "rings/resources.h"
 #include "rings/dsp/dsp.h"
 
-//extern double gSampleRate;
-//extern double gA3;
 
 namespace rings {
 
@@ -44,6 +42,10 @@ using namespace stmlib;
     
 
 void Part::Init(uint16_t* reverb_buffer) {
+    // vb
+    sr_ = Dsp::getSr();
+    a3_ = Dsp::getA3();
+    
   active_voice_ = 0;
   
   fill(&note_[0], &note_[kMaxPolyphony], 0.0);
@@ -56,14 +58,15 @@ void Part::Init(uint16_t* reverb_buffer) {
   for (int32_t i = 0; i < kMaxPolyphony; ++i) {
     excitation_filter_[i].Init();
     plucker_[i].Init();
-      dc_blocker_[i].Init(1.0 - 10.0 / Dsp::getSr());
+    dc_blocker_[i].Init(1.0 - 10.0 / sr_);
+    resonator_[i].Init();     // vb, init resonators
   }
   
   reverb_.Init(reverb_buffer);
   limiter_.Init();
 
   note_filter_.Init(
-      Dsp::getSr() / Dsp::getBlockSize(),
+      sr_ / Dsp::getBlockSize(),
       0.001,  // Lag time with a sharp edge on the V/Oct input or trigger.
       0.010,  // Lag time after the trigger has been received.
       0.050,  // Time to transition from reactive to filtered.
@@ -99,7 +102,7 @@ void Part::ConfigureResonators() {
               model_ == RESONATOR_MODEL_STRING_AND_REVERB;
           string_[i].Init(has_dispersion);
 
-          double f_lfo = double(Dsp::getBlockSize()) / double(Dsp::getSr());
+          double f_lfo = double(Dsp::getBlockSize()) / sr_;
           f_lfo *= lfo_frequencies[i];
           lfo_[i].Init<COSINE_OSCILLATOR_APPROXIMATE>(f_lfo);
         }
@@ -383,7 +386,7 @@ void Part::RenderStringVoice(
         frequencies,
         num_strings);
     for (int32_t i = 0; i < num_strings; ++i) {
-      frequencies[i] = SemitonesToRatio(frequencies[i] - 69.0) * Dsp::getA3();
+      frequencies[i] = SemitonesToRatio(frequencies[i] - 69.0) * a3_;
     }
   } else {
     frequencies[0] = frequency;
@@ -488,7 +491,7 @@ void Part::Process(
   }
     
   ConfigureResonators();
-  
+    
   note_filter_.Process(
       performance_state.note,
       performance_state.strum);
@@ -525,13 +528,13 @@ void Part::Process(
       std::cout << "note: " << note << "\n";
       */
       // TODO: check what's happening here
-    double frequency = SemitonesToRatio(note - 69.0) * Dsp::getA3();
+    double frequency = SemitonesToRatio(note - 69.0) * a3_;
     double filter_cutoff_range = performance_state.internal_exciter
       ? frequency * SemitonesToRatio((cutoff - 0.5) * 96.0)
       : 0.4 * SemitonesToRatio((cutoff - 1.0) * 108.0);
     double filter_cutoff = min(voice == active_voice_
       ? filter_cutoff_range
-      : (10.0 / Dsp::getSr()), 0.499);
+      : (10.0 / sr_), 0.499);
     double filter_q = performance_state.internal_exciter ? 1.5 : 0.8;
       /*
       std::cout << "filter: ---------------\n";

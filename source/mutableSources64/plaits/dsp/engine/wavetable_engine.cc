@@ -53,7 +53,8 @@ void WavetableEngine::Init(BufferAllocator* allocator) {
   previous_x_ = 0.0;
   previous_y_ = 0.0;
   previous_z_ = 0.0;
-    previous_f0_ = plaits::Dsp::getA0();    //a0;
+    //previous_f0_ = plaits::Dsp::getA0();    //a0;
+  previous_f0_ = a0;
 
   diff_out_.Init();
 }

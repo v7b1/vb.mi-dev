@@ -56,7 +56,7 @@ void String::Reset() {
   string_.Reset();
   stretch_.Reset();
   iir_damping_filter_.Init();
-    dc_blocker_.Init(1.0 - 20.0 / Dsp::getSr());
+    dc_blocker_.Init(1.0 - 20.0 / kSampleRate);
   dispersion_noise_ = 0.0;
   curved_bridge_ = 0.0;
   out_sample_[0] = out_sample_[1] = 0.0;
@@ -125,7 +125,7 @@ void String::ProcessInternal(
       &delay_, delay * damping_compensation, size);
   
   double stretch_point = non_linearity_amount * (2.0 - non_linearity_amount) * 0.225;
-    double stretch_correction = (160.0 / Dsp::getSr()) * delay;
+    double stretch_correction = (160.0 / kSampleRate) * delay;
   CONSTRAIN(stretch_correction, 1.0, 2.1);
   
   double noise_amount_sqrt = non_linearity_amount > 0.75
