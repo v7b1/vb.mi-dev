@@ -1,6 +1,6 @@
-// Copyright 2016 Olivier Gillet.
+// Copyright 2016 Emilie Gillet.
 //
-// Author: Olivier Gillet (ol.gillet@gmail.com)
+// Author: Emilie Gillet (emilie.o.gillet@gmail.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -52,7 +52,7 @@ namespace plaits {
 //static const double kCorrectedSampleRate = 47872.34;
 //const double a0 = (440.0 / 8.0) / kCorrectedSampleRate;
 
-    const size_t kMaxBlockSize = 1024;   // was 24;
+    const size_t kMaxBlockSize = 32;   // was 24;
     const size_t kBlockSize = 16;       // 12
     
     /*

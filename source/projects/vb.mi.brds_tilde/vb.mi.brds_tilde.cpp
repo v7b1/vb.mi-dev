@@ -1,3 +1,36 @@
+//
+// Copyright 2019 Volker Böhm.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
+// See http://creativecommons.org/licenses/MIT/ for more information.
+
+
+// a clone of mutable instruments' 'braids' module for maxmsp
+// by volker böhm, okt 2019, https://vboehm.net
+
+
+// Original code by Émilie Gillet, https://mutable-instruments.net/
+
+
+
+
 #include "c74_msp.h"
 
 #include "stmlib/utils/dsp.h"
@@ -12,13 +45,14 @@
 #include "Accelerate/Accelerate.h"
 #include "samplerate.h"
 
-//#define    BUFFER_LEN            1024
-#define     SAMPLERATE          96000.0
-#define     BLOCK_SIZE          16
-#define     SAMP_SCALE          (float)(1.0 / 32767.0)
 
-//const uint32_t kSampleRate = 96000;
-const uint16_t kAudioBlockSize = BLOCK_SIZE;    //16;
+// TODO: work on decimation and sr reduction + audioBlockSize, auto-trigger
+
+
+const uint32_t  kSampleRate = 96000;        // original sampling rate
+const uint16_t  kAudioBlockSize = 32;       // 24 
+const float     kSampScale = (float)(1.0 / 32767.0);
+
 
 const uint16_t decimation_factors[] = { 24, 12, 6, 4, 3, 2, 1 };
 const uint16_t bit_reduction_masks[] = {
@@ -44,7 +78,7 @@ typedef struct
     uint16_t    signature, bit_mask;
     size_t      decimation_factor;
     
-    float       samps[BLOCK_SIZE] ;
+    float       samps[kAudioBlockSize] ;
     int16_t     buffer[kAudioBlockSize];
     uint8_t     sync_buffer[kAudioBlockSize];
     
@@ -65,6 +99,7 @@ struct t_myObj {
     bool            last_trig, trig_connected;
     bool            resamp;
     int32_t         midi_pitch;
+    int32_t         previous_pitch;
     
     double          sr;
     long            sigvs;
@@ -89,13 +124,22 @@ void* myObj_new(t_symbol *s, long argc, t_atom *argv) {
     {
         dsp_setup((t_pxobject*)self, 5);
         outlet_new(self, "signal");
+        
+        self->sigvs = sys_getblksize();
+        
+        if(self->sigvs < kAudioBlockSize) {
+            object_error((t_object*)self,
+                         "sigvs can't be smaller than %d samples\n", kAudioBlockSize);
+            object_free(self);
+            self = NULL;
+            return self;
+        }
 
         self->sr = sys_getsr();
-        //ratio: output_sample_rate / input_sample_rate.
-        self->ratio = self->sr / SAMPLERATE;
+        self->ratio = self->sr / kSampleRate;
         
         self->pd.osc = new braids::MacroOscillator;
-        self->pd.osc->Init(SAMPLERATE);
+        self->pd.osc->Init(kSampleRate);
         self->pd.osc->set_pitch((48 << 7));
         self->pd.osc->set_shape(braids::MACRO_OSC_SHAPE_VOWEL_FOF);
         
@@ -108,13 +152,13 @@ void* myObj_new(t_symbol *s, long argc, t_atom *argv) {
         
         self->quantizer = new braids::Quantizer;
         self->quantizer->Init();
+        self->quantizer->Configure(braids::scales[0]);
         
-        //self->jitter_source = new braids::VcoJitterSource;
         self->jitter_source.Init();
         
         memset(self->pd.sync_buffer, 0, sizeof(self->pd.sync_buffer));
         
-        self->midi_pitch = 69 << 7;
+        self->midi_pitch = 60 << 7;     // 69?
         self->root = 0;
         self->timbre = 0;
         self->color = 0;
@@ -126,6 +170,7 @@ void* myObj_new(t_symbol *s, long argc, t_atom *argv) {
         self->trigger_flag = false;
         self->resamp = true;
         self->last_in = 0.0;
+        self->previous_pitch = 0;
         
         // setup SRC ----------------
         int error;
@@ -196,6 +241,30 @@ void myObj_note(t_myObj* self, double n) {
 }
 
 
+
+void myObj_float(t_myObj *self, double m) {
+    long innum = proxy_getinlet((t_object *)self);
+    
+    switch (innum) {
+        case 0:
+            myObj_note(self, m);        // TODO: good idea?
+            break;
+        case 1:
+            self->timbre_pot = clamp(m, 0., 1.);
+            break;
+        case 2:
+            self->color_pot = clamp(m, 0., 1.);
+            break;
+        case 3:
+            CONSTRAIN(m, 0., 1.);
+            int shape = m * (braids::MACRO_OSC_SHAPE_LAST - 1);
+            self->shape = shape;
+            break;
+    }
+}
+
+
+
 void myObj_bang(t_myObj* self) {
     self->trigger_flag = true;
 }
@@ -235,7 +304,7 @@ static long
 src_input_callback(void *cb_data, float **audio)
 {
     PROCESS_CB_DATA *data = (PROCESS_CB_DATA *) cb_data;
-    const int input_frames = BLOCK_SIZE;
+    const int input_frames = kAudioBlockSize;
     
     int16_t     *buffer = data->buffer;
     uint8_t     *sync_buffer = data->sync_buffer;
@@ -258,7 +327,7 @@ src_input_callback(void *cb_data, float **audio)
         int16_t warped = ws->Transform(sample);
         buffer[i] = stmlib::Mix(sample, warped, signature);
         */
-        samps[i] = (buffer[i] * SAMP_SCALE);
+        samps[i] = (buffer[i] * kSampScale);
     }
     
     *audio = &(samps [0]);
@@ -279,7 +348,7 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     double  *model_cv = ins[3];     // model selection
     double  *trigger_cv = ins[4];   // trig input
 
-    long vs = sampleframes;
+    long    vs = sampleframes;
     
     float       *samples, *output;
     int16_t     timbre, color, count;
@@ -308,7 +377,7 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     braids::VcoJitterSource *jitter_source = &self->jitter_source;
     SRC_STATE   *src_state = self->src_state;
     
-    for(count = 0; count < vs; count += BLOCK_SIZE) {
+    for(count = 0; count < vs; count += kAudioBlockSize) {
         output = samples + count;
         
         // set parameters
@@ -336,7 +405,7 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
         // detect trigger
         if(trig_connected) {
             double sum = 0.0;
-            vDSP_sveD(trigger_cv+count, 1, &sum, BLOCK_SIZE);
+            vDSP_sveD(trigger_cv+count, 1, &sum, kAudioBlockSize);
             bool trigger = sum != 0.0;
             trigger_flag |= (trigger && (!self->last_trig));
             self->last_trig = trigger;
@@ -347,7 +416,7 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
         }
         
         // render
-        src_callback_read(src_state, ratio, BLOCK_SIZE, output);
+        src_callback_read(src_state, ratio, kAudioBlockSize, output);
     }
     
     // copy and type cast output samples from 'float' to 'double'
@@ -370,7 +439,7 @@ void myObj_perform64_no_resamp(t_myObj* self, t_object* dsp64, double** ins, lon
     double  *color_cv = ins[2];     // color CV
     double  *model_cv = ins[3];     // model selection
     double  *trigger_cv = ins[4];   // trig input
-    double *out = outs[0];
+    double  *out = outs[0];
     
     long vs = sampleframes;
     size_t size = kAudioBlockSize;
@@ -407,7 +476,7 @@ void myObj_perform64_no_resamp(t_myObj* self, t_object* dsp64, double** ins, lon
     braids::VcoJitterSource *jitter_source = &self->jitter_source;
     
     
-    for(count = 0; count < vs; count += BLOCK_SIZE) {
+    for(count = 0; count < vs; count += kAudioBlockSize) {
         
         // set parameters
         timbre = clamp(timbre_pot + timbre_cv[count], 0.0, 1.0) * 32767.0;
@@ -425,6 +494,14 @@ void myObj_perform64_no_resamp(t_myObj* self, t_object* dsp64, double** ins, lon
         pitch += (int)(pitch_cv[count] * 128.0 * 12.0);    // V/OCT add pitch in half tone steps
         // quantize
         pitch = quantizer->Process(pitch, (60 + root) << 7);
+        /*
+        bool trigger_detected_flag = false;
+        int32_t pitch_delta = pitch - self->previous_pitch;
+        if(self->auto_trig && (pitch_delta >= 0x40 || -pitch_delta >= 0x40)) {
+            trigger_detected_flag = true;
+        }
+        self->previous_pitch = pitch;
+        */
         pitch += jitter_source->Render(drift);
         
         // add FM mod
@@ -434,12 +511,12 @@ void myObj_perform64_no_resamp(t_myObj* self, t_object* dsp64, double** ins, lon
         // detect trigger
         if(trig_connected) {
             double sum = 0.0;
-            vDSP_sveD(trigger_cv+count, 1, &sum, BLOCK_SIZE);
+            vDSP_sveD(trigger_cv+count, 1, &sum, kAudioBlockSize);
             bool trigger = sum != 0.0;
             trigger_flag |= (trigger && (!self->last_trig));
             self->last_trig = trigger;
         }
-        if(trigger_flag) {
+        if(trigger_flag) { // || trigger_detected_flag) {
             osc->Strike();
             trigger_flag = false;
         }
@@ -532,19 +609,18 @@ void myObj_dsp64(t_myObj* self, t_object* dsp64, short* count, double samplerate
     self->trig_connected = count[0];
     
     if(maxvectorsize < kAudioBlockSize) {
-        object_error((t_object*)self, "vector size can't be smaller than %d samples, sorry!", kAudioBlockSize);
+        object_error((t_object*)self, "sigvs can't be smaller than %d samples, sorry!", kAudioBlockSize);
         return;
     }
     
     if(samplerate != self->sr) {
         self->sr = samplerate;
-        // ratio: output_sample_rate / input_sample_rate.
-        self->ratio = self->sr / SAMPLERATE;
+        self->ratio = self->sr / kSampleRate;
         
     }
     
     if(self->resamp) {
-        self->pd.osc->Init(SAMPLERATE);
+        self->pd.osc->Init(kSampleRate);
         object_method_direct(void, (t_object*, t_object*, t_perfroutine64, long, void*),
                          dsp64, gensym("dsp_add64"), (t_object*)self, (t_perfroutine64)myObj_perform64, 0, NULL);
     }
@@ -576,13 +652,13 @@ void myObj_assist(t_myObj* self, void* unused, t_assist_function io, long index,
 	if (io == ASSIST_INLET) {
 		switch (index) {
 			case 0:
-                strncpy(string_dest,"(signal) V/OCT", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal) V/OCT_CV, (bang) trigger, (float) MIDI NOTE", ASSIST_STRING_MAXSIZE); break; // TODO: midi note, good idea?
             case 1:
-                strncpy(string_dest,"(signal) Timbre", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal) Timbre_CV, (float) Timbre_POT", ASSIST_STRING_MAXSIZE); break;
             case 2:
-                strncpy(string_dest,"(signal) Color", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal) Color_CV, (float) Color_POT", ASSIST_STRING_MAXSIZE); break;
             case 3:
-                strncpy(string_dest,"(signal) Model", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal) Model_CV, (float) Model", ASSIST_STRING_MAXSIZE); break;
             case 4:
                 strncpy(string_dest,"(signal/bang) tigger input", ASSIST_STRING_MAXSIZE); break;
 		}
@@ -614,6 +690,7 @@ void ext_main(void* r) {
     class_addmethod(this_class, (method)myObj_set_scale,"scale",      A_LONG, 0);
     class_addmethod(this_class, (method)myObj_shape,    "model",      A_LONG, 0);
     class_addmethod(this_class, (method)myObj_bang,     "bang",  0);
+    class_addmethod(this_class, (method)myObj_float,    "float",    A_FLOAT, 0);
 
     
     class_addmethod(this_class, (method)myObj_set_sampleRate,    "sr",      A_LONG, 0);

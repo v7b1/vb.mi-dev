@@ -4,7 +4,34 @@
 //
 //  Created by vb on 30.10.18.
 //
+
+// Copyright 2015 Émilie Gillet.
 //
+// Author: Émilie Gillet
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
+// See http://creativecommons.org/licenses/MIT/ for more information.
+//
+// -----------------------------------------------------------------------------
+
+
 
 #include "read_inputs.h"
 
@@ -17,19 +44,12 @@
 #include "rings/dsp/part.h"
 #include "rings/dsp/patch.h"
 
-#include <iostream>
 
 namespace rings {
     
     using namespace std;
     using namespace stmlib;
     
-    /*
-
-     Law law;
-     bool remove_offset;
-     double lp_coefficient;
-*/
     
     /* static */
     ChannelSettings ReadInputs::channel_settings_[ADC_CHANNEL_LAST] = {
@@ -58,8 +78,7 @@ namespace rings {
         inhibit_strum_ = 0;
         fm_cv_ = 0.0;
     }
-    
-    
+ /*
 #define ATTENUVERT(destination, NAME, min, max) \
 { \
 double value = adc_lp_[ADC_CHANNEL_CV_ ## NAME]; \
@@ -68,61 +87,48 @@ value += adc_lp_[ADC_CHANNEL_POT_ ## NAME]; \
 CONSTRAIN(value, min, max) \
 destination = value; \
 }
+  */
+    
+//#define ATTENUVERT(destination, NAME, min, max) \
+//{ \
+//double value = adc_lp_[ADC_CHANNEL_CV_ ## NAME]; \
+//value += adc_lp_[ADC_CHANNEL_POT_ ## NAME]; \
+//CONSTRAIN(value, min, max) \
+//destination = value; \
+//}
     
     void ReadInputs::Read(Patch* patch, PerformanceState* performance_state, double* inputs)
     {
-        // Process all CVs / pots.
-        for (size_t i = 0; i < ADC_CHANNEL_LAST; ++i) {
-            const ChannelSettings& settings = channel_settings_[i];
+        for (size_t i = 0; i < ADC_CHANNEL_ATTENUVERTER_FREQUENCY; ++i) {
             double value = inputs[i];
-            if (settings.remove_offset) {
-                // vb: originally cv inputs are inverted in hardware - so, no need to re-invert them here...
-                // and: our 'cv' data is bipolar (-1.--+1.)
-                // so, no need for offset, either
-                //value = calibration_data_->offset[i] - value;
-                value *= 0.5;
-            }
-            switch (settings.law) {
-                case LAW_QUADRATIC_BIPOLAR:
-                {
-                    value = value - 0.5;
-                    double value2 = value * value * 4.0 * 3.3;
-                    value = value < 0.0 ? -value2 : value2;
-                }
-                    break;
-                    
-                case LAW_QUARTIC_BIPOLAR:
-                {
-                    value = value - 0.5;
-                    double value2 = value * value * 4.0;
-                    double value4 = value2 * value2 * 3.3;
-                    value = value < 0.0 ? -value4 : value4;
-                }
-                    break;
-                    
-                default:
-                    break;
-            }
+            const ChannelSettings& settings = channel_settings_[i];
             adc_lp_[i] += settings.lp_coefficient * (value - adc_lp_[i]);
         }
         
-        ATTENUVERT(patch->structure, STRUCTURE, 0.0, 0.9995);
-        ATTENUVERT(patch->brightness, BRIGHTNESS, 0.0, 1.0);
-        ATTENUVERT(patch->damping, DAMPING, 0.0, 1.0);
-        ATTENUVERT(patch->position, POSITION, 0.0, 1.0);
+//        ATTENUVERT(patch->structure, STRUCTURE, 0.0, 0.9995);
+//        ATTENUVERT(patch->brightness, BRIGHTNESS, 0.0, 1.0);
+//        ATTENUVERT(patch->damping, DAMPING, 0.0, 1.0);
+//        ATTENUVERT(patch->position, POSITION, 0.0, 1.0);
         
-        double fm = adc_lp_[ADC_CHANNEL_CV_FREQUENCY] * 48.0;
-        /*
-        double error = fm - fm_cv_;
-        if (fabs(error) >= 0.8) {
-            fm_cv_ = fm;
-        } else {
-            fm_cv_ += 0.02 * error;     // TODO: can we hear this actually?
-        }
-        performance_state->fm = fm_cv_ * adc_lp_[ADC_CHANNEL_ATTENUVERTER_FREQUENCY];
-        CONSTRAIN(performance_state->fm, -48.0, 48.0);
-         */
-        performance_state->fm = fm;
+        double value;
+        value = adc_lp_[ADC_CHANNEL_CV_STRUCTURE] + adc_lp_[ADC_CHANNEL_POT_STRUCTURE];
+        CONSTRAIN(value, 0.0, 0.9995);
+        patch->structure = value;
+        
+        value = adc_lp_[ADC_CHANNEL_CV_BRIGHTNESS] + adc_lp_[ADC_CHANNEL_POT_BRIGHTNESS];
+        CONSTRAIN(value, 0.0, 1.0);
+        patch->brightness = value;
+        
+        value = adc_lp_[ADC_CHANNEL_CV_DAMPING] + adc_lp_[ADC_CHANNEL_POT_DAMPING];
+        CONSTRAIN(value, 0.0, 1.0);
+        patch->damping = value;
+        
+        value = adc_lp_[ADC_CHANNEL_CV_POSITION] + adc_lp_[ADC_CHANNEL_POT_POSITION];
+        CONSTRAIN(value, 0.0, 1.0);
+        patch->position = value;
+        
+        
+        performance_state->fm = adc_lp_[ADC_CHANNEL_CV_FREQUENCY];// * 48.0;
         
         double transpose = 60.0 * adc_lp_[ADC_CHANNEL_POT_FREQUENCY];
         // vb, we don't care about the quantization...
@@ -139,32 +145,8 @@ destination = value; \
         // TODO: isn't this from the previous block and therefore late?
         performance_state->strum = trigger_input_.rising_edge();
 
-
-        // Hysteresis on chord.
-        //double chord = calibration_data_->offset[ADC_CHANNEL_CV_STRUCTURE] - \
-        //inputs[ADC_CHANNEL_CV_STRUCTURE];
-        /*
-        // no need to invert 'cv' input, just scale between -0.5 + 0.5, vb
-        double chord = inputs[ADC_CHANNEL_CV_STRUCTURE] * 0.5;
-        chord *= adc_lp_[ADC_CHANNEL_ATTENUVERTER_STRUCTURE];
-        chord += adc_lp_[ADC_CHANNEL_POT_STRUCTURE];
-        chord *= static_cast<double>(kNumChords - 1);       // 11 - 1
-        hysteresis = chord - chord_ > 0.0 ? -0.1 : +0.1;
-        chord_ = static_cast<int32_t>(chord + hysteresis + 0.5);  
-        CONSTRAIN(chord_, 0, kNumChords - 1);
-        performance_state->chord = chord_;
-        */
-        /*
-        double chord = inputs[ADC_CHANNEL_CV_STRUCTURE] * 0.5;
-        chord *= adc_lp_[ADC_CHANNEL_ATTENUVERTER_STRUCTURE];
-        chord += adc_lp_[ADC_CHANNEL_POT_STRUCTURE];
-        chord *= static_cast<double>(kNumChords - 1);       // 11 - 1
-        chord = roundf(chord);
-        //CONSTRAIN(chord_, 0, kNumChords - 1);
-         */
         
         performance_state->chord = roundf(patch->structure * (kNumChords-1));
-        //printf("chord: %d\n", performance_state->chord);
         
         trigger_input_.Read(inputs[ADC_CHANNEL_LAST]);
     }

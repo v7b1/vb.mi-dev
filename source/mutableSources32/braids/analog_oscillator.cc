@@ -62,7 +62,7 @@ uint32_t AnalogOscillator::ComputePhaseIncrement(int16_t midi_pitch) {
   uint32_t phase_increment = a + \
       (static_cast<int32_t>(b - a) * (ref_pitch & 0xf) >> 4);
   phase_increment >>= num_shifts;
-  //return (uint32_t)(phase_increment * 96000./44100. + 0.5); // vb, add scaling --> SR
+  //return (uint32_t)(phase_increment * 96000./44100. + 0.5);
     return (uint32_t)(phase_increment * srFactor_ + 0.5);     // vb, add scaling --> SR
 }
 

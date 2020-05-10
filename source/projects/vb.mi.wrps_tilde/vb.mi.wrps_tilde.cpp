@@ -1,3 +1,35 @@
+//
+// Copyright 2019 Volker Böhm.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
+// See http://creativecommons.org/licenses/MIT/ for more information.
+
+
+// a clone of mutable instruments' 'warps' module for maxmsp
+// by volker böhm, okt 2019, https://vboehm.net
+
+
+// Original code by Émilie Gillet, https://mutable-instruments.net/
+
+
+
 #include "c74_max.h"
 #include "c74_msp.h"
 
@@ -5,12 +37,15 @@
 #include "warps/settings.h"
 #include "read_inputs.hpp"
 
-// volker böhm, 2019
 
 
 using namespace c74::max;
 
-const size_t kBlockSize = 96;       // has to stay like that
+
+// TODO: work on block size and SR, use libsamplerate for downsampling?
+// original SR: 96 kHz, block size: 60
+
+const size_t kBlockSize = 96;       // has to stay like that TODO: why?
 
 static t_class* this_class = nullptr;
 
@@ -350,7 +385,7 @@ void ext_main(void* r) {
     class_addmethod(this_class, (method)myObj_note,                 "note",     A_FLOAT, 0);
     
     class_addmethod(this_class, (method)myObj_bypass,               "bypass",   A_LONG, 0);
-    class_addmethod(this_class, (method)myObj_easter_egg,           "easterEgg",A_LONG, 0);
+    class_addmethod(this_class, (method)myObj_easter_egg,           "easteregg",A_LONG, 0);
     
     class_addmethod(this_class, (method)myObj_int,                  "int",      A_LONG, 0);
     class_addmethod(this_class, (method)myObj_info,	                "info", 0);

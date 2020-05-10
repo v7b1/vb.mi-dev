@@ -1,6 +1,6 @@
-// Copyright 2015 Olivier Gillet.
+// Copyright 2015 Emilie Gillet.
 //
-// Author: Olivier Gillet (ol.gillet@gmail.com)
+// Author: Emilie Gillet (emilie.o.gillet@gmail.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -62,7 +62,7 @@ void StringSynthPart::Init(uint16_t* reverb_buffer) {
   ensemble_.Init(reverb_buffer);
     
   note_filter_.Init(
-      Dsp::getSr() / Dsp::getBlockSize(),
+                    Dsp::getSr() / kMaxBlockSize,
       0.001,  // Lag time with a sharp edge on the V/Oct input or trigger.
       0.005,  // Lag time after the trigger has been received.
       0.050,  // Time to transition from reactive to filtered.
@@ -239,8 +239,7 @@ void StringSynthPart::ProcessEnvelopes(
   }
   
   // Convert the arbitrary values to actual units.
-    double period = Dsp::getSr() / Dsp::getBlockSize();
-    //double period = Dsp::getSr() / kMaxBlockSize;
+    double period = Dsp::getSr() / kMaxBlockSize;
   double attack_time = SemitonesToRatio(attack * 96.0) * 0.005 * period;
   // double decay_time = SemitonesToRatio(decay * 96.0) * 0.125f * period;
   double decay_time = SemitonesToRatio(decay * 84.0) * 0.180 * period;

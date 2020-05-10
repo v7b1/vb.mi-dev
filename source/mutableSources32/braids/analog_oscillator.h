@@ -68,8 +68,8 @@ class AnalogOscillator {
   ~AnalogOscillator() { }
   
   inline void Init(double sr) {
-      sampleRate_ = sr;
-      srFactor_ = 96000. / sr;
+      sampleRate_ = sr;             // vb
+      srFactor_ = 96000. / sr;      // vb
     phase_ = 0;
     phase_increment_ = 1;
     high_ = false;

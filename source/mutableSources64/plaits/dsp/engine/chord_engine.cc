@@ -1,6 +1,6 @@
-// Copyright 2016 Olivier Gillet.
+// Copyright 2016 Emilie Gillet.
 //
-// Author: Olivier Gillet (ol.gillet@gmail.com)
+// Author: Emilie Gillet (emilie.o.gillet@gmail.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -65,11 +65,17 @@ void ChordEngine::Init(BufferAllocator* allocator) {
 }
 
 void ChordEngine::Reset() {
-  for (int i = 0; i < kChordNumChords; ++i) {
-    for (int j = 0; j < kChordNumVoices; ++j) {
-      ratios_[i * kChordNumVoices + j] = SemitonesToRatio(chords[i][j]);
+    // vb, this is probably an oversight
+//  for (int i = 0; i < kChordNumChords; ++i) {
+//      for (int j = 0; j < kChordNumVoices; ++j) {     // vb TODO: check that - kChordNumVoices ?
+//      ratios_[i * kChordNumVoices + j] = SemitonesToRatio(chords[i][j]);
+//    }
+//  }
+    for (int i = 0; i < kChordNumChords; ++i) {
+        for (int j = 0; j < kChordNumNotes; ++j) {
+            ratios_[i * kChordNumVoices + j] = SemitonesToRatio(chords[i][j]);
+        }
     }
-  }
 }
 
 const double fade_point[kChordNumVoices] = {

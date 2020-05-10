@@ -1,6 +1,6 @@
-// Copyright 2015 Olivier Gillet.
+// Copyright 2015 Emilie Gillet.
 //
-// Author: Olivier Gillet (ol.gillet@gmail.com)
+// Author: Emilie Gillet (emilie.o.gillet@gmail.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -109,10 +109,9 @@ void Resonator::Process(const double* in, double* out, double* aux, size_t size)
   while (size--) {
     CosineOscillator amplitudes;
       double freq = position.Next();
-      //std::cout << "freq: " << freq << "\n";
-    //amplitudes.Init<COSINE_OSCILLATOR_APPROXIMATE>(freq);
-    amplitudes.Init<COSINE_OSCILLATOR_EXACT>(freq);
-      // TODO: something's wrong with 'approximate' - gives me 'nans' in output
+
+    amplitudes.Init<COSINE_OSCILLATOR_APPROXIMATE>(freq);
+    //amplitudes.Init<COSINE_OSCILLATOR_EXACT>(freq);
 
     double input = *in++ * 0.125;
     double odd = 0.0;

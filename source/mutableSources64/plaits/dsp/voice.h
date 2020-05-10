@@ -1,6 +1,6 @@
-// Copyright 2016 Olivier Gillet.
+// Copyright 2016 Emilie Gillet.
 //
-// Author: Olivier Gillet (ol.gillet@gmail.com)
+// Author: Emilie Gillet (emilie.o.gillet@gmail.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -219,8 +219,9 @@ class Voice {
       double minimum_value,
       double maximum_value) {
     double value = base_value;
-    modulation_amount *= std::max(fabs(modulation_amount) - 0.05, 0.05);
-      modulation_amount *= 1.05;
+//    modulation_amount *= std::max(fabs(modulation_amount) - 0.05, 0.05);
+//      modulation_amount *= 1.05;
+      modulation_amount *= fabs(modulation_amount);     // vb
     
     double modulation = use_external_modulation
         ? external_modulation

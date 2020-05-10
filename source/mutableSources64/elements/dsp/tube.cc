@@ -1,6 +1,6 @@
-// Copyright 2014 Olivier Gillet.
+// Copyright 2014 Emilie Gillet.
 //
-// Author: Olivier Gillet (ol.gillet@gmail.com)
+// Author: Emilie Gillet (emilie.o.gillet@gmail.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -33,12 +33,10 @@
 #include "stmlib/dsp/dsp.h"
 #include "stmlib/utils/random.h"
 
-#include <iostream>
 
 namespace elements {
 
 void Tube::Init() {
-    std::cout << "tube init()\n";
   zero_state_ = 0.0;
   pole_state_ = 0.0;
   delay_ptr_ = 0;
@@ -80,7 +78,6 @@ void Tube::Process(
     double out = pressure_delta * reed + breath;
     
     CONSTRAIN(out, -5.0, 5.0);
-     // std::cout << "d: " << d << "\n";
     delay_line_[d] = out * 0.5;         // TODO: Crahses here, because d goes out of bound! why?
     
     --d;
@@ -91,7 +88,6 @@ void Tube::Process(
     *input_output++ += gain * envelope * pole_state_;
   }
   delay_ptr_ = d;
-    //std::cout << "delay_ptr: " << delay_ptr_ << "\n";
 }
 
 }  // namespace elements

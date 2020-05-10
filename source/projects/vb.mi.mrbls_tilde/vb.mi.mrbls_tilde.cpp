@@ -1,3 +1,36 @@
+//
+// Copyright 2019 Volker Böhm.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
+// See http://creativecommons.org/licenses/MIT/ for more information.
+
+
+// a clone of mutable instruments' 'marbles' module for maxmsp
+// by volker böhm, nov 2019, https://vboehm.net
+
+
+// Original code by Émilie Gillet, https://mutable-instruments.net/
+
+
+
+
 #include "c74_msp.h"
 
 #include "dsp.h"
@@ -91,7 +124,7 @@ struct t_myObj {
     
     float               sr;
     int                 sigvs;      // signal vector size
-    short               blockCounter;
+    //short               blockCounter;
     void                *info_out;
 };
 
@@ -152,6 +185,15 @@ void* myObj_new(t_symbol *s, long argc, t_atom *argv) {
         if(self->sr <= 0)
             self->sr = 44100.0f;
         self->sigvs = sys_getblksize();
+        
+        if(self->sigvs < kBlockSize) {
+            object_error((t_object*)self,
+                         "sigvs can't be smaller than %d samples\n", kBlockSize);
+            object_free(self);
+            self = NULL;
+            return self;
+        }
+        
         
         self->set_scale = false;    // don't need this one
         self->record_scale = false;
@@ -529,7 +571,7 @@ void myObj_y_divider(t_myObj* self, double m) {
 
 
 
-void dsp_loop(t_myObj* self, double** ins, double** outs, long blockSize, long offsetCount)
+void dsp_loop(t_myObj* self, double** ins, double** outs, long blockSize, long offset)
 {
     
     size_t size = blockSize;
@@ -542,8 +584,6 @@ void dsp_loop(t_myObj* self, double** ins, double** outs, long blockSize, long o
     GroupSettings   x, y;
     TGenerator      *t_generator = &self->t_generator;
     
-    int offset = offsetCount * blockSize;
-
     
     // 7 cv inputs (inlets 1 - 7)
     // 2 clock/audio inputs (inlets 0 and 8)
@@ -726,10 +766,8 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     if (self->obj.z_disabled)
         return;
 
-    int count = self->blockCounter;
-
-    for(int i=0; i<count; ++i)
-        dsp_loop(self, ins, outs, kBlockSize, i);
+    for(int count = 0; count < sampleframes; count += kBlockSize)
+        dsp_loop(self, ins, outs, kBlockSize, count);
     
 
 }
@@ -742,12 +780,12 @@ void myObj_dsp64(t_myObj* self, t_object* dsp64, short* count, double samplerate
     self->clock_connected[1] = count[ADC_CHANNEL_LAST+1];
     
     if(maxvectorsize < kBlockSize) {
-        object_error((t_object*)self, "vector size can't be smaller than %d samples, sorry!", kBlockSize);
+        object_error((t_object*)self, "sgivs can't be smaller than %d samples, sorry!", kBlockSize);
         return;
     }
     self->sigvs = maxvectorsize;
-    self->blockCounter = maxvectorsize / kBlockSize;
-    object_post(NULL, "vector size div: %d", self->blockCounter);
+    //self->blockCounter = maxvectorsize / kBlockSize;
+    //object_post(NULL, "vector size div: %d", self->blockCounter);
     
     
     if(samplerate != self->sr) {

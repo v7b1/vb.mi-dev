@@ -1,8 +1,37 @@
+//
+// Copyright 2019 Volker Böhm.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
+// See http://creativecommons.org/licenses/MIT/ for more information.
+
+
+// audio companding based on mutable instruments' 'clouds' module for maxmsp
+// by volker böhm, april 2019, https://vboehm.net
+
+
+// Original code by Émilie Gillet, https://mutable-instruments.net/
+
+
+
+
 #include "c74_msp.h"
-
-//#include "reverb.h"
-
-//#include "Accelerate/Accelerate.h"
 
 
 using namespace c74::max;
@@ -30,10 +59,6 @@ void* myObj_new(void) {
 
         self->gain = 1.0;
         self->bypass = false;
-        
-        
-        
-        //attr_args_process(x, argc, argv);            // process attributes
     }
     else {
         object_free(self);
@@ -45,11 +70,9 @@ void* myObj_new(void) {
 
 
 
-// TODO: implement bypass
 void myObj_bypass(t_myObj *self, long input) {
     self->bypass = ( input != 0);
 }
-
 
 
 
@@ -114,6 +137,21 @@ inline void SoftLimit_block(double *inout, size_t size) {
         *inout *= (27.0 + x2) / (27.0 + 9.0 * x2);
         inout++;
     }
+}
+
+inline void SoftClip_block(double *inout, size_t size) {
+    while(size--) {
+        double x = *inout;
+        if (x < -3.0)
+            *inout = -1.0;
+        else if (x > 3.0)
+            *inout = 1.0;
+        else {
+            double x2 = (*inout)*(*inout);
+            *inout *= (27.0 + x2) / (27.0 + 9.0 * x2);
+        }
+        inout++;
+    }
 }*/
 
 
@@ -140,9 +178,9 @@ void myObj_perform64(t_myObj *self, t_object *dsp64, double **ins, long numins,
     for (size_t i = 0; i < vs; ++i) {
         double input = SoftClip(in[i] * gain);
         int16_t pcm_in = input * 32767.0;
-        uint8_t compressed = Lin2MuLaw(pcm_in);
+        uint8_t companded = Lin2MuLaw(pcm_in);
         
-        int16_t pcm_out = MuLaw2Lin(compressed);
+        int16_t pcm_out = MuLaw2Lin(companded);
         out[i] = pcm_out / 32767.0;
         
     }
@@ -201,5 +239,5 @@ void ext_main(void* r) {
 
     
     object_post(NULL, "vb.mi.mu~ by volker böhm --> https://vboehm.net");
-    object_post(NULL, "mµ law compression from 'clouds' module by mutable instruments");
+    object_post(NULL, "mµ law companding from 'clouds' module by mutable instruments");
 }

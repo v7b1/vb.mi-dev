@@ -1,3 +1,36 @@
+//
+// Copyright 2019 Volker Böhm.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
+// See http://creativecommons.org/licenses/MIT/ for more information.
+
+
+// a clone of mutable instruments' 'elements' module for maxmsp
+// by volker böhm, april 2019, https://vboehm.net
+
+
+// Original code by Émilie Gillet, https://mutable-instruments.net/
+
+
+
+
 #include "c74_msp.h"
 
 //#include "elements/dsp/voice.h"
@@ -11,6 +44,7 @@
 
 using namespace c74::max;
 
+const size_t kBlockSize = elements::kMaxBlockSize;
 
 double elements::Dsp::kSampleRate = 32000.0;
 double elements::Dsp::kSrFactor = 32000.0 / kSampleRate;
@@ -38,9 +72,6 @@ struct t_myObj {
     short               blockCount;
 };
 
-//const double kNoiseGateThreshold = 0.0001;
-
-
 
 void* myObj_new(void) {
     t_myObj* self = (t_myObj*)object_alloc(this_class);
@@ -53,6 +84,16 @@ void* myObj_new(void) {
         outlet_new(self, "signal"); // 'out' output
         outlet_new(self, "signal"); // 'aux' output
         
+        self->sigvs = sys_getblksize();
+        
+        if(self->sigvs < kBlockSize) {
+            object_error((t_object*)self,
+                         "sigvs can't be smaller than %d samples\n", kBlockSize);
+            object_free(self);
+            self = NULL;
+            return self;
+        }
+        
         // init some params
         
         self->strike_in_level = 0.0;
@@ -60,10 +101,10 @@ void* myObj_new(void) {
         self->uigate = false;
         
         // allocate memory
-        self->reverb_buffer = (t_uint16*)sysmem_newptrclear(32768*sizeof(t_uint16)); // 65536
+        self->reverb_buffer = (t_uint16*)sysmem_newptrclear(32768*sizeof(t_uint16));
         
         // TODO: make sure 4096 is enough memory
-        self->out = (double *)sysmem_newptrclear(4096*sizeof(double));       // 4096
+        self->out = (double *)sysmem_newptrclear(4096*sizeof(double));
         self->aux = (double *)sysmem_newptrclear(4096*sizeof(double));
         
         if(self->reverb_buffer == NULL) {
@@ -145,14 +186,14 @@ void myObj_info(t_myObj *self)
 
 
 void myObj_bang(t_myObj *self) {
-    
+    /*
     int size = elements::kMaxModes;
     double *f = self->part->voice_[0].getF();
     t_atom freqs[size];
     for(int i=0; i<size; ++i)
         atom_setfloat(&freqs[i], f[i]);
     outlet_list(self->info_out, 0L, size, freqs);
-    
+    */
         //object_post((t_object*)self, "freq[%d]: %f", i, freqs[i]);
 }
 
@@ -245,42 +286,6 @@ void myObj_float(t_myObj *self, double f)
             object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
             break;
     }
-    /*
-    switch (innum) {
-        case 5:
-            self->read_inputs->ReadPanelPot(elements::POT_EXCITER_BOW_TIMBRE_ATTENUVERTER, f);
-            break;
-        case 6:
-            self->read_inputs->ReadPanelPot(elements::POT_EXCITER_BLOW_META_ATTENUVERTER, f);
-            break;
-        case 7:
-            self->read_inputs->ReadPanelPot(elements::POT_EXCITER_BLOW_TIMBRE_ATTENUVERTER, f);
-            break;
-        case 8:
-            self->read_inputs->ReadPanelPot(elements::POT_EXCITER_STRIKE_META_ATTENUVERTER, f);
-            break;
-        case 9:
-            self->read_inputs->ReadPanelPot(elements::POT_EXCITER_STRIKE_TIMBRE_ATTENUVERTER, f);
-            break;
-        case 10:
-            self->read_inputs->ReadPanelPot(elements::POT_RESONATOR_DAMPING_ATTENUVERTER, f);
-            break;
-        case 11:
-            self->read_inputs->ReadPanelPot(elements::POT_RESONATOR_GEOMETRY_ATTENUVERTER, f);
-            break;
-        case 12:
-            self->read_inputs->ReadPanelPot(elements::POT_RESONATOR_POSITION_ATTENUVERTER, f);
-            break;
-        case 13:
-            self->read_inputs->ReadPanelPot(elements::POT_RESONATOR_BRIGHTNESS_ATTENUVERTER, f);
-            break;
-        case 14:
-            self->read_inputs->ReadPanelPot(elements::POT_SPACE_ATTENUVERTER, f);
-            break;
-        default:
-            object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
-            break;
-    }*/
 }
 
 
@@ -387,7 +392,8 @@ void myObj_position(t_myObj* self, double m) {
 
 void myObj_space(t_myObj* self, double m) {
     m = clamp(m, 0., 1.);
-    self->read_inputs.ReadPanelPot(elements::POT_SPACE, m * 2.0);
+    self->read_inputs.ReadPanelPot(elements::POT_SPACE, m * 1.11);
+    // vb, use the last bit to trigger rev freeze
 }
 
 
@@ -407,16 +413,13 @@ void myObj_note(t_myObj* self, double n) {
  };*/
 
 void myObj_model(t_myObj *self, long n) {
-    //if(n>2) n=2;
-    //else if(n<0) n=0;
+
     CONSTRAIN(n, 0, 2);
     self->part->set_resonator_model(static_cast<elements::ResonatorModel>(n));
     self->read_inputs.set_resonator_model(self->part->resonator_model());
     
     /*
      TODO: have a look at 'easter_egg' mode (in ui.cc)
-     self->part_->set_easter_egg(!part_->easter_egg());
-     self->read_inputs->set_boot_in_easter_egg_mode(part_->easter_egg());
      */
 }
 
@@ -442,7 +445,7 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     
     
     long vs = sampleframes;
-    size_t size = elements::kMaxBlockSize;
+    size_t size = kBlockSize;
     
     if (self->obj.z_disabled)
         return;
@@ -485,7 +488,6 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
         // read 'cv' input signals, store only first value of a block
         for(int j=0; j<numcvs; j++) {
             cvinputs[j] = ins[j+2][offset];  // leave out first two inlets (audio inputs)
-            //cvinputs[i] = clamp(ins[i+2][0], 0., 1.);
         }
         
         if(gate_connected) {        // check if gate signal is connected
@@ -504,8 +506,8 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
         
         for (size_t i = 0; i < size; ++i) {
             int index = i + offset;
-            outL[index] = stmlib::SoftLimit(out[i]*0.5);        //out[i];   //
-            outR[index] = stmlib::SoftLimit(aux[i]*0.5);        //aux[i];   //
+            outL[index] = stmlib::SoftLimit(out[i]*0.5);
+            outR[index] = stmlib::SoftLimit(aux[i]*0.5);
         }
     }
 }
@@ -518,7 +520,7 @@ void myObj_dsp64(t_myObj* self, t_object* dsp64, short* count, double samplerate
     self->gate_connected = count[15];       // check if last signal inlet (gate in) is connected
     
     if(maxvectorsize < elements::kMaxBlockSize) {
-        object_error((t_object*)self, "vector size can't be smaller than 16 samples, sorry!");
+        object_error((t_object*)self, "sigvs can't be smaller than %d samples, sorry!", kBlockSize);
         return;
     }
     if(samplerate != elements::Dsp::getSr()) {

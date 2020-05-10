@@ -1,7 +1,5 @@
-
-// Copyright 2015 Olivier Gillet.
 //
-// Original Author: Olivier Gillet (ol.gillet@gmail.com)
+// Copyright 2019 Volker Böhm.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +23,10 @@
 
 
 // a clone of mutable instruments' 'rings' module for maxmsp
-// by volker böhm, jan 2019
+// by volker böhm, jan 2019, https://vboehm.net
+
+
+// Original code by Émilie Gillet, https://mutable-instruments.net/
 
 
 #include "c74_msp.h"
@@ -35,7 +36,6 @@
 #include "rings/dsp/part.h"
 #include "rings/dsp/strummer.h"
 #include "rings/dsp/string_synth_part.h"
-//#include "rings/settings.h"
 #include "rings/dsp/dsp.h"
 
 #include "Accelerate/Accelerate.h"
@@ -49,7 +49,9 @@ static t_class* this_class = nullptr;
 
 double rings::Dsp::sr = 48000.0;
 double rings::Dsp::a3 = 440.0 / 48000.0;
-size_t rings::Dsp::maxBlockSize = 64;
+
+const int kBlockSize = rings::kMaxBlockSize;
+
 
 struct t_myObj {
     t_pxobject	obj;
@@ -67,7 +69,6 @@ struct t_myObj {
     rings::Patch            patch;
     
     double                  cvinputs[rings::ADC_CHANNEL_LAST+1];
-    void                    *info_out;
     double                  sr;
     int                     sigvs;
     short                   strum_connected;
@@ -84,19 +85,26 @@ void* myObj_new(void) {
     {
         dsp_setup((t_pxobject*)self, 8);        // 8 signal inlets
         
-        //self->info_out = outlet_new((t_object *)self, NULL);
         outlet_new(self, "signal"); // 'out' output
         outlet_new(self, "signal"); // 'aux' output
+        
+        self->sigvs = sys_getblksize();
+        
+        if(self->sigvs < kBlockSize) {
+            object_error((t_object*)self,
+                         "sigvs can't be smaller than %d samples\n", kBlockSize);
+            object_free(self);
+            self = NULL;
+            return self;
+        }
         
         
         self->sr = sys_getsr();
         if(self->sr <= 0.0)
             self->sr = 48000.0;
         
-        self->sigvs = sys_getblksize();
         
-        // set actual Sampling Rate and block size
-        rings::Dsp::setBlockSize(self->sigvs);
+        // set actual Sampling Rate
         rings::Dsp::setSr(self->sr);
         
 
@@ -128,7 +136,7 @@ void* myObj_new(void) {
         memset(&self->string_synth, 0, sizeof(self->string_synth));
         
 
-        self->strummer.Init(0.01, rings::Dsp::getSr() / rings::Dsp::getBlockSize());        
+        self->strummer.Init(0.01, rings::Dsp::getSr() / kBlockSize);
         self->part.Init(self->reverb_buffer);
         self->string_synth.Init(self->reverb_buffer);
         
@@ -163,8 +171,7 @@ void myObj_info(t_myObj *self)
     
     rings::Patch p = self->patch;
     rings::PerformanceState ps = self->performance_state;
-    //rings::Part *pa = &self->part;
-    //rings::State *st = self->settings->mutable_state();
+
     
     object_post((t_object*)self, "Patch ----------------------->");
     object_post((t_object*)self, "structure: %f", p.structure);
@@ -181,44 +188,11 @@ void myObj_info(t_myObj *self)
     object_post((t_object*)self, "note: %f", ps.note);
     object_post((t_object*)self, "fm: %f", ps.fm);
     object_post((t_object*)self, "chord: %d", ps.chord);
-    /*
-    object_post((t_object*)self, "Part ----------------------->");
-    object_post((t_object*)self, "polyphony: %d", pa->polyphony());
-    object_post((t_object*)self, "model: %d", pa->model());
-    
-    object_post((t_object*)self, "mySR: %f", rings::Dsp::getSr());
-    object_post((t_object*)self, "a3: %f", rings::Dsp::getA3());
-    */
+
     object_post((t_object*)self, "-----");
     
 }
 
-void infoCV(t_myObj *self) {
-    
-    double *cvinfo = self->cvinputs;
-    for(int i=0; i<=rings::ADC_CHANNEL_LAST; i++) {
-        object_post((t_object*)self, "cvinput[%d]: %f", cvinfo[i]);
-    }
-    object_post(NULL, "----------------------");
-    /*ADC_CHANNEL_CV_FREQUENCY,   // 0
-     ADC_CHANNEL_CV_STRUCTURE,   // 1
-     ADC_CHANNEL_CV_BRIGHTNESS,  // 2
-     ADC_CHANNEL_CV_DAMPING,     // 3
-     ADC_CHANNEL_CV_POSITION,    // 4
-     ADC_CHANNEL_CV_V_OCT,       // 5
-     ADC_CHANNEL_POT_FREQUENCY,  // 6
-     ADC_CHANNEL_POT_STRUCTURE,  // 7
-     ADC_CHANNEL_POT_BRIGHTNESS, // 8
-     ADC_CHANNEL_POT_DAMPING,    // 9
-     ADC_CHANNEL_POT_POSITION,   // 10
-     ADC_CHANNEL_ATTENUVERTER_FREQUENCY, // 11
-     ADC_CHANNEL_ATTENUVERTER_STRUCTURE, // 12
-     ADC_CHANNEL_ATTENUVERTER_BRIGHTNESS,// 13
-     ADC_CHANNEL_ATTENUVERTER_DAMPING,   // 14
-     ADC_CHANNEL_ATTENUVERTER_POSITION,  // 15
-     ADC_CHANNEL_LAST,       // use this for strum? yes
-     */
-}
 
 
 // plug / unplug patch chords...
@@ -230,21 +204,6 @@ void myObj_int(t_myObj *self, long value)
     switch (innum) {
         case 0:
             self->performance_state.internal_exciter = (value == 0);
-            break;
-        case 1:
-            //self->fm_patched = (value != 0);  // brauchts nicht mehr
-            break;
-        case 2:
-            object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
-            break;
-        case 3:
-            object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
-            break;
-        case 4:
-            object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
-            break;
-        case 5:
-            object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
             break;
         case 6:
             self->performance_state.internal_note = (value == 0);
@@ -281,12 +240,6 @@ void myObj_float(t_myObj *self, double m)
         case 5:
             self->cvinputs[rings::ADC_CHANNEL_POT_POSITION] = clamp(m, 0., 1.);
             break;
-        case 6:
-            object_post((t_object*)self, "inlet %ld: nothing to do...", innum); //TODO: good?
-            break;
-        case 7:
-            object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
-            break;
         default:
             break;
     }
@@ -315,34 +268,6 @@ void myObj_position(t_myObj* self, double m) {
     self->cvinputs[rings::ADC_CHANNEL_POT_POSITION] = clamp(m, 0., 1.);
 }
 
-
-#pragma mark --------- Attenuverters ----------------
-//accept input from -1. to 1., but scale it to 0. to 1. for internal use
-// TODO: think about these... do we need them at all?
-void myObj_freq_mod_amount(t_myObj* self, double m) {
-    m = clamp(m, -1., 1.);
-    self->cvinputs[rings::ADC_CHANNEL_ATTENUVERTER_FREQUENCY] = (m+1.)*0.5;
-}
-
-void myObj_struct_mod_amount(t_myObj* self, double m) {
-    m = clamp(m, -1., 1.);
-    self->cvinputs[rings::ADC_CHANNEL_ATTENUVERTER_STRUCTURE] = (m+1.)*0.5;
-}
-
-void myObj_bright_mod_amount(t_myObj* self, double m) {
-    m = clamp(m, -1., 1.);
-    self->cvinputs[rings::ADC_CHANNEL_ATTENUVERTER_BRIGHTNESS] = (m+1.)*0.5;
-}
-
-void myObj_damp_mod_amount(t_myObj* self, double m) {
-    m = clamp(m, -1., 1.);
-    self->cvinputs[rings::ADC_CHANNEL_ATTENUVERTER_DAMPING] = (m+1.)*0.5;
-}
-
-void myObj_pos_mod_amount(t_myObj* self, double m) {
-    m = clamp(m, -1., 1.);
-    self->cvinputs[rings::ADC_CHANNEL_ATTENUVERTER_POSITION] = (m+1.)*0.5;
-}
 
 
 #pragma mark ----- other parameters -----
@@ -376,14 +301,11 @@ void myObj_bypass(t_myObj* self, long n) {
 
 
 // change the sample rate and or blockSize and reinit
-void reinit(t_myObj* self, double newSR, size_t newBlockSize)
+void reinit(t_myObj* self, double newSR)
 {
     rings::Dsp::setSr(newSR);
-    rings::Dsp::setBlockSize(newBlockSize);
     
-    //delete self->strummer;
-    //self->strummer = new rings::Strummer;
-    self->strummer.Init(0.01, rings::Dsp::getSr() / rings::Dsp::getBlockSize());
+    self->strummer.Init(0.01, rings::Dsp::getSr() / kBlockSize);
     
     self->part.Init(self->reverb_buffer);
     self->string_synth.Init(self->reverb_buffer);
@@ -392,7 +314,7 @@ void reinit(t_myObj* self, double newSR, size_t newBlockSize)
 
 // panic: simply reinit...
 void myObj_reset(t_myObj *self) {
-    reinit(self, self->sr, self->sigvs);
+    reinit(self, self->sr);
 }
 
 
@@ -409,14 +331,16 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     double *cvinputs = self->cvinputs;
     
     long vs = sampleframes;
-    size_t size = vs;
+    size_t size = kBlockSize;
     
     if (self->obj.z_disabled)
         return;
 
+    // FM input
+    cvinputs[0] = clamp(ins[1][0], -48., 48.);
     
     // read 'cv' input signals, store first value of a sig vector
-    for(int i=0; i<5; i++) {
+    for(int i=1; i<5; i++) {
         // cv inputs are expected in -1. to 1. range
         cvinputs[i] = clamp(ins[i+1][0], -1., 1.);  // leave out first inlet (which is audio in)
     }
@@ -433,23 +357,33 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     double trigger = 0.;
     
     // will not be used, if internal exciter is off
-    // TODO: should we check for intern.exciter?
+    // TODO: should we check for internal_exciter?
     if(self->strum_connected && !self->performance_state.internal_strum)
         vDSP_sveD(strum, 1, &trigger, vs);  // calc sum of trigger input
     
     cvinputs[16] = trigger;         // cvinputs[16] => ADC_CHANNEL_LAST,
     
-    self->read_inputs.Read(&self->patch, &self->performance_state, cvinputs);
     
+        
     if(self->easter_egg) {
-        self->strummer.Process(NULL, size, &self->performance_state);  // TODO: check this out
-        self->string_synth.Process(self->performance_state, self->patch, in, out, out2, size);
+        for(int count=0; count<vs; count+=size) {
+            
+            self->read_inputs.Read(&self->patch, &self->performance_state, cvinputs);
+            
+            self->strummer.Process(NULL, size, &self->performance_state);
+            self->string_synth.Process(self->performance_state, self->patch, in+count, out+count, out2+count, size);
+        }
     }
     else {
-        self->strummer.Process(in, size, &self->performance_state);
-        self->part.Process(self->performance_state, self->patch, in, out, out2, size);
+        for(int count=0; count<vs; count+=size) {
+            
+            self->read_inputs.Read(&self->patch, &self->performance_state, cvinputs);
+            
+            self->strummer.Process(in+count, size, &self->performance_state);
+            self->part.Process(self->performance_state, self->patch, in+count, out+count, out2+count, size);
+        }
     }
-
+    
 }
 
 
@@ -461,11 +395,11 @@ void myObj_dsp64(t_myObj* self, t_object* dsp64, short* count, double samplerate
         self->sr = samplerate;
         self->sigvs = maxvectorsize;
         
-        reinit(self, samplerate, maxvectorsize);
+        reinit(self, samplerate);
     }
     
-    if(self->sigvs > 1024)
-        object_warn((t_object*)self, "signal vector size can't be higher than 1024 samples, sorry!");
+    if(self->sigvs < kBlockSize)
+        object_warn((t_object*)self, "sigvs can't be smaller than %d samples!", kBlockSize);
     else {
         object_method_direct(void, (t_object*, t_object*, t_perfroutine64, long, void*),
                          dsp64, gensym("dsp_add64"), (t_object*)self, (t_perfroutine64)myObj_perform64, 0, NULL);
@@ -478,9 +412,6 @@ void myObj_dsp64(t_myObj* self, t_object* dsp64, short* count, double samplerate
 
 void myObj_free(t_myObj* self) {
     dsp_free((t_pxobject*)self);
-    //delete self->strummer;
-    //delete self->string_synth;
-    //delete self->part;
     if(self->reverb_buffer)
         sysmem_freeptr(self->reverb_buffer);
 }
@@ -493,19 +424,19 @@ void myObj_assist(t_myObj* self, void* unused, t_assist_function io, long index,
                 strncpy(string_dest,"(signal) audio IN", ASSIST_STRING_MAXSIZE);
                 break;
             case 1:
-                strncpy(string_dest,"(signal) FREQUENCY (-1..+1), (int) patch/unpatch", ASSIST_STRING_MAXSIZE);
+                strncpy(string_dest,"(signal) FREQUENCY_CV (-1..+1), (float) FREQUENCY_POT", ASSIST_STRING_MAXSIZE);
                 break;
             case 2:
-                strncpy(string_dest,"(signal) STRUCTURE (-1..+1)" , ASSIST_STRING_MAXSIZE);
+                strncpy(string_dest,"(signal) STRUCTURE_CV (-1..+1), (float) STRUCTURE_POT" , ASSIST_STRING_MAXSIZE);
                 break;
             case 3:
-                strncpy(string_dest,"(signal) BRIGHTNESS (-1..+1)", ASSIST_STRING_MAXSIZE);
+                strncpy(string_dest,"(signal) BRIGHTNESS_CV (-1..+1), (float) BRIGHTNESS_POT", ASSIST_STRING_MAXSIZE);
                 break;
             case 4:
-                strncpy(string_dest,"(signal) DAMPING (-1..+1)", ASSIST_STRING_MAXSIZE);
+                strncpy(string_dest,"(signal) DAMPING_CV (-1..+1), (float) DAMPING_POT", ASSIST_STRING_MAXSIZE);
                 break;
             case 5:
-                strncpy(string_dest,"(signal) POSITION (-1..+1)", ASSIST_STRING_MAXSIZE);
+                strncpy(string_dest,"(signal) POSITION_CV (-1..+1), (float) POSITION_POT", ASSIST_STRING_MAXSIZE);
                 break;
             case 6:
                 strncpy(string_dest,"(signal) V/OCT, (int) patch/unpatch", ASSIST_STRING_MAXSIZE);
@@ -545,13 +476,6 @@ void ext_main(void* r) {
     class_addmethod(this_class, (method)myObj_damping,      "damping",      A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_position,     "position",     A_FLOAT, 0);
     
-    
-    // attenuverters
-    class_addmethod(this_class, (method)myObj_freq_mod_amount,      "freq_mod",        A_FLOAT, 0);
-    class_addmethod(this_class, (method)myObj_struct_mod_amount,    "struct_mod",      A_FLOAT, 0);
-    class_addmethod(this_class, (method)myObj_bright_mod_amount,    "bright_mod",      A_FLOAT, 0);
-    class_addmethod(this_class, (method)myObj_damp_mod_amount,      "damp_mod",        A_FLOAT, 0);
-    class_addmethod(this_class, (method)myObj_pos_mod_amount,       "pos_mod",         A_FLOAT, 0);
 
     // other params
     class_addmethod(this_class, (method)myObj_note,     "note",     A_FLOAT, 0);
@@ -568,5 +492,5 @@ void ext_main(void* r) {
     class_register(CLASS_BOX, this_class);
     
     object_post(NULL, "vb.mi.rngs~ by volker böhm --> vboehm.net");
-    object_post(NULL, "a clone of mutable instruments' 'rings' module");
+    object_post(NULL, "a clone of mutable instruments' 'Rings' module");
 }

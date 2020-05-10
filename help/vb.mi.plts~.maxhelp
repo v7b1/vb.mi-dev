@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ -1396.0, 22.0, 1155.0, 961.0 ],
+		"rect" : [ 0.0, 45.0, 1155.0, 961.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 13.0,
@@ -38,6 +38,154 @@
 		"style" : "",
 		"subpatcher_template" : "vb01",
 		"boxes" : [ 			{
+				"box" : 				{
+					"hidden" : 1,
+					"id" : "obj-58",
+					"linecount" : 2,
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 936.0, 850.0, 232.0, 38.0 ],
+					"text" : ";\rmax launchbrowser https://vboehm.net"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"fontface" : 1,
+					"id" : "obj-4",
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 936.0, 893.0, 161.0, 21.0 ],
+					"text" : "https://vboehm.net, 2018"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"handoff" : "",
+					"id" : "obj-46",
+					"maxclass" : "ubutton",
+					"numinlets" : 1,
+					"numoutlets" : 4,
+					"outlettype" : [ "bang", "bang", "", "int" ],
+					"parameter_enable" : 0,
+					"patching_rect" : [ 936.0, 890.0, 158.142822265625, 28.0 ]
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-47",
+					"maxclass" : "number",
+					"numinlets" : 1,
+					"numoutlets" : 2,
+					"outlettype" : [ "", "bang" ],
+					"parameter_enable" : 0,
+					"patching_rect" : [ 419.0, 387.0, 50.0, 23.0 ]
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-38",
+					"maxclass" : "live.dial",
+					"numinlets" : 1,
+					"numoutlets" : 2,
+					"outlettype" : [ "", "float" ],
+					"parameter_enable" : 1,
+					"patching_rect" : [ 522.5, 407.5, 44.0, 48.0 ],
+					"saved_attribute_attributes" : 					{
+						"valueof" : 						{
+							"parameter_type" : 0,
+							"parameter_unitstyle" : 1,
+							"parameter_mmin" : -1.0,
+							"parameter_longname" : "live.dial[10]",
+							"parameter_mmax" : 1.0,
+							"parameter_shortname" : "FREQ"
+						}
+
+					}
+,
+					"varname" : "live.dial[10]"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-39",
+					"maxclass" : "live.dial",
+					"numinlets" : 1,
+					"numoutlets" : 2,
+					"outlettype" : [ "", "float" ],
+					"parameter_enable" : 1,
+					"patching_rect" : [ 674.357177734375, 407.5, 44.0, 48.0 ],
+					"saved_attribute_attributes" : 					{
+						"valueof" : 						{
+							"parameter_type" : 0,
+							"parameter_unitstyle" : 1,
+							"parameter_longname" : "live.dial[11]",
+							"parameter_mmax" : 1.0,
+							"parameter_shortname" : "MORPH"
+						}
+
+					}
+,
+					"varname" : "live.dial[11]"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-43",
+					"maxclass" : "live.dial",
+					"numinlets" : 1,
+					"numoutlets" : 2,
+					"outlettype" : [ "", "float" ],
+					"parameter_enable" : 1,
+					"patching_rect" : [ 623.5, 407.5, 44.0, 48.0 ],
+					"saved_attribute_attributes" : 					{
+						"valueof" : 						{
+							"parameter_type" : 0,
+							"parameter_unitstyle" : 1,
+							"parameter_longname" : "live.dial[12]",
+							"parameter_mmax" : 1.0,
+							"parameter_shortname" : "TIMBRE"
+						}
+
+					}
+,
+					"varname" : "live.dial[12]"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-45",
+					"maxclass" : "live.dial",
+					"numinlets" : 1,
+					"numoutlets" : 2,
+					"outlettype" : [ "", "float" ],
+					"parameter_enable" : 1,
+					"patching_rect" : [ 573.0, 407.5, 44.0, 48.0 ],
+					"saved_attribute_attributes" : 					{
+						"valueof" : 						{
+							"parameter_type" : 0,
+							"parameter_unitstyle" : 1,
+							"parameter_longname" : "live.dial[13]",
+							"parameter_mmax" : 1.0,
+							"parameter_shortname" : "HARMO"
+						}
+
+					}
+,
+					"varname" : "live.dial[13]"
+				}
+
+			}
+, 			{
 				"box" : 				{
 					"id" : "obj-28",
 					"maxclass" : "newobj",
@@ -78,25 +226,12 @@
 			}
 , 			{
 				"box" : 				{
-					"id" : "obj-4",
-					"items" : [ "virtual_analog_engine", ",", "waveshaping_engine", ",", "fm_engine", ",", "grain_engine", ",", "additive_engine", ",", "wavetable_engine", ",", "chord_engine", ",", "speech_engine", ",", "swarm_engine", ",", "noise_engine", ",", "particle_engine", ",", "string_engine", ",", "modal_engine", ",", "bass_drum_engine", ",", "snare_drum_engine", ",", "hi_hat_engine" ],
-					"maxclass" : "umenu",
-					"numinlets" : 1,
-					"numoutlets" : 3,
-					"outlettype" : [ "int", "", "" ],
-					"parameter_enable" : 0,
-					"patching_rect" : [ 246.0, 696.0, 162.0, 23.0 ]
-				}
-
-			}
-, 			{
-				"box" : 				{
 					"fontsize" : 16.0,
 					"id" : "obj-21",
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 67.5, 51.5, 135.0, 24.0 ],
+					"patching_rect" : [ 96.5, 51.5, 135.0, 24.0 ],
 					"text" : "a macro-oscillator"
 				}
 
@@ -109,17 +244,6 @@
 					"numoutlets" : 0,
 					"patching_rect" : [ 526.5, 81.5, 431.0, 21.0 ],
 					"text" : "Please refer to the manual of the original module for further explanations:"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-151",
-					"maxclass" : "comment",
-					"numinlets" : 1,
-					"numoutlets" : 0,
-					"patching_rect" : [ 955.0, 908.0, 152.0, 21.0 ],
-					"text" : "https://vboehm.net, 2018"
 				}
 
 			}
@@ -749,11 +873,11 @@
 					"patching_rect" : [ 173.0, 341.0, 44.0, 48.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
+							"parameter_type" : 0,
+							"parameter_unitstyle" : 1,
 							"parameter_longname" : "live.dial[9]",
 							"parameter_mmax" : 1.0,
-							"parameter_shortname" : "lpg",
-							"parameter_type" : 0,
-							"parameter_unitstyle" : 1
+							"parameter_shortname" : "lpg"
 						}
 
 					}
@@ -773,11 +897,11 @@
 					"patching_rect" : [ 106.5, 341.0, 44.0, 48.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
+							"parameter_type" : 0,
+							"parameter_unitstyle" : 1,
 							"parameter_longname" : "live.dial[8]",
 							"parameter_mmax" : 1.0,
-							"parameter_shortname" : "decay",
-							"parameter_type" : 0,
-							"parameter_unitstyle" : 1
+							"parameter_shortname" : "decay"
 						}
 
 					}
@@ -797,11 +921,11 @@
 					"patching_rect" : [ 37.5, 341.0, 44.0, 48.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
+							"parameter_type" : 0,
+							"parameter_unitstyle" : 1,
 							"parameter_longname" : "live.dial[7]",
 							"parameter_mmax" : 1.0,
-							"parameter_shortname" : "oct",
-							"parameter_type" : 0,
-							"parameter_unitstyle" : 1
+							"parameter_shortname" : "oct"
 						}
 
 					}
@@ -899,11 +1023,11 @@
 					"patching_rect" : [ 205.714279000000005, 565.5, 15.0, 15.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
+							"parameter_enum" : [ "off", "on" ],
+							"parameter_type" : 2,
 							"parameter_longname" : "live.button",
 							"parameter_mmax" : 1,
-							"parameter_shortname" : "live.button",
-							"parameter_enum" : [ "off", "on" ],
-							"parameter_type" : 2
+							"parameter_shortname" : "live.button"
 						}
 
 					}
@@ -1551,12 +1675,12 @@
 					"patching_rect" : [ 31.0, 132.5, 44.0, 48.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
+							"parameter_type" : 0,
+							"parameter_unitstyle" : 1,
 							"parameter_mmin" : -1.0,
 							"parameter_longname" : "live.dial[6]",
 							"parameter_mmax" : 1.0,
-							"parameter_shortname" : "FREQ",
-							"parameter_type" : 0,
-							"parameter_unitstyle" : 1
+							"parameter_shortname" : "FREQ"
 						}
 
 					}
@@ -1576,11 +1700,11 @@
 					"patching_rect" : [ 313.0, 132.5, 44.0, 48.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
+							"parameter_type" : 0,
+							"parameter_unitstyle" : 1,
 							"parameter_longname" : "live.dial[5]",
 							"parameter_mmax" : 1.0,
-							"parameter_shortname" : "MORPH",
-							"parameter_type" : 0,
-							"parameter_unitstyle" : 1
+							"parameter_shortname" : "MORPH"
 						}
 
 					}
@@ -1600,11 +1724,11 @@
 					"patching_rect" : [ 218.0, 132.5, 44.0, 48.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
+							"parameter_type" : 0,
+							"parameter_unitstyle" : 1,
 							"parameter_longname" : "live.dial[4]",
 							"parameter_mmax" : 1.0,
-							"parameter_shortname" : "TIMBRE",
-							"parameter_type" : 0,
-							"parameter_unitstyle" : 1
+							"parameter_shortname" : "TIMBRE"
 						}
 
 					}
@@ -1620,7 +1744,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 221.5, 13.5, 277.0, 65.0 ],
+					"patching_rect" : [ 257.5, 13.5, 277.0, 65.0 ],
 					"text" : "a clone of mutable instruments' 'plaits' module\nby volker böhm, https://vboehm.net\n\noriginal code by Émilie Gillet"
 				}
 
@@ -1634,7 +1758,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 43.0, 13.5, 165.0, 36.0 ],
+					"patching_rect" : [ 72.0, 13.5, 165.0, 36.0 ],
 					"text" : "vb.mi.plts~"
 				}
 
@@ -1650,11 +1774,11 @@
 					"patching_rect" : [ 125.0, 132.5, 44.0, 48.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
+							"parameter_type" : 0,
+							"parameter_unitstyle" : 1,
 							"parameter_longname" : "live.dial[3]",
 							"parameter_mmax" : 1.0,
-							"parameter_shortname" : "HARMO",
-							"parameter_type" : 0,
-							"parameter_unitstyle" : 1
+							"parameter_shortname" : "HARMO"
 						}
 
 					}
@@ -1916,14 +2040,14 @@
 					"patching_rect" : [ 34.5, 549.5, 40.5, 36.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
+							"parameter_type" : 0,
+							"parameter_unitstyle" : 1,
 							"parameter_mmin" : -1.0,
 							"parameter_longname" : "live.dial[2]",
 							"parameter_initial_enable" : 1,
 							"parameter_mmax" : 1.0,
 							"parameter_initial" : [ 0.0 ],
-							"parameter_shortname" : "tmbr",
-							"parameter_type" : 0,
-							"parameter_unitstyle" : 1
+							"parameter_shortname" : "tmbr"
 						}
 
 					}
@@ -1957,14 +2081,14 @@
 					"patching_rect" : [ 97.5, 549.5, 35.5, 36.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
+							"parameter_type" : 0,
+							"parameter_unitstyle" : 1,
 							"parameter_mmin" : -1.0,
 							"parameter_longname" : "live.dial[1]",
 							"parameter_initial_enable" : 1,
 							"parameter_mmax" : 1.0,
 							"parameter_initial" : [ 0.0 ],
-							"parameter_shortname" : "fm",
-							"parameter_type" : 0,
-							"parameter_unitstyle" : 1
+							"parameter_shortname" : "fm"
 						}
 
 					}
@@ -1998,14 +2122,14 @@
 					"patching_rect" : [ 157.5, 549.5, 35.5, 36.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
+							"parameter_type" : 0,
+							"parameter_unitstyle" : 1,
 							"parameter_mmin" : -1.0,
 							"parameter_longname" : "live.dial",
 							"parameter_initial_enable" : 1,
 							"parameter_mmax" : 1.0,
 							"parameter_initial" : [ 0.0 ],
-							"parameter_shortname" : "mrph",
-							"parameter_type" : 0,
-							"parameter_unitstyle" : 1
+							"parameter_shortname" : "mrph"
 						}
 
 					}
@@ -2101,14 +2225,14 @@
 					"patching_rect" : [ 526.5, 613.0, 48.0, 136.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
+							"parameter_type" : 0,
+							"parameter_unitstyle" : 4,
 							"parameter_mmin" : -70.0,
 							"parameter_longname" : "live.gain~[1]",
 							"parameter_initial_enable" : 1,
 							"parameter_mmax" : 6.0,
 							"parameter_initial" : [ -12 ],
-							"parameter_shortname" : "AUX",
-							"parameter_type" : 0,
-							"parameter_unitstyle" : 4
+							"parameter_shortname" : "AUX"
 						}
 
 					}
@@ -2260,14 +2384,14 @@
 					"patching_rect" : [ 464.5, 613.0, 48.0, 136.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
+							"parameter_type" : 0,
+							"parameter_unitstyle" : 4,
 							"parameter_mmin" : -70.0,
 							"parameter_longname" : "live.gain~",
 							"parameter_initial_enable" : 1,
 							"parameter_mmax" : 6.0,
 							"parameter_initial" : [ -12 ],
-							"parameter_shortname" : "OUT",
-							"parameter_type" : 0,
-							"parameter_unitstyle" : 4
+							"parameter_shortname" : "OUT"
 						}
 
 					}
@@ -2503,7 +2627,7 @@
 					"mode" : 0,
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 0.0, 6.0, 217.0, 73.0 ],
+					"patching_rect" : [ 0.0, 6.0, 255.714279000000005, 72.5 ],
 					"proportion" : 0.39
 				}
 
@@ -2844,6 +2968,20 @@
 			}
 , 			{
 				"patchline" : 				{
+					"destination" : [ "obj-1", 1 ],
+					"source" : [ "obj-38", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 5 ],
+					"source" : [ "obj-39", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
 					"destination" : [ "obj-53", 0 ],
 					"source" : [ "obj-40", 0 ]
 				}
@@ -2860,6 +2998,35 @@
 				"patchline" : 				{
 					"destination" : [ "obj-41", 0 ],
 					"source" : [ "obj-42", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 4 ],
+					"source" : [ "obj-43", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 3 ],
+					"source" : [ "obj-45", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-58", 0 ],
+					"hidden" : 1,
+					"source" : [ "obj-46", 1 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"source" : [ "obj-47", 0 ]
 				}
 
 			}
@@ -3034,19 +3201,23 @@
 			}
  ],
 		"parameters" : 		{
-			"obj-97" : [ "live.dial[6]", "FREQ", 0 ],
-			"obj-96" : [ "live.dial[5]", "MORPH", 0 ],
-			"obj-95" : [ "live.dial[4]", "TIMBRE", 0 ],
-			"obj-62" : [ "live.dial[1]", "fm", 0 ],
 			"obj-130" : [ "live.dial[9]", "lpg", 0 ],
-			"obj-64" : [ "live.dial[2]", "tmbr", 0 ],
-			"obj-2" : [ "live.gain~[1]", "AUX", 0 ],
-			"obj-129" : [ "live.dial[8]", "decay", 0 ],
-			"obj-128" : [ "live.dial[7]", "oct", 0 ],
 			"obj-116" : [ "live.button", "live.button", 0 ],
+			"obj-2" : [ "live.gain~[1]", "AUX", 0 ],
 			"obj-60" : [ "live.dial", "mrph", 0 ],
+			"obj-128" : [ "live.dial[7]", "oct", 0 ],
 			"obj-6" : [ "live.gain~", "OUT", 0 ],
+			"obj-97" : [ "live.dial[6]", "FREQ", 0 ],
+			"obj-43" : [ "live.dial[12]", "TIMBRE", 0 ],
+			"obj-64" : [ "live.dial[2]", "tmbr", 0 ],
+			"obj-62" : [ "live.dial[1]", "fm", 0 ],
+			"obj-38" : [ "live.dial[10]", "FREQ", 0 ],
+			"obj-39" : [ "live.dial[11]", "MORPH", 0 ],
+			"obj-129" : [ "live.dial[8]", "decay", 0 ],
+			"obj-95" : [ "live.dial[4]", "TIMBRE", 0 ],
+			"obj-96" : [ "live.dial[5]", "MORPH", 0 ],
 			"obj-24" : [ "live.dial[3]", "HARMO", 0 ],
+			"obj-45" : [ "live.dial[13]", "HARMO", 0 ],
 			"parameterbanks" : 			{
 
 			}

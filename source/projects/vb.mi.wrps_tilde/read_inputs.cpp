@@ -94,10 +94,11 @@ namespace warps {
         
         // Internal oscillator parameters.  // TODO: check internal oscillator note!
         double note;
-        //pitch_offset = 66.67;
-        //pitch_scale = -84.26;
-        note = calibration_data_->pitch_offset;
-        note += adc_inputs[ADC_LEVEL_1_CV] * calibration_data_->pitch_scale;
+        //pitch_offset = 66.67;         // 100.00f;
+        //pitch_scale = -84.26;         //-110.00f;
+        //note = calibration_data_->pitch_offset;
+        //note += adc_inputs[ADC_LEVEL_1_CV] * calibration_data_->pitch_scale;
+        note = adc_inputs[ADC_LEVEL_1_CV] * 60.f;
         double interval = note - note_cv_;
         if (interval < -0.4 || interval > 0.4) {
             note_cv_ = note;
@@ -117,7 +118,7 @@ namespace warps {
             }
         }
         if (!patched[0]) {
-            p->note = note_pot_ ;    // + 24.0;
+            p->note = note_pot_ + 24.0;
         }
     }
     

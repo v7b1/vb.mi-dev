@@ -36,6 +36,8 @@
 
 #include <cstring>
 
+#include <stdio.h>
+
 namespace braids {
 
 static const size_t kWGBridgeLength = 1024;

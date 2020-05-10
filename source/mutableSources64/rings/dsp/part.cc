@@ -1,6 +1,6 @@
-// Copyright 2015 Olivier Gillet.
+// Copyright 2015 Emilie Gillet.
 //
-// Author: Olivier Gillet (ol.gillet@gmail.com)
+// Author: Emilie Gillet (emilie.o.gillet@gmail.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -66,7 +66,7 @@ void Part::Init(uint16_t* reverb_buffer) {
   limiter_.Init();
 
   note_filter_.Init(
-      sr_ / Dsp::getBlockSize(),
+                    sr_ / rings::kMaxBlockSize, //Dsp::getBlockSize(),
       0.001,  // Lag time with a sharp edge on the V/Oct input or trigger.
       0.010,  // Lag time after the trigger has been received.
       0.050,  // Time to transition from reactive to filtered.
@@ -102,7 +102,8 @@ void Part::ConfigureResonators() {
               model_ == RESONATOR_MODEL_STRING_AND_REVERB;
           string_[i].Init(has_dispersion);
 
-          double f_lfo = double(Dsp::getBlockSize()) / sr_;
+//          double f_lfo = double(Dsp::getBlockSize()) / sr_;
+            double f_lfo = double(kMaxBlockSize) / sr_;
           f_lfo *= lfo_frequencies[i];
           lfo_[i].Init<COSINE_OSCILLATOR_APPROXIMATE>(f_lfo);
         }
@@ -518,16 +519,7 @@ void Part::Process(
     // filter.
     double cutoff = patch.brightness * (2.0 - patch.brightness);
     double note = note_[voice] + performance_state.tonic + performance_state.fm;
-      /*
-      std::cout << "part -->> performance_state: voice: " << voice << "\n";
-      std::cout << "note_: " << note_[voice] << "\n";
-      std::cout << "fm: " << performance_state.fm << "\n";
-      std::cout << "note: " << performance_state.note << "\n";
-      std::cout << "tonic: " << performance_state.tonic << "\n";
-      std::cout << "---------\n";
-      std::cout << "note: " << note << "\n";
-      */
-      // TODO: check what's happening here
+
     double frequency = SemitonesToRatio(note - 69.0) * a3_;
     double filter_cutoff_range = performance_state.internal_exciter
       ? frequency * SemitonesToRatio((cutoff - 0.5) * 96.0)
@@ -536,13 +528,7 @@ void Part::Process(
       ? filter_cutoff_range
       : (10.0 / sr_), 0.499);
     double filter_q = performance_state.internal_exciter ? 1.5 : 0.8;
-      /*
-      std::cout << "filter: ---------------\n";
-      std::cout << "frequency: " << frequency << "\n";
-      std::cout << "cutoff_range: " << filter_cutoff_range << "\n";
-      std::cout << "cutoff: " << filter_cutoff << "\n";
-      std::cout << "filter q: " << filter_q << "\n";
-       */
+
       
     // Process input with excitation filter. Inactive voices receive silence.
     excitation_filter_[voice].set_f_q<FREQUENCY_DIRTY>(filter_cutoff, filter_q);

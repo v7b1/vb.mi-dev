@@ -1,6 +1,6 @@
-// Copyright 2014 Olivier Gillet.
+// Copyright 2014 Emilie Gillet.
 //
-// Author: Olivier Gillet (ol.gillet@gmail.com)
+// Author: Emilie Gillet (emilie.o.gillet@gmail.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -125,8 +125,6 @@ void FmOscillator::Process(
     frequency += Dsp::getIntervalCorrection();   // vb, pitch correction
     
   ratio = Interpolate(lut_fm_frequency_quantizer, ratio, 128.0);
-
-    //std::cout << "frequency: " << frequency << "\n";
     
   uint32_t inc_carrier = midi_to_increment(frequency);
   uint32_t inc_mod = midi_to_increment(frequency + ratio);

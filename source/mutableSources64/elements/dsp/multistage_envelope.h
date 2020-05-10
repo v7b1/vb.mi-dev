@@ -1,6 +1,6 @@
-// Copyright 2014 Olivier Gillet.
+// Copyright 2014 Emilie Gillet.
 //
-// Author: Olivier Gillet (ol.gillet@gmail.com)
+// Author: Emilie Gillet (emilie.o.gillet@gmail.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -58,36 +58,29 @@ class MultistageEnvelope {
   
   void Init();
     
-    // TODO: envelope process doesn't work .. segment_ goes up to 3
+    // TODO: envelope process doesn't work ? .. segment_ goes up to 3
   inline double Process(uint8_t flags) {
-      //std::cout << "segment in: " << segment_ << "\n";
     if (flags & ENVELOPE_FLAG_RISING_EDGE) {
-        //std::cout << "flags & ENV_RISING\n";
       start_value_ = (segment_ == num_segments_ || hard_reset_)
           ? level_[0]
           : value_;
       segment_ = 0;
       phase_ = 0.0;
     } else if (flags & ENVELOPE_FLAG_FALLING_EDGE && sustain_point_) {
-        //std::cout << "flags & ENV_FALLING && sus_point\n";
       start_value_ = value_;
       segment_ = sustain_point_;
       phase_ = 0.0;
     } else if (phase_ >= 1.0) {
-        //std::cout << "phase >= 1.0\n";
       start_value_ = level_[segment_ + 1];
-      ++segment_;       // TODO: WTF is this???
+      ++segment_;       // TODO: what is this???
       phase_ = 0.0;
       if (segment_ == loop_end_) {
-          //std::cout << "segment == looplen\n";
         segment_ = loop_start_;
       }
     }
-      //std::cout << "segment out: " << segment_ << "\n";
   
     bool done = segment_ == num_segments_;
-      //if (done)
-          //std::cout << "env done!\n";
+
       
     bool sustained = sustain_point_ && segment_ == sustain_point_ &&
         flags & ENVELOPE_FLAG_GATE;
@@ -96,13 +89,13 @@ class MultistageEnvelope {
     if (!sustained && !done) {
       phase_increment = Interpolate8(lut_env_increments, time_[segment_]);
     }
-      // TODO: here is the problem: segment_ is too big and read garbage from shape_ array
+
     double t = Interpolate8(
         lookup_table_table[LUT_ENV_LINEAR + shape_[segment_]],
         phase_);
     phase_ += phase_increment;
     value_ = start_value_ + (level_[segment_ + 1] - start_value_) * t;
-      //std::cout << "env phase: " << phase_ << "\n";
+
     return value_;
   }
 

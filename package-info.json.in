@@ -1,0 +1,20 @@
+{
+	"author" : "volker böhm",
+	"description" : "clones of several eurorack modules originally created by mutable instruments",
+	"homepatcher" : "max-devkit.maxpat",
+	"max_version_min" : "7.1",
+	"name" : "vb.mi-dev",
+	"os" : {
+		"macintosh" : {
+			"platform" : [ "x64" ],
+			"min_version" : "none"
+		}
+	},
+	"package_extra" : {
+		"reverse_domain" : "net.vboehm",
+		"copyright" : "Copyright (c) 2019 vboehm"
+	},
+	"tags" : ["eurorack", "mutable instruments" ],
+	"version" : "0.0.1",
+	"website" : "https://vboehm.net"
+}

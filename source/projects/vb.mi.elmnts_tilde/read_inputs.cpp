@@ -65,8 +65,7 @@ namespace elements {
         calibration_settings_.boot_in_easter_egg_mode = false;
         calibration_settings_.resonator_model = 0;
 
-        
-        //CONSTRAIN(calibration_settings_.resonator_model, 0, 2);       // vb ??
+
         
         note_ = 0.0;
         modulation_ = 0.0;
@@ -175,7 +174,8 @@ destination = value; \
         /*
         double modulation = pot_lp_[POT_RESONATOR_FM_ATTENUVERTER] * 49.5 *
         (calibration_settings_.offset[CV_ADC_FM] - cv_floats[CV_ADC_FM]);*/
-        double modulation = pot_lp_[POT_RESONATOR_FM_ATTENUVERTER] * 49.5 * cv_floats[CV_ADC_FM];
+        // TODO: check FM mod depth
+        double modulation = pot_lp_[POT_RESONATOR_FM_ATTENUVERTER] * 24.0 * cv_floats[CV_ADC_FM];
         
         modulation_ += 0.5 * (modulation - modulation_);
         state->modulation = modulation_;
@@ -188,7 +188,7 @@ destination = value; \
         
         //state->strength = 1.0 - cv_floats[CV_ADC_PRESSURE];
         // scale -1..+1 input to 0..+1.0
-        state->strength = cv_floats[CV_ADC_PRESSURE];   // * 0.5 + 0.5;
+        state->strength = cv_floats[CV_ADC_PRESSURE] * 0.5 + 0.5;
         
         CONSTRAIN(state->strength, 0.0, 1.0);
         CONSTRAIN(state->modulation, -60.0, 60.0);

@@ -1,3 +1,35 @@
+//
+// Copyright 2019 Volker Böhm.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
+// See http://creativecommons.org/licenses/MIT/ for more information.
+
+
+// a clone of mutable instruments' 'clouds' module for maxmsp
+// by volker böhm, dez 2019, https://vboehm.net
+
+
+// Original code by Émilie Gillet, https://mutable-instruments.net/
+
+
+
 #include "c74_msp.h"
 
 #include "clouds/dsp/granular_processor.h"
@@ -6,18 +38,12 @@
 #include "clouds/dsp/mu_law.h"
 #include "clouds/dsp/sample_rate_converter.h"
 
-//#include "copy_buffer.h"
-
-//#include "ext_buffer.h"
-
 #include "Accelerate/Accelerate.h"
 
 // original sample rate is 32 kHz
 
-// Dezember 2019
-// author: volker böhm, https://vboehm.net
 //
-// TODO: save and load audio data to buffer, make size of internal memory settable, make lofi bit depth settable
+// TODO: make lofi bit depth settable
 
 const uint16_t kAudioBlockSize = 32;        // sig vs can't be smaller than this!
 
@@ -74,7 +100,7 @@ struct t_myObj {
     
 };
 
-//void* myObj_new(t_symbol *s, long argc, t_atom *argv) {
+
 void* myObj_new(long size_in_ms) {
 	t_myObj* self = (t_myObj*)object_alloc(this_class);
 	
@@ -83,18 +109,19 @@ void* myObj_new(long size_in_ms) {
         dsp_setup((t_pxobject*)self, 10);
         outlet_new(self, "signal");
         outlet_new(self, "signal");
+        
+        self->sigvs = sys_getblksize();
+        
+        if(self->sigvs < kAudioBlockSize) {
+            object_error((t_object*)self,
+                         "sigvs can't be smaller than %d samples\n", kAudioBlockSize);
+            object_free(self);
+            self = NULL;
+            return self;
+        }
 
         self->sr = sys_getsr();
         
-        // check channel arg
-        /*
-        if(chns <= 0)
-            chns = 2;
-        else if(chns >= 2)
-            chns = 2;
-        else
-            chns = 1;
-        */
         
         int largeBufSize = 118784;
         int smallBufSize = 65536-128;
@@ -392,7 +419,7 @@ void myObj_dsp64(t_myObj* self, t_object* dsp64, short* count, double samplerate
     self->trig_connected = count[9];
     
     if(maxvectorsize < kAudioBlockSize) {
-        object_error((t_object*)self, "vector size can't be smaller than %d samples, sorry!", kAudioBlockSize);
+        object_error((t_object*)self, "sigvs can't be smaller than %d samples, sorry!", kAudioBlockSize);
         return;
     }
     
@@ -589,7 +616,7 @@ void myObj_copyFrom(t_myObj *self, t_symbol *name) {
         object_post((t_object*)self, "ab-size: %d", size);
         
         if(size < frames) {
-            // make sure, our the internal buffer is large enough
+            // make sure, the internal buffer is large enough
             // otherwise only copy part of the msp buffer
             frames = size;
         }

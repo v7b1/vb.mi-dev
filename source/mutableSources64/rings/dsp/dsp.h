@@ -1,6 +1,6 @@
-// Copyright 2015 Olivier Gillet.
+// Copyright 2015 Emilie Gillet.
 //
-// Author: Olivier Gillet (ol.gillet@gmail.com)
+// Author: Emilie Gillet (emilie.o.gillet@gmail.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -38,15 +38,13 @@ namespace rings {
     // original SR
     //static const double kSampleRate = 48000.0;
     //const double a3 = 440.0 / kSampleRate;
-    const size_t kMaxBlockSize = 1024;            // was: 24
+    const size_t kMaxBlockSize = 32;     // 24
     
-    // vb: don't know if this is the best way, to make these parameters
-    // set- and getable, but it seems to work...
+
     class Dsp {
     private:
         static double sr;
         static double a3;
-        static size_t maxBlockSize;
         
     public:
         static double getSr() {return sr;}
@@ -54,10 +52,6 @@ namespace rings {
         static void setSr(double newsr) {
             sr = newsr;
             a3 = 440.0 / sr;
-        }
-        static size_t getBlockSize() {return maxBlockSize;}
-        static void setBlockSize(int newBlockSize) {
-            maxBlockSize = static_cast<size_t>(newBlockSize);
         }
     };
 

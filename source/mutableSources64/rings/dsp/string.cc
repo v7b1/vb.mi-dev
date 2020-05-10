@@ -1,6 +1,6 @@
-// Copyright 2015 Olivier Gillet.
+// Copyright 2015 Emilie Gillet.
 //
-// Author: Olivier Gillet (ol.gillet@gmail.com)
+// Author: Emilie Gillet (emilie.o.gillet@gmail.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -195,7 +195,7 @@ void String::ProcessInternal(
 #ifndef MIC_W
       s = iir_damping_filter_.Process<FILTER_MODE_LOW_PASS>(s);
 #endif  // MIC_W
-        string_.Write(s);     // TODO: crashed here
+        string_.Write(s);  
 
       out_sample_[1] = out_sample_[0];
       aux_sample_[1] = aux_sample_[0];

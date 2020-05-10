@@ -1,6 +1,6 @@
-// Copyright 2014 Olivier Gillet.
+// Copyright 2014 Emilie Gillet.
 //
-// Author: Olivier Gillet (ol.gillet@gmail.com)
+// Author: Emilie Gillet (emilie.o.gillet@gmail.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -163,7 +163,7 @@ void Part::Process(
   
     
   // Render each voice.
-    /*
+    
   for (size_t i = 0; i < kNumVoices; ++i) {
     double midi_pitch = note_[i] + performance_state.modulation;
     if (easter_egg_) {
@@ -188,6 +188,7 @@ void Part::Process(
       }
       voice_[i].set_resonator_model(resonator_model_);
       // Render the voice signal.
+        // vb
         double freq = lut_midi_to_f_high[pitch >> 8] * lut_midi_to_f_low[pitch & 0xff];
         freq *= Dsp::getSrFactor();
         //std::cout << "freq: " << freq << "\n";
@@ -203,9 +204,9 @@ void Part::Process(
           center_buffer_,
           sides_buffer_,
           size);
-    }*/
+    }
     
-
+/*
         double midi_pitch = note_[0] + performance_state.modulation;
         if (easter_egg_) {
             ominous_voice_[0].Process(
@@ -243,7 +244,7 @@ void Part::Process(
                               center_buffer_,
                               sides_buffer_,
                               size);
-        }
+        }*/
     
     // Mixdown.
     for (size_t j = 0; j < size; ++j) {
@@ -253,7 +254,7 @@ void Part::Process(
       main[j] += r;
       aux[j] += l + (raw_buffer_[j] - l) * raw_gain;
     }
-  //}
+  }
 
     
   // Pre-clipping
@@ -278,7 +279,6 @@ void Part::Process(
     panic_ = true;
   }
     
-
   if (easter_egg_) {
     double l = (patch_.exciter_blow_level + patch_.exciter_strike_level) * 0.5;
     scaled_exciter_level_ = l * (2.0 - l);
@@ -294,7 +294,7 @@ void Part::Process(
   // Apply reverb.
   reverb_.set_amount(reverb_amount);
   reverb_.set_diffusion(patch_.reverb_diffusion);
-    bool freeze = patch_.space >= 1.75;       // TODO: freeze level a little too low, no? vb
+    bool freeze = patch_.space >= 1.1;     // vb, 1.75;
   if (freeze) {
     reverb_.set_time(1.0);
     reverb_.set_input_gain(0.0);

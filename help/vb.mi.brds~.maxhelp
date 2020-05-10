@@ -4,13 +4,13 @@
 		"appversion" : 		{
 			"major" : 8,
 			"minor" : 1,
-			"revision" : 0,
+			"revision" : 3,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 468.0, 65.0, 1044.0, 835.0 ],
+		"rect" : [ 209.0, 177.0, 1044.0, 835.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 13.0,
@@ -39,29 +39,52 @@
 		"subpatcher_template" : "vb01",
 		"boxes" : [ 			{
 				"box" : 				{
-					"id" : "obj-82",
-					"maxclass" : "textbutton",
-					"numinlets" : 1,
-					"numoutlets" : 3,
-					"outlettype" : [ "", "", "int" ],
-					"parameter_enable" : 0,
-					"patching_rect" : [ 787.5, 733.0, 138.0, 22.0 ],
-					"text" : "https://vboehm.net",
-					"texton" : "https://vboehm.net"
+					"hidden" : 1,
+					"id" : "obj-2",
+					"linecount" : 2,
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 808.0, 720.0, 232.0, 38.0 ],
+					"text" : ";\rmax launchbrowser https://vboehm.net"
 				}
 
 			}
 , 			{
 				"box" : 				{
-					"hidden" : 1,
-					"id" : "obj-76",
-					"linecount" : 3,
-					"maxclass" : "message",
-					"numinlets" : 2,
-					"numoutlets" : 1,
-					"outlettype" : [ "" ],
-					"patching_rect" : [ 849.0, 643.0, 125.0, 52.0 ],
-					"text" : ";\rmax launchbrowser https://vboehm.net"
+					"fontface" : 1,
+					"id" : "obj-102",
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 808.0, 763.0, 161.0, 21.0 ],
+					"text" : "https://vboehm.net, 2019"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"handoff" : "",
+					"id" : "obj-9",
+					"maxclass" : "ubutton",
+					"numinlets" : 1,
+					"numoutlets" : 4,
+					"outlettype" : [ "bang", "bang", "", "int" ],
+					"parameter_enable" : 0,
+					"patching_rect" : [ 808.0, 760.0, 158.142822265625, 28.0 ]
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-41",
+					"linecount" : 4,
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 730.0, 210.0, 232.0, 65.0 ],
+					"text" : "messages (serving as offsets) and signals (serving as modulators) are always added internally and clipped to 0..1 range."
 				}
 
 			}
@@ -108,19 +131,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 16.0, 582.0, 226.0, 79.0 ],
-					"text" : "the original module runs @ 96 kHz\nwith the resamp attribute, you can downsample to your system's current SR. Toggling resamp only comes into effect after restarting the DAC."
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"fontface" : 1,
-					"id" : "obj-56",
-					"maxclass" : "comment",
-					"numinlets" : 1,
-					"numoutlets" : 0,
-					"patching_rect" : [ 787.5, 710.0, 143.0, 21.0 ],
-					"text" : "by Volker Böhm, 2019"
+					"text" : "The original module runs @ 96 kHz.\nWith the resamp attribute, you can downsample to your system's current SR. Toggling resamp only comes into effect after restarting the DAC."
 				}
 
 			}
@@ -189,7 +200,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "signal" ],
 					"patching_rect" : [ 360.25, 415.0, 43.0, 23.0 ],
-					"text" : "*~ 0.3"
+					"text" : "*~ 0.2"
 				}
 
 			}
@@ -404,12 +415,12 @@
 					"patching_rect" : [ 749.5, 306.0, 41.0, 48.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
-							"parameter_mmax" : 4.0,
-							"parameter_shortname" : "coarse",
 							"parameter_type" : 0,
 							"parameter_unitstyle" : 1,
 							"parameter_mmin" : -4.0,
-							"parameter_longname" : "live.dial"
+							"parameter_longname" : "live.dial",
+							"parameter_mmax" : 4.0,
+							"parameter_shortname" : "coarse"
 						}
 
 					}
@@ -567,16 +578,27 @@
 			}
 , 			{
 				"box" : 				{
-					"format" : 6,
 					"id" : "obj-57",
-					"maxclass" : "flonum",
-					"maximum" : 1.0,
-					"minimum" : 0.0,
+					"maxclass" : "live.dial",
 					"numinlets" : 1,
 					"numoutlets" : 2,
-					"outlettype" : [ "", "bang" ],
-					"parameter_enable" : 0,
-					"patching_rect" : [ 368.0, 200.0, 50.0, 23.0 ]
+					"outlettype" : [ "", "float" ],
+					"parameter_enable" : 1,
+					"patching_rect" : [ 368.0, 175.0, 41.0, 48.0 ],
+					"saved_attribute_attributes" : 					{
+						"valueof" : 						{
+							"parameter_type" : 0,
+							"parameter_unitstyle" : 1,
+							"parameter_longname" : "live.dial[2]",
+							"parameter_initial_enable" : 1,
+							"parameter_mmax" : 1.0,
+							"parameter_initial" : [ 0.5 ],
+							"parameter_shortname" : "color"
+						}
+
+					}
+,
+					"varname" : "live.dial[2]"
 				}
 
 			}
@@ -594,16 +616,27 @@
 			}
 , 			{
 				"box" : 				{
-					"format" : 6,
 					"id" : "obj-126",
-					"maxclass" : "flonum",
-					"maximum" : 1.0,
-					"minimum" : 0.0,
+					"maxclass" : "live.dial",
 					"numinlets" : 1,
 					"numoutlets" : 2,
-					"outlettype" : [ "", "bang" ],
-					"parameter_enable" : 0,
-					"patching_rect" : [ 290.25, 200.0, 50.0, 23.0 ]
+					"outlettype" : [ "", "float" ],
+					"parameter_enable" : 1,
+					"patching_rect" : [ 290.25, 175.0, 41.0, 48.0 ],
+					"saved_attribute_attributes" : 					{
+						"valueof" : 						{
+							"parameter_type" : 0,
+							"parameter_unitstyle" : 1,
+							"parameter_longname" : "live.dial[1]",
+							"parameter_initial_enable" : 1,
+							"parameter_mmax" : 1.0,
+							"parameter_initial" : [ 0.5 ],
+							"parameter_shortname" : "timbre"
+						}
+
+					}
+,
+					"varname" : "live.dial[1]"
 				}
 
 			}
@@ -656,14 +689,14 @@
 					"patching_rect" : [ 265.0, 582.0, 48.0, 136.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
-							"parameter_initial_enable" : 1,
-							"parameter_mmax" : 6.0,
-							"parameter_initial" : [ -20 ],
-							"parameter_shortname" : "live.gain~",
 							"parameter_type" : 0,
 							"parameter_unitstyle" : 4,
 							"parameter_mmin" : -70.0,
-							"parameter_longname" : "live.gain~"
+							"parameter_longname" : "live.gain~",
+							"parameter_initial_enable" : 1,
+							"parameter_mmax" : 6.0,
+							"parameter_initial" : [ -20 ],
+							"parameter_shortname" : "live.gain~"
 						}
 
 					}
@@ -687,7 +720,7 @@
 						"appversion" : 						{
 							"major" : 8,
 							"minor" : 1,
-							"revision" : 0,
+							"revision" : 3,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -888,7 +921,7 @@
 						"auto_trig" : 1,
 						"drift" : 0,
 						"resamp" : 1,
-						"root" : 0
+						"root" : 5
 					}
 ,
 					"text" : "vb.mi.brds~"
@@ -1275,9 +1308,9 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-76", 0 ],
+					"destination" : [ "obj-2", 0 ],
 					"hidden" : 1,
-					"source" : [ "obj-82", 0 ]
+					"source" : [ "obj-9", 1 ]
 				}
 
 			}
@@ -1285,6 +1318,8 @@
 		"parameters" : 		{
 			"obj-4" : [ "live.dial", "coarse", 0 ],
 			"obj-6" : [ "live.gain~", "live.gain~", 0 ],
+			"obj-57" : [ "live.dial[2]", "color", 0 ],
+			"obj-126" : [ "live.dial[1]", "timbre", 0 ],
 			"parameterbanks" : 			{
 
 			}
@@ -1382,8 +1417,8 @@
 , 			{
 				"name" : "rsliderGold",
 				"default" : 				{
-					"color" : [ 0.646639, 0.821777, 0.854593, 1.0 ],
-					"bgcolor" : [ 0.764706, 0.592157, 0.101961, 1.0 ]
+					"bgcolor" : [ 0.764706, 0.592157, 0.101961, 1.0 ],
+					"color" : [ 0.646639, 0.821777, 0.854593, 1.0 ]
 				}
 ,
 				"parentstyle" : "",

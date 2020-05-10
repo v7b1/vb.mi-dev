@@ -48,8 +48,6 @@ class MacroOscillator {
   ~MacroOscillator() { }
   
   inline void Init(double sr) {
-      //sampleRate_ = sr;            // vb
-      //srFactor_ = 96000. / sr;     // vb
       
     analog_oscillator_[0].Init(sr);
     analog_oscillator_[1].Init(sr);
@@ -102,12 +100,10 @@ class MacroOscillator {
   int16_t parameter_[2];
   int16_t previous_parameter_[2];
   int16_t pitch_;
-  uint8_t sync_buffer_[24];
-  int16_t temp_buffer_[24];
+  uint8_t sync_buffer_[32];     // vb must be at least BLOCK_SIZE!
+  int16_t temp_buffer_[32];
   int32_t lp_state_;
     
-    double sampleRate_;       // vb
-    double srFactor_;        // vb
   
   AnalogOscillator analog_oscillator_[3];
   DigitalOscillator digital_oscillator_;

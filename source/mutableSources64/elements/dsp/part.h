@@ -1,6 +1,6 @@
-// Copyright 2014 Olivier Gillet.
+// Copyright 2014 Emilie Gillet.
 //
-// Author: Olivier Gillet (ol.gillet@gmail.com)
+// Author: Emilie Gillet (emilie.o.gillet@gmail.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -82,11 +82,9 @@ class Part {
   inline ResonatorModel resonator_model() const { return resonator_model_; }
   inline void set_resonator_model(ResonatorModel r) { resonator_model_ = r; }
     
-    Voice voice_[kNumVoices];
-    
  private:
   Patch patch_;
-  //Voice voice_[kNumVoices];
+  Voice voice_[kNumVoices];
   OminousVoice ominous_voice_[kNumVoices];
   
   bool panic_;

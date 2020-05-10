@@ -1,3 +1,35 @@
+//
+// Copyright 2019 Volker Böhm.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//
+// See http://creativecommons.org/licenses/MIT/ for more information.
+
+
+// a clone of mutable instruments' 'plaits' module for maxmsp
+// by volker böhm, jan 2019, https://vboehm.net
+
+
+// Original code by Émilie Gillet, https://mutable-instruments.net/
+
+
+
 #include "c74_msp.h"
 
 #include "plaits/dsp/dsp.h"
@@ -6,14 +38,13 @@
 #include "Accelerate/Accelerate.h"
 
 
-// author: Volker Boehm, 2019
-
 
 //#define ENABLE_LFO_MODE
 
 using namespace c74::max;
 
 
+const size_t kBlockSize = plaits::kBlockSize;
 
 double kSampleRate = 48000.0;
 double a0 = (440.0 / 8.0) / kSampleRate;
@@ -51,6 +82,16 @@ void* myObj_new(void) {
         outlet_new(self, "signal"); // 'out' output
         outlet_new(self, "signal"); // 'aux' output
         
+        self->sigvs = sys_getblksize();
+        
+        if(self->sigvs < kBlockSize) {
+            object_error((t_object*)self,
+                         "sigvs can't be smaller than %d samples\n", kBlockSize);
+            object_free(self);
+            self = NULL;
+            return self;
+        }
+        
         self->sr = sys_getsr();
         if(self->sr <= 0)
             self->sr = 44100.0;
@@ -67,8 +108,7 @@ void* myObj_new(void) {
         
         
         // allocate memory
-        // TODO: try with 32768
-        self->shared_buffer = sysmem_newptrclear(65536);
+        self->shared_buffer = sysmem_newptrclear(32768);
         
         if(self->shared_buffer == NULL) {
             object_post((t_object*)self, "mem alloc failed!");
@@ -76,7 +116,7 @@ void* myObj_new(void) {
             self = NULL;
             return self;
         }
-        stmlib::BufferAllocator allocator(self->shared_buffer, 65536);
+        stmlib::BufferAllocator allocator(self->shared_buffer, 32768);
         
         self->voice_ = new plaits::Voice;
         self->voice_->Init(&allocator);
@@ -128,6 +168,30 @@ void myObj_info(t_myObj *self)
     
 }
 
+void calc_note(t_myObj* self)
+{
+#ifdef ENABLE_LFO_MODE
+    int octave = static_cast<int>(self->octave_ * 10.0);
+    if (octave == 0) {
+        self->patch.note = -48.37 + self->transposition_ * 60.0;
+    } else if (octave == 9) {
+        self->patch.note = 60.0 + self->transposition_ * 48.0;
+    } else {
+        const double fine = self->transposition_ * 7.0;
+        self->patch.note = fine + static_cast<double>(octave) * 12.0;
+    }
+#else
+    int octave = static_cast<int>(self->octave_ * 9.0);
+    if (octave < 8) {
+        const double fine = self->transposition_ * 7.0;
+        self->patch.note = fine + static_cast<float>(octave) * 12.0 + 12.0;
+    } else {
+        self->patch.note = 60.0 + self->transposition_ * 48.0;
+    }
+#endif  // ENABLE_LFO_MODE
+}
+
+
 
 // plug / unplug patch chords...
 
@@ -137,7 +201,7 @@ void myObj_int(t_myObj *self, long value)
     
     switch (innum) {
         case 0:
-            object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
+            self->patch.engine = clamp(value, 0L, 32L);
             break;
         case 1:
             object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
@@ -166,31 +230,34 @@ void myObj_int(t_myObj *self, long value)
     }
 }
 
-
-void calc_note(t_myObj* self)
+void myObj_float(t_myObj *self, double value)
 {
-#ifdef ENABLE_LFO_MODE
-    int octave = static_cast<int>(self->octave_ * 10.0);
-    if (octave == 0) {
-        self->patch.note = -48.37 + self->transposition_ * 60.0;
-    } else if (octave == 9) {
-        self->patch.note = 60.0 + self->transposition_ * 48.0;
-    } else {
-        const double fine = self->transposition_ * 7.0;
-        self->patch.note = fine + static_cast<double>(octave) * 12.0;
+    long innum = proxy_getinlet((t_object *)self);
+    
+    switch (innum) {
+        case 0:
+            object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
+            break;
+        case 1:
+            self->transposition_ = clamp(value, -1., 1.);
+            calc_note(self);
+            break;
+        case 2:
+            object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
+            break;
+        case 3:
+            self->patch.harmonics = clamp(value, 0., 1.);
+            break;
+        case 4:
+            self->patch.timbre = clamp(value, 0., 1.);
+            break;
+        case 5:
+            self->patch.morph = clamp(value, 0., 1.);
+            break;
+        default:
+            break;
     }
-#else
-    int octave = static_cast<int>(self->octave_ * 9.0);
-    if (octave < 8) {
-        const double fine = self->transposition_ * 7.0;
-        self->patch.note = fine + static_cast<float>(octave) * 12.0 + 12.0;
-    } else {
-        self->patch.note = 60.0 + self->transposition_ * 48.0;
-    }
-#endif  // ENABLE_LFO_MODE
 }
-
-
 
 
 void myObj_choose_engine(t_myObj* self, long e) {
@@ -198,8 +265,6 @@ void myObj_choose_engine(t_myObj* self, long e) {
 }
 
 void myObj_get_engine(t_myObj* self) {
-    
-    //object_post((t_object*)self, "active engine: %d", self->voice_->active_engine());
     
     t_atom argv;
     atom_setlong(&argv, self->voice_->active_engine());
@@ -318,21 +383,16 @@ void myObj_dsp64(t_myObj* self, t_object* dsp64, short* count, double samplerate
     self->trigger_connected = count[6];
     self->modulations.trigger_patched = self->trigger_toggle && self->trigger_connected;
     
-    if(maxvectorsize > plaits::kMaxBlockSize) {
-        object_error((t_object*)self, "vector size can't be larger than 1024 samples, sorry!");
+    if(maxvectorsize < kBlockSize) {
+        object_error((t_object*)self, "sigvs can't be smaller than %d samples, sorry!", kBlockSize);
         return;
     }
 
     if(samplerate != self->sr) {
-        //plaits::Dsp::setSr(samplerate);
         self->sr = samplerate;
         kSampleRate = self->sr;
         a0 = (440.0f / 8.0f) / kSampleRate;
     }
-    
-    //if(maxvectorsize != self->sigvs)
-      //  plaits::Dsp::setBlockSize(maxvectorsize);
-
     
     object_method_direct(void, (t_object*, t_object*, t_perfroutine64, long, void*),
                          dsp64, gensym("dsp_add64"), (t_object*)self, (t_perfroutine64)myObj_perform64, 0, NULL);
@@ -423,6 +483,7 @@ void ext_main(void* r) {
     class_addmethod(this_class, (method)myObj_choose_engine,      "engine",      A_LONG, 0);
     class_addmethod(this_class, (method)myObj_get_engine,      "get_engine", 0);
     class_addmethod(this_class, (method)myObj_int,  "int",      A_LONG, 0);
+    class_addmethod(this_class, (method)myObj_float,  "float",      A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_info,	"info", 0);
     
     class_dspinit(this_class);
