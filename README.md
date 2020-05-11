@@ -12,6 +12,12 @@ https://vboehm.net
 
 
 
+Compiled versions for macOS can be found here:
+
+https://vboehm.net/downloads (look for vb.mi-objects)
+
+
+
 ## Building
 
 (Mostly copying from https://github.com/Cycling74/max-devkit ReadMe.md)
