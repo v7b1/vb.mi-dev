@@ -2,7 +2,7 @@
 
 Several MaxMSP clones of eurorack modules originally created by 'mutable instruments' https://mutable-instruments.net/ 
 
-Thanks to Émilie Gillet for making the source code available!
+Many thanks to Émilie Gillet for making the source code available!
 https://github.com/pichenettes/eurorack
 
 **Please note, this is not a release of 'mutable instruments'!**
