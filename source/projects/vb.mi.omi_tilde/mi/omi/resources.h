@@ -38,7 +38,7 @@
 
 
 
-namespace elements {
+namespace omi {
 
 typedef uint8_t ResourceId;
 
@@ -122,6 +122,6 @@ extern const size_t smp_boundaries[];
 #define SMP_BOUNDARIES 0
 #define SMP_BOUNDARIES_SIZE 10
 
-}  // namespace elements
+}  // namespace omi
 
 #endif  // ELEMENTS_RESOURCES_H_

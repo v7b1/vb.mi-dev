@@ -33,12 +33,12 @@
 
 #include <cmath>
 
-namespace elements {
+namespace omi {
   
 
-    const size_t kMaxBlockSize = 1024;  
+    const size_t kMaxBlockSize = 32;
     
 
-}  // namespace elements
+}  // namespace omi
 
 #endif  // ELEMENTS_DSP_DSP_H_

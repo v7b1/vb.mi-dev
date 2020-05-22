@@ -41,7 +41,8 @@
 using namespace c74::max;
 
 
-const int kMaxBlockSize = elements::kMaxBlockSize;
+const int kMaxBlockSize = omi::kMaxBlockSize;
+//const int kBlockSize = 16;
 
 static t_class* this_class = nullptr;
 
@@ -49,12 +50,11 @@ static t_class* this_class = nullptr;
 struct t_myObj {
     t_pxobject	obj;
     
-    elements::Part      *part;
-    elements::PerformanceState ps;
+    omi::Part      *part;
+    omi::PerformanceState ps;
     bool                uigate;
     
     short               gate_connected;
-    double              *out, *aux;     // output buffers
     double              sr;
 };
 
@@ -80,20 +80,10 @@ void* myObj_new(void) {
         self->ps.strength = 0.5;
         self->ps.modulation = 0.0;
         self->ps.gate = 0;
-    
-        self->out = (double *)sysmem_newptrclear(kMaxBlockSize*sizeof(double));
-        self->aux = (double *)sysmem_newptrclear(kMaxBlockSize*sizeof(double));
-        
-        if(self->out == NULL || self->aux == NULL) {
-            object_post((t_object*)self, "mem alloc failed!");
-            object_free(self);
-            self = NULL;
-            return self;
-        }
         
         
         // Init and seed the random parameters and generators with the serial number.
-        self->part = new elements::Part;
+        self->part = new omi::Part;
         self->part->Init(self->sr);
 
         uint32_t mySeed = 0x1fff7a10;
@@ -217,6 +207,16 @@ void myObj_note(t_myObj* self, double n) {
 }
 
 
+inline void SoftLimit_block(t_myObj *self, double *inout, size_t size)
+{
+    while(size--) {
+        double x = *inout * 0.5;
+        double x2 = x * x;
+        *inout = x * (27.0 + x2) / (27.0 + 9.0 * x2);
+        inout++;
+    }
+}
+
 
 
 
@@ -231,27 +231,27 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     double *raw = outs[2];
     
     long vs = sampleframes;
-    size_t size = vs;
+    size_t size = kMaxBlockSize;
+    omi::PerformanceState *ps = &self->ps;
     
     if (self->obj.z_disabled)
         return;
     
-    
-    if(self->gate_connected) {
-        double trigger = 0.0;
-        vDSP_sveD(gate, 1, &trigger, vs);   // calc sum of input vector
-        self->ps.gate = trigger > 0;
-    }
-    
-    self->ps.gate |= self->uigate;          // ui button pressed?
+    ps->gate = self->uigate;          // ui button pressed?
 
-    
-    self->part->Process(self->ps, audio_in, outL, outR, raw, size);
-    
-    for (size_t i = 0; i < vs; ++i) {
-        outL[i] = stmlib::SoftLimit(outL[i]*0.5);
-        outR[i] = stmlib::SoftLimit(outR[i]*0.5);
+    for(int count=0; count<vs; count+=size) {
+        
+        if(self->gate_connected) {
+            double trigger = 0.0;
+            vDSP_sveD(gate+count, 1, &trigger, size);   // calc sum of input vector
+            ps->gate |= trigger > 0.0;
+        }
+        
+        self->part->Process(*ps, audio_in+count, outL+count, outR+count, raw+count, size);
     }
+
+    SoftLimit_block(self, outL, vs);
+    SoftLimit_block(self, outR, vs);
 
 }
 
@@ -260,8 +260,8 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
 
 void myObj_dsp64(t_myObj* self, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags)
 {
-    if(maxvectorsize > kMaxBlockSize) {
-        object_error((t_object*)self, "vector size can't be larger than 1024 samples, sorry!");
+    if(maxvectorsize < kMaxBlockSize) {
+        object_error((t_object*)self, "vector size can't be smaller than %d samples, sorry!", kMaxBlockSize);
         return;
     }
     
@@ -283,11 +283,6 @@ void myObj_dsp64(t_myObj* self, t_object* dsp64, short* count, double samplerate
 void myObj_free(t_myObj* self) {
     dsp_free((t_pxobject*)self);
     delete self->part;
-
-    if(self->out)
-        sysmem_freeptr(self->out);
-    if(self->aux)
-        sysmem_freeptr(self->aux);
 }
 
 

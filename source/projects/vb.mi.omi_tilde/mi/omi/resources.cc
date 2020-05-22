@@ -32,7 +32,7 @@
 
 #include "omi/resources.h"
 
-namespace elements {
+namespace omi {
 
 const int16_t lut_db_led_brightness[] = {
        0,      0,     28,     45,
@@ -44618,4 +44618,4 @@ const size_t* sample_boundary_table[] = {
 };
 
 
-}  // namespace elements
+}  // namespace omi

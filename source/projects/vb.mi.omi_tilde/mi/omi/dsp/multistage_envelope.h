@@ -33,7 +33,7 @@
 
 #include "omi/resources.h"
 
-namespace elements {
+namespace omi {
 
 enum EnvelopeShape {
   ENV_SHAPE_LINEAR,
@@ -84,6 +84,8 @@ class MultistageEnvelope {
     double phase_increment = 0.0;
     if (!sustained && !done) {
       phase_increment = Interpolate8(lut_env_increments, time_[segment_]);
+        // vb: scale increment up a little to compensate for larger blockSize (32 vs 16)
+        phase_increment *= 2.0;
     }
 
     double t = Interpolate8(
@@ -358,6 +360,6 @@ class MultistageEnvelope {
   DISALLOW_COPY_AND_ASSIGN(MultistageEnvelope);
 };
 
-}  // namespace elements
+}  // namespace omi
 
 #endif  // ELEMENTS_DSP_MULTISTAGE_ENVELOPE_H_

@@ -30,7 +30,7 @@
 
 #include <algorithm>
 
-namespace elements {
+namespace omi {
 
 using namespace std;
 using namespace stmlib;
@@ -48,4 +48,4 @@ void MultistageEnvelope::Init() {
     shape_[4] = ENV_SHAPE_LINEAR;
 }
 
-}  // namespace elements
+}  // namespace omi

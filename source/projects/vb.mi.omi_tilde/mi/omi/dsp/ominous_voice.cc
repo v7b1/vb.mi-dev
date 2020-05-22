@@ -31,7 +31,7 @@
 #include <algorithm>
 #include <cstdio>
 
-namespace elements {
+namespace omi {
 
 using namespace std;
 using namespace stmlib;
@@ -168,7 +168,7 @@ void OminousVoice::ConfigureEnvelope(const Patch& patch) {
   if (patch.exciter_envelope_shape < 0.4) {
     double a = 0.0;
     double dr = (patch.exciter_envelope_shape * 0.625 + 0.2) * 1.8;
-    envelope_.set_adsr(a, dr, 0.0, dr);
+      envelope_.set_adsr(a, dr, 0.0, dr);     // vb: why adsr?
   } else if (patch.exciter_envelope_shape < 0.6) {
     double s = (patch.exciter_envelope_shape - 0.4) * 5.0;
     envelope_.set_adsr(0.0, 0.80, s, 0.80);
@@ -190,100 +190,99 @@ void OminousVoice::Process(
     double* sides,
     size_t size) {
     
-  uint8_t flags = GetGateFlags(gate_in);
+    uint8_t flags = GetGateFlags(gate_in);
     
-  // Compute the envelope.
-  ConfigureEnvelope(patch);
-  double level = envelope_.Process(flags);
-  //level += strength >= 0.5 ? 2.0 * strength - 1.0 : 0.0;
+    // Compute the envelope.
+    ConfigureEnvelope(patch);
+    double level = envelope_.Process(flags);
     level += strength;
-  double level_increment = (level - level_state_) / size;
+    double level_increment = (level - level_state_) / size;
 
-  damping_ += 0.1 * (patch.resonator_damping - damping_);
-  double filter_env_amount = damping_ <= 0.9 ? 1.1 * damping_ : 0.99;
-  double vca_env_amount = 1.0 + \
+    damping_ += 0.1 * (patch.resonator_damping - damping_);
+    double filter_env_amount = damping_ <= 0.9 ? 1.1 * damping_ : 0.99;
+    double vca_env_amount = 1.0 + \
       damping_ * damping_ * damping_ * damping_ * 0.5;
   
-  // Comfigure the filter.
-  double cutoff_midi = 12.0;
-  cutoff_midi += patch.resonator_brightness * 140.0;
-  cutoff_midi += filter_env_amount * level * 120.0;
-  cutoff_midi += 0.5 * (frequency - 64.0);
-  
-  double cutoff = midi_to_frequency(cutoff_midi);
-  double q_bump = patch.resonator_geometry - 0.6;
-  double q = 1.72 - q_bump * q_bump * 2.0;
-  double cutoff_2 = cutoff * (1.0 + patch.resonator_modulation_offset);
+    // Comfigure the filter.
+    double cutoff_midi = 12.0;
+    cutoff_midi += patch.resonator_brightness * 140.0;
+    cutoff_midi += filter_env_amount * level * 120.0;
+    cutoff_midi += 0.5 * (frequency - 64.0);
 
-  filter_[0].set_f_q<FREQUENCY_FAST>(cutoff, q);
-  filter_[1].set_f_q<FREQUENCY_FAST>(cutoff_2, q * 1.25);
-  
-  // Process each oscillator.
-  fill(&center[0], &center[size], 0.0);
-  fill(&sides[0], &sides[size], 0.0);
-  fill(&raw[0], &raw[size], 0.0);
+    double cutoff = midi_to_frequency(cutoff_midi);
+    double q_bump = patch.resonator_geometry - 0.6;
+    double q = 1.72 - q_bump * q_bump * 2.0;
+    double cutoff_2 = cutoff * (1.0 + patch.resonator_modulation_offset);
+
+    filter_[0].set_f_q<FREQUENCY_FAST>(cutoff, q);
+    filter_[1].set_f_q<FREQUENCY_FAST>(cutoff_2, q * 1.25);
+
+    // Process each oscillator.
+    fill(&center[0], &center[size], 0.0);
+    fill(&sides[0], &sides[size], 0.0);
+    fill(&raw[0], &raw[size], 0.0);
   
     const double rotation_speed[2] = { 1.0, 1.123456 };
-  feedback_ += 0.01 * (patch.exciter_bow_timbre - feedback_);
+    feedback_ += 0.01 * (patch.exciter_bow_timbre - feedback_);
 
-  for (size_t i = 0; i < 2; ++i) {
+    for (size_t i = 0; i < 2; ++i) {
 
-    double detune, ratio, amount, level;
-    if (i == 0) {
-      detune = 0.0;
-      ratio = patch.exciter_blow_meta;
-      amount = patch.exciter_blow_timbre;
-      level = patch.exciter_blow_level;
-    } else {
-      detune = Interpolate(
-          lut_detune_quantizer, patch.exciter_bow_level, 64.0);
-      ratio = patch.exciter_strike_meta;
-      amount = patch.exciter_strike_timbre;
-      level = patch.exciter_strike_level;
+        double detune, ratio, amount, level;
+        if (i == 0) {
+          detune = 0.0;
+          ratio = patch.exciter_blow_meta;
+          amount = patch.exciter_blow_timbre;
+          level = patch.exciter_blow_level;
+        } else {
+          detune = Interpolate(
+              lut_detune_quantizer, patch.exciter_bow_level, 64.0);
+          ratio = patch.exciter_strike_meta;
+          amount = patch.exciter_strike_timbre;
+          level = patch.exciter_strike_level;
+        }
+
+          // vb: skip oversampling to make it cheaper...
+          // (filter feedback path instead)
+          oscillator_[i].Process(
+                                 frequency + detune,
+                                 ratio,
+                                 feedback_ * (0.25 + 0.15 * patch.exciter_signature),
+                                 (2.0 - patch.exciter_signature * feedback_) * amount,
+                                 audio_in,
+                                 osc_,
+                                 size);
+        
+        // Copy to raw buffer.
+        double level_state = osc_level_[i];
+        for (size_t j = 0; j < size; ++j) {
+          level_state += 0.01 * (level - level_state);
+          osc_[j] *= level_state;
+          raw[j] += osc_[j];
+        }
+        osc_level_[i] = level_state;
+
+        // Apply filter.
+        filter_[i].ProcessMultimode(osc_, osc_, size, patch.resonator_geometry);
+
+        // Apply VCA.
+        double l = level_state_;
+        for (size_t j = 0; j < size; ++j) {
+          double gain = l * vca_env_amount;
+          if (gain >= 1.0) gain = 1.0;
+          osc_[j] *= gain;
+          l += level_increment;
+        }
+
+        // Spatialize.
+        double f = patch.resonator_position * patch.resonator_position * 0.001;
+        double distance = patch.resonator_position;
+
+        spatializer_[i].Rotate(f * rotation_speed[i]);
+        spatializer_[i].set_distance(distance * (2.0 - distance));
+        spatializer_[i].Process(osc_, center, sides, size);
     }
-
-      // vb: skip oversampling to make it cheaper...
-      // (filter the feedback path instead)
-      oscillator_[i].Process(
-                             frequency + detune,
-                             ratio,
-                             feedback_ * (0.25 + 0.15 * patch.exciter_signature),
-                             (2.0 - patch.exciter_signature * feedback_) * amount,
-                             audio_in,
-                             osc_,
-                             size);
-      
-    // Copy to raw buffer.
-    double level_state = osc_level_[i];
-    for (size_t j = 0; j < size; ++j) {
-      level_state += 0.01 * (level - level_state);
-      osc_[j] *= level_state;
-      raw[j] += osc_[j];
-    }
-    osc_level_[i] = level_state;
-
-    // Apply filter.
-    filter_[i].ProcessMultimode(osc_, osc_, size, patch.resonator_geometry);
-
-    // Apply VCA.
-    double l = level_state_;
-    for (size_t j = 0; j < size; ++j) {
-      double gain = l * vca_env_amount;
-      if (gain >= 1.0) gain = 1.0;
-      osc_[j] *= gain;
-      l += level_increment;
-    }
-
-    // Spatialize.
-    double f = patch.resonator_position * patch.resonator_position * 0.001;
-    double distance = patch.resonator_position;
-    
-    spatializer_[i].Rotate(f * rotation_speed[i]);
-    spatializer_[i].set_distance(distance * (2.0 - distance));
-    spatializer_[i].Process(osc_, center, sides, size);
-  }
   
   level_state_ = level;
 }
 
-}  // namespace elements
+}  // namespace omi

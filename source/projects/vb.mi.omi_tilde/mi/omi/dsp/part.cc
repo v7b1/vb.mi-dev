@@ -29,7 +29,7 @@
 #include "omi/dsp/part.h"
 #include "omi/resources.h"
 
-namespace elements {
+namespace omi {
 
 using namespace std;
 using namespace stmlib;
@@ -131,4 +131,4 @@ void Part::Process(
     }
 }
 
-}  // namespace elements
+}  // namespace omi

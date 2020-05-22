@@ -41,7 +41,7 @@
 #include "omi/dsp/patch.h"
 #include "omi/resources.h"
 
-namespace elements {
+namespace omi {
 
 //const double kOversamplingDownMidi = -36.0;
 const size_t kOversamplingUp = 8;
@@ -266,6 +266,6 @@ class OminousVoice {
   DISALLOW_COPY_AND_ASSIGN(OminousVoice);
 };
 
-}  // namespace elements
+}  // namespace omi
 
 #endif  // ELEMENTS_DSP_OMINOUS_VOICE_H_

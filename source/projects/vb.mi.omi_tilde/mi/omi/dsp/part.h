@@ -35,7 +35,7 @@
 #include "omi/dsp/ominous_voice.h"
 #include "omi/dsp/patch.h"
 
-namespace elements {
+namespace omi {
 
 struct PerformanceState {
   bool gate;
@@ -78,6 +78,6 @@ class Part {
     DISALLOW_COPY_AND_ASSIGN(Part);
 };
 
-}  // namespace elements
+}  // namespace omi
 
 #endif  // ELEMENTS_DSP_PART_H_

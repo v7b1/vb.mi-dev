@@ -33,14 +33,13 @@
 
 #include "c74_msp.h"
 
-//#include "elements/dsp/voice.h"
+
 #include "elements/dsp/dsp.h"
 #include "elements/dsp/part.h"
 #include "read_inputs.hpp"
 
 #include "Accelerate/Accelerate.h"
 
-#include <iostream>
 
 using namespace c74::max;
 
@@ -65,7 +64,7 @@ struct t_myObj {
     
     uint16_t            *reverb_buffer;
     void                *info_out;
-    double              *out, *aux;     // output buffers
+    //double              *out, *aux;     // output buffers
     double              sr;
     long                sigvs;
     bool                gate_connected;
@@ -104,8 +103,8 @@ void* myObj_new(void) {
         self->reverb_buffer = (t_uint16*)sysmem_newptrclear(32768*sizeof(t_uint16));
         
         // TODO: make sure 4096 is enough memory
-        self->out = (double *)sysmem_newptrclear(4096*sizeof(double));
-        self->aux = (double *)sysmem_newptrclear(4096*sizeof(double));
+//        self->out = (double *)sysmem_newptrclear(4096*sizeof(double));
+//        self->aux = (double *)sysmem_newptrclear(4096*sizeof(double));
         
         if(self->reverb_buffer == NULL) {
             object_post((t_object*)self, "mem alloc failed!");
@@ -114,7 +113,7 @@ void* myObj_new(void) {
             return self;
         }
         
-        //self->read_inputs = new elements::ReadInputs;
+
         self->read_inputs.Init();
         
         
@@ -405,12 +404,6 @@ void myObj_note(t_myObj* self, double n) {
 }
 
 
-/*
- enum ResonatorModel {
-    RESONATOR_MODEL_MODAL,
-    RESONATOR_MODEL_STRING,
-    RESONATOR_MODEL_STRINGS,
- };*/
 
 void myObj_model(t_myObj *self, long n) {
 
@@ -433,6 +426,18 @@ void myObj_easter(t_myObj* self, long n) {
 }
 
 
+
+inline void SoftLimit_block(t_myObj *self, double *inout, size_t size)
+{
+    while(size--) {
+        double x = *inout * 0.5;
+        double x2 = x * x;
+        *inout = x * (27.0 + x2) / (27.0 + 9.0 * x2);
+        inout++;
+    }
+}
+
+
 #pragma mark ----- dsp loop -----
 
 void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam)
@@ -450,10 +455,7 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     if (self->obj.z_disabled)
         return;
     
-    //double blow_in_level = self->blow_in_level;
-    //double strike_in_level = self->strike_in_level;
-    double *out = self->out;
-    double *aux = self->aux;
+
     double *cvinputs = self->read_inputs.cv_floats;    //self->cvinputs;
     int     numcvs = elements::CV_ADC_CHANNEL_LAST;     // 13
     elements::PerformanceState *ps = &self->ps;
@@ -480,36 +482,61 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
         ? (1.0 / kNoiseGateThreshold) * blow_in_level : 1.0;
         blow_in[i] = gain * blow_in_sample;
     }*/
-    int kend = vs / size;
+//    int kend = vs / size;
+//
+//    for(size_t k = 0; k < kend; ++k) {
+//        int offset = k * size;
+//
+//        // read 'cv' input signals, store only first value of a block
+//        for(int j=0; j<numcvs; j++) {
+//            cvinputs[j] = ins[j+2][offset];  // leave out first two inlets (audio inputs)
+//        }
+//
+//        if(gate_connected) {        // check if gate signal is connected
+//            double trigger = 0.0;
+//            vDSP_sveD(gate_in+offset, 1, &trigger, size);   // calc sum of input block
+//            //cvinputs[numcvs] = trigger;         //put it into last cv channel
+//            ps->gate |= trigger != 0.0;
+//        }
+//        //else
+//          //  cvinputs[numcvs] = 0.0;
+//
+//
+//        self->read_inputs.Read(self->part->mutable_patch(), ps);
+//
+//        self->part->Process(*ps, blow_in+offset, strike_in+offset, out, aux, size);
+//
+//        for (size_t i = 0; i < size; ++i) {
+//            int index = i + offset;
+//            outL[index] = out[i];
+//            outR[index] = aux[i];
+//        }
+//
+//    }
     
-    for(size_t k = 0; k < kend; ++k) {
-        int offset = k * size;
+    
+    for(size_t count = 0; count < vs; count += size) {
         
         // read 'cv' input signals, store only first value of a block
         for(int j=0; j<numcvs; j++) {
-            cvinputs[j] = ins[j+2][offset];  // leave out first two inlets (audio inputs)
+            cvinputs[j] = ins[j+2][count];  // leave out first two inlets (audio inputs)
         }
         
         if(gate_connected) {        // check if gate signal is connected
             double trigger = 0.0;
-            vDSP_sveD(gate_in+offset, 1, &trigger, size);   // calc sum of input block
-            //cvinputs[numcvs] = trigger;         //put it into last cv channel
+            vDSP_sveD(gate_in+count, 1, &trigger, size);   // calc sum of input block
             ps->gate |= trigger != 0.0;
         }
-        //else
-          //  cvinputs[numcvs] = 0.0;
-        
+
         
         self->read_inputs.Read(self->part->mutable_patch(), ps);
         
-        self->part->Process(*ps, blow_in+offset, strike_in+offset, out, aux, size);
+        self->part->Process(*ps, blow_in+count, strike_in+count, outL+count, outR+count, size);
         
-        for (size_t i = 0; i < size; ++i) {
-            int index = i + offset;
-            outL[index] = stmlib::SoftLimit(out[i]*0.5);
-            outR[index] = stmlib::SoftLimit(aux[i]*0.5);
-        }
     }
+    
+    SoftLimit_block(self, outL, vs);
+    SoftLimit_block(self, outR, vs);
 }
 
 
@@ -547,10 +574,10 @@ void myObj_free(t_myObj* self)
 
     if(self->reverb_buffer)
         sysmem_freeptr(self->reverb_buffer);
-    if(self->out)
-        sysmem_freeptr(self->out);
-    if(self->aux)
-        sysmem_freeptr(self->aux);
+//    if(self->out)
+//        sysmem_freeptr(self->out);
+//    if(self->aux)
+//        sysmem_freeptr(self->aux);
 }
 
 

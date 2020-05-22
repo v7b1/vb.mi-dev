@@ -29,7 +29,7 @@
 #ifndef ELEMENTS_DSP_PATCH_H_
 #define ELEMENTS_DSP_PATCH_H_
 
-namespace elements {
+namespace omi {
 
 struct Patch {
   double exciter_envelope_shape;
@@ -55,6 +55,6 @@ struct Patch {
   double modulation_frequency;
 };
 
-}  // namespace elements
+}  // namespace omi
 
 #endif  // ELEMENTS_DSP_PATCH_H_
