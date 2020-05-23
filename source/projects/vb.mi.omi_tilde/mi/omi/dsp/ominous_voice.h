@@ -127,7 +127,7 @@ class FmOscillator {
     previous_sample_ = 0.0;
       lp_filter[0].Init();
       lp_filter[1].Init();
-      // vb: use two onepole filter in the feedback path to avoid aliasing and ringing
+      // vb: use two onepole filters in the feedback path to avoid aliasing and ringing
       lp_filter[0].set_f<stmlib::FREQUENCY_DIRTY>(0.08);
       lp_filter[1].set_f<stmlib::FREQUENCY_DIRTY>(0.08);
   }
@@ -137,6 +137,8 @@ class FmOscillator {
       double feedback_amount,
       double target_fm_amount,
       const double* external,
+        double*  cross_fm,        // vb
+        double cross_fb_amount, // vb
       double* destination,
       size_t size);
 
@@ -173,7 +175,7 @@ class FmOscillator {
     
     double intervalCorrection_;
     
-    stmlib::OnePole lp_filter[2];
+    stmlib::OnePole lp_filter[2];       // vb
    
   DISALLOW_COPY_AND_ASSIGN(FmOscillator);
 };
@@ -240,6 +242,7 @@ class OminousVoice {
       return lut_midi_to_f_high[pitch >> 8] * lut_midi_to_f_low[pitch & 0xff] * srFactor_;  // vb
   }
   
+    double cross_fm_[kMaxBlockSize];     //vb
   double osc_[kMaxBlockSize];
   
   bool previous_gate_;

@@ -193,6 +193,17 @@ void myObj_space(t_myObj* self, double m) {
     self->part->mutable_patch()->space = m;
 }
 
+// vb: add some scalable resonance to the multimode filter
+void myObj_reson(t_myObj* self, double m) {
+    m = clamp(m, 0., 1.);
+    self->part->mutable_patch()->resonance = m * 10.0;
+}
+
+// vb: add some scalable resonance to the multimode filter
+void myObj_xfb(t_myObj* self, double m) {
+    m = clamp(m, 0., 1.);
+    self->part->mutable_patch()->cross_fb = m;
+}
 
 
 void myObj_strength(t_myObj* self, double m) {
@@ -342,6 +353,8 @@ void ext_main(void* r) {
     class_addmethod(this_class, (method)myObj_filter_env, "filter_env",    A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_rotation, "rotation",    A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_space, "space",    A_FLOAT, 0);
+    class_addmethod(this_class, (method)myObj_reson, "reson",    A_FLOAT, 0);
+    class_addmethod(this_class, (method)myObj_xfb, "xfb",    A_FLOAT, 0);
     
     class_addmethod(this_class, (method)myObj_note,	"note",	A_FLOAT, 0);
     

@@ -46,13 +46,16 @@ struct Patch {
   double resonator_brightness;
   double resonator_damping;
   double resonator_position;
-  double resonator_modulation_frequency;
-  double resonator_modulation_offset;
+    double resonator_modulation_frequency;        // TODO: check
+    double resonator_modulation_offset;              // TODO: check
   double reverb_diffusion;
   double reverb_lp;
   double space;
   
   double modulation_frequency;
+    
+    double resonance;       // vb
+    double cross_fb;
 };
 
 }  // namespace omi

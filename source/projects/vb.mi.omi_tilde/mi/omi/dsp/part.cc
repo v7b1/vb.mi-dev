@@ -49,15 +49,17 @@ void Part::Init(double sr) {
     patch_.exciter_strike_meta = 0.5;
     patch_.exciter_strike_timbre = 0.5;
     patch_.exciter_signature = 0.0;
-    patch_.resonator_geometry = 0.2;
+    patch_.resonator_geometry = 0.0;
     patch_.resonator_brightness = 0.5;
     patch_.resonator_damping = 0.25;
     patch_.resonator_position = 0.3;
     patch_.resonator_modulation_frequency = 0.5 / sr;
     patch_.resonator_modulation_offset = 0.1;
     patch_.reverb_diffusion = 0.625;
-    patch_.reverb_lp = 0.7;
+    //patch_.reverb_lp = 0.7;
     patch_.space = 0.5;
+    patch_.resonance = 0.0;
+    patch_.cross_fb = 0.0;
 
   
     ominous_voice_.Init(srFactor);

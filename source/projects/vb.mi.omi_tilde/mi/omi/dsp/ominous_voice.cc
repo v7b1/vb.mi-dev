@@ -90,6 +90,8 @@ void FmOscillator::Process(
     double feedback_amount,
     double target_fm_amount,
     const double* external_fm,
+    double* cross_fm,       // vb
+    double cross_fm_amount, // vb
     double* destination,
     size_t size) {
     
@@ -129,10 +131,11 @@ void FmOscillator::Process(
     double mod = SineFm(phase_mod, feedback_amount * previous_sample);
       // vb: add lowpass to prevent ringing at sf/2
       mod = lp_filter[0].Process<FILTER_MODE_LOW_PASS>(mod);
+      // vb: add cross fb
     destination[i] = previous_sample = SineFm(
         phase_carrier,
-        amount_attenuation * (mod * fm_amount + external_fm[i]));
-      previous_sample = lp_filter[1].Process<FILTER_MODE_LOW_PASS>(previous_sample);
+        amount_attenuation * (mod * fm_amount + external_fm[i] + cross_fm_amount * cross_fm[i]));
+      cross_fm[i] = previous_sample = lp_filter[1].Process<FILTER_MODE_LOW_PASS>(previous_sample);
   }
   
   phase_carrier_ = phase_carrier;
@@ -160,6 +163,7 @@ void OminousVoice::Init(double srFactor) {
   }
     
     // vb init additions
+    fill(&cross_fm_[0], &cross_fm_[kMaxBlockSize], 0.0);
     damping_ = 0.0;
     feedback_ = 0.0;
 }
@@ -212,8 +216,11 @@ void OminousVoice::Process(
     double cutoff = midi_to_frequency(cutoff_midi);
     double q_bump = patch.resonator_geometry - 0.6;
     double q = 1.72 - q_bump * q_bump * 2.0;
+    q += patch.resonance;   // vb
     double cutoff_2 = cutoff * (1.0 + patch.resonator_modulation_offset);
 
+    //printf("cutoff1: %f -- cutoff2: %f\n", cutoff, cutoff_2);
+    
     filter_[0].set_f_q<FREQUENCY_FAST>(cutoff, q);
     filter_[1].set_f_q<FREQUENCY_FAST>(cutoff_2, q * 1.25);
 
@@ -249,6 +256,8 @@ void OminousVoice::Process(
                                  feedback_ * (0.25 + 0.15 * patch.exciter_signature),
                                  (2.0 - patch.exciter_signature * feedback_) * amount,
                                  audio_in,
+                                 cross_fm_,
+                                 patch.cross_fb,
                                  osc_,
                                  size);
         
