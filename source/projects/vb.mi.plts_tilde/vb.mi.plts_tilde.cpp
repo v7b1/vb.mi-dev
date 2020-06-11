@@ -341,7 +341,7 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     
     long    vs = sampleframes;
     size_t  size = plaits::kBlockSize;
-    double  pitch_lp_ = 0.;
+    //double  pitch_lp_ = 0.; //self->pitch_lp_;
     uint16_t count = 0;
     
     if (self->obj.z_disabled)
@@ -366,9 +366,9 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
         }
         
         // smooth out pitch changes
-        ONE_POLE(pitch_lp_, self->modulations.note, 0.7);
+        //ONE_POLE(pitch_lp_, self->modulations.note, 0.7);
         
-        self->modulations.note = pitch_lp_;
+        //self->modulations.note = pitch_lp_;
         
         self->voice_->Render(self->patch, self->modulations, out+count, aux+count, size);
     }
