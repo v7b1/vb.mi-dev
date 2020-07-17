@@ -106,10 +106,11 @@ class XYGenerator {
       output_channel_[i].LoadScale(scale_index, scale);
     }
   }
+    OutputChannel output_channel_[kNumChannels];    // vb
   
  private:
   RandomSequence random_sequence_[kNumChannels];
-  OutputChannel output_channel_[kNumChannels];
+//  OutputChannel output_channel_[kNumChannels];
   RampExtractor ramp_extractor_;
   RampDivider ramp_divider_;
   

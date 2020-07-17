@@ -128,7 +128,8 @@ void XYGenerator::Process(
   for (size_t i = 0; i < kNumChannels; ++i) {
     OutputChannel& channel = output_channel_[i];
     const GroupSettings& settings = i < kNumXChannels ? x_settings : y_settings;
-    
+      // vb, take this out of the dsp loop
+    /*
     switch (settings.voltage_range) {
       case VOLTAGE_RANGE_NARROW:
         channel.set_scale_offset(ScaleOffset(2.0f, 0.0f));
@@ -144,7 +145,7 @@ void XYGenerator::Process(
       
       default:
         break;
-    }
+    }*/
     
     float amount = 1.0f;
     if (settings.control_mode == CONTROL_MODE_BUMP) {

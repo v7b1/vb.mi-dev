@@ -339,7 +339,10 @@ void myObj_record_scale(t_myObj *self, long a)
                                                    self->settings.mutable_scale(scale_index));
         if (success) {
             self->settings.set_dirty_scale_index(scale_index);
-            object_post((t_object *)self, "set scale success!");
+            object_post((t_object *)self, "extracting scale done! scale index: %d", scale_index);
+        }
+        else {
+            object_warn((t_object *)self, "extracting scale failed!");
         }
     }
 
@@ -424,39 +427,58 @@ void myObj_x(t_myObj *self, long b) {
 void myObj_t_model(t_myObj *self, long b) {
     //b = clamp(b, 0, 2);
     State* state = self->settings.mutable_state();
-    if(b>2) b = 2;
-    else if(b<0) b = 0;
+    CONSTRAIN(b, 0, 2);
     state->t_model = b;
 }
 
 
 void myObj_t_range(t_myObj *self, long b) {
     State* state = self->settings.mutable_state();
-    if(b>2) b = 2;
-    else if(b<0) b = 0;
+    CONSTRAIN(b, 0, 2);
     state->t_range = b;
 }
 
 
 void myObj_x_range(t_myObj *self, long b) {
     State* state = self->settings.mutable_state();
-    if(b>2) b = 2;
-    else if(b<0) b = 0;
+    CONSTRAIN(b, 0, 2);
     state->x_range = b;
+    
+    // try out ....
+    for (size_t i = 0; i < kNumXChannels; ++i) {
+        OutputChannel& channel = self->xy_generator.output_channel_[i];
+        //const GroupSettings& settings = i < kNumXChannels ? x_settings : y_settings;
+        
+        switch (b) {
+            case VOLTAGE_RANGE_NARROW:
+                channel.set_scale_offset(ScaleOffset(2.0f, 0.0f));
+                break;
+                
+            case VOLTAGE_RANGE_POSITIVE:
+                channel.set_scale_offset(ScaleOffset(5.0f, 0.0f));
+                break;
+                
+            case VOLTAGE_RANGE_FULL:
+                channel.set_scale_offset(ScaleOffset(10.0f, -5.0f));
+                break;
+                
+            default:
+                break;
+        }
+    }
+    // end try out
 }
 
 void myObj_x_mode(t_myObj *self, long b) {
     State* state = self->settings.mutable_state();
-    if(b>2) b = 2;
-    else if(b<0) b = 0;
+    CONSTRAIN(b, 0, 2);
     state->x_control_mode = b;
 }
 
 void myObj_x_scale(t_myObj *self, long b) {
     State* state = self->settings.mutable_state();
     int max = kNumScales-1;
-    if(b>max) b = max;
-    else if(b<0) b = 0;
+    CONSTRAIN(b, 0, max);
     state->x_scale = b;
 }
 
@@ -702,7 +724,7 @@ void dsp_loop(t_myObj* self, double** ins, double** outs, long blockSize, long o
         std::fill(&self->voltages[0], &self->voltages[4 * size], voltage);
     } else {
         x.control_mode = ControlMode(state.x_control_mode);
-        x.voltage_range = VoltageRange(state.x_range % 3);
+        //x.voltage_range = VoltageRange(state.x_range % 3);  // TODO: can range be something else then 0..2 ?
         x.register_mode = state.x_register_mode;
         x.register_value = u;
         
@@ -715,7 +737,7 @@ void dsp_loop(t_myObj* self, double** ins, double** outs, long blockSize, long o
         x.ratio.q = 1;
         
         y.control_mode = CONTROL_MODE_IDENTICAL;
-        y.voltage_range = VoltageRange(state.y_range);
+        y.voltage_range = VoltageRange(state.y_range);      // TODO: we never set this manually ?
         y.register_mode = false;
         y.register_value = 0.0f;
         y.spread = float(state.y_spread) / 256.0f;

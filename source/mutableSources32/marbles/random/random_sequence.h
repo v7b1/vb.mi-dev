@@ -102,7 +102,7 @@ class RandomSequence {
     // RewriteValue(x) returns what the most recent call to NextValue would have
     // returned if its second argument were x instead. This is used to "rewrite
     // history" when the module acquires data from an external source (ASR,
-    // randomizer or quantizer mode).
+      // randomizer or quantizer mode).   // TODO: look at that! vb
     if (replay_head_ >= 0) {
       return GetReplayValue();
     }

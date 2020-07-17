@@ -112,12 +112,13 @@ void OutputChannel::Process(
   // output will be slewed too. Another option would have been to wait 2ms
   // between the rising edge and the actual acquisition, but we don't want
   // to penalize people who use tighter sequencers.
-  if (reacquisition_counter_) {
-    --reacquisition_counter_;
-    float u = random_sequence->RewriteValue(register_value_);
-    voltage_ = 10.0f * (u - 0.5f) + register_transposition_;
-    quantized_voltage_ = Quantize(voltage_, 2.0f * steps_ - 1.0f);
-  }
+    // vb, can we just comment that out?
+//  if (reacquisition_counter_) {
+//    --reacquisition_counter_;
+//    float u = random_sequence->RewriteValue(register_value_);
+//    voltage_ = 10.0f * (u - 0.5f) + register_transposition_;
+//    quantized_voltage_ = Quantize(voltage_, 2.0f * steps_ - 1.0f);
+//  }
   
   while (size--) {
     const float steps = steps_modulation.Next();
@@ -126,16 +127,16 @@ void OutputChannel::Process(
       voltage_ = GenerateNewVoltage(random_sequence);
       lag_processor_.ResetRamp();
       quantized_voltage_ = Quantize(voltage_, 2.0f * steps - 1.0f);
-      if (register_mode_) {
-        reacquisition_counter_ = kNumReacquisitions;
-      }
+//      if (register_mode_) {
+//        reacquisition_counter_ = kNumReacquisitions;
+//      }
     }
     
     if (steps >= 0.5f) {
-      *output = quantized_voltage_;
+      *output = quantized_voltage_ * 0.2f;      // vb, scale output to -1..+1 range
     } else {
       const float smoothness = 1.0f - 2.0f * steps;
-      *output = lag_processor_.Process(voltage_, smoothness, *phase);
+      *output = lag_processor_.Process(voltage_, smoothness, *phase) * 0.2f; //vb, scale output to -1..+1 range
     }
     output += stride;
     previous_phase_ = *phase++;
