@@ -1,33 +1,25 @@
 //
-// Copyright 2020 Volker Böhm.
+//    Copyright 2020 Volker Böhm.
 //
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
+//    This program is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
 //
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
+//    This program is distributed in the hope that it will be useful, but
+//    WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    General Public License for more details.
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
-//
-// See http://creativecommons.org/licenses/MIT/ for more information.
+//    You should have received a copy of the GNU General Public License
+//    along with this program. If not, see http://www.gnu.org/licenses/ .
 
 
-// a clone of mutable instruments' 'ripples' module for maxmsp
+// A clone of mutable instruments' 'Ripples' Eurorack module
+// by volker böhm, july 2020, https://vboehm.net
 // based on the virtual analog model provided by
 // Alright Devices https://www.alrightdevices.com/
-// for VCVrack https://vcvrack.com/
-
-// by volker böhm, jan 2019, https://vboehm.net
+// done for VCVrack https://vcvrack.com/
 
 
 // Original module conceived by Émilie Gillet, https://mutable-instruments.net/
@@ -57,8 +49,6 @@ struct t_myObj {
     ripples::RipplesEngine::Frame frame;
     float                   sr;
     int                     sigvs;
-    short                   strum_connected;
-    short                   fm_patched;
     double                  drive;
 };
 
@@ -132,13 +122,6 @@ void myObj_resonance(t_myObj* self, double m) {
     self->frame.res_knob = clamp(m, 0., 1.);
 }
 
-void myObj_fm(t_myObj* self, double m) {
-    self->frame.fm_knob = clamp(m, -1., 1.);
-}
-
-//void myObj_use_gain(t_myObj* self, long m) {
-//    self->frame.gain_cv_present = (m != 0); //clamp(m, 0., 1.);
-//}
 
 inline void SoftLimit_block(double *inout, double drive, size_t size) {
     while(size--) {
@@ -233,12 +216,6 @@ void myObj_assist(t_myObj* self, void* unused, t_assist_function io, long index,
             case 2:
                 strncpy(string_dest,"(signal/float) resonance" , ASSIST_STRING_MAXSIZE);
                 break;
-//            case 3:
-//                strncpy(string_dest,"(signal/float) gain", ASSIST_STRING_MAXSIZE);
-//                break;
-//            case 4:
-//                strncpy(string_dest,"(signal/float) fm", ASSIST_STRING_MAXSIZE);
-//                break;
         }
     }
     else if (io == ASSIST_OUTLET) {
@@ -268,9 +245,6 @@ void ext_main(void* r) {
     
     class_addmethod(this_class, (method)myObj_frequency,    "freq",    A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_resonance,	"res",	A_FLOAT, 0);
-    class_addmethod(this_class, (method)myObj_fm,   "fm",   A_FLOAT, 0);
-
-//    class_addmethod(this_class, (method)myObj_int,      "int",      A_LONG, 0);
     class_addmethod(this_class, (method)myObj_float,    "float",    A_FLOAT, 0);
 
     
@@ -278,6 +252,6 @@ void ext_main(void* r) {
     class_register(CLASS_BOX, this_class);
     
     object_post(NULL, "vb.mi.rppls~ by volker böhm --> vboehm.net");
-    object_post(NULL, "a clone of mutable instruments' 'ripples' module");
+    object_post(NULL, "a clone of mutable instruments' 'Ripples' module");
     object_post(NULL, "based on a virtual analog model by Alright Devices");
 }
