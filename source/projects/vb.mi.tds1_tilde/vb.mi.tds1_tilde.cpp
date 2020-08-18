@@ -30,15 +30,11 @@
 
 
 
-// TODO: add plotter, make a separate object for 'sheep', check out parasite
-
-
-
 #include "c74_msp.h"
 
 
 #include "tides/generator.h"
-#include "tides/plotter.h"
+//#include "tides/plotter.h"
 
 #include "stmlib/utils/gate_flags.h"
 
@@ -56,7 +52,7 @@ struct t_myObj {
 	t_pxobject	obj;
     
     tides::Generator    generator;
-    tides::Plotter      plotter;
+//    tides::Plotter      plotter;
 
     tides::GeneratorMode     ramp_mode;
     tides::GeneratorRange        range;
@@ -76,7 +72,7 @@ struct t_myObj {
 };
 
 
-
+//#include "tides/easter_egg/plotter_program.h"
 
 void* myObj_new(t_symbol *s, long argc, t_atom *argv)
 {
@@ -108,6 +104,7 @@ void* myObj_new(t_symbol *s, long argc, t_atom *argv)
         self->generator.set_range(tides::GENERATOR_RANGE_HIGH);
         self->generator.set_mode(tides::GENERATOR_MODE_LOOPING);
         self->generator.set_sync(false);
+//        self->plotter.Init(plotter_program, sizeof(plotter_program) / sizeof(PlotInstruction));
 
         
         self->previous_state_ = 0;
@@ -146,6 +143,7 @@ void myObj_int(t_myObj* self, long m) {
         case 6:
             bool a = m != 0;
             self->use_clock = a;
+            // TODO: toggling this sometimes crashes (somewhere in Generator::ProcessAudioRate() )
             self->generator.set_sync(a);
             break;
     }
@@ -196,7 +194,7 @@ void myObj_smooth(t_myObj* self, double m) {
 }
 
 
-
+#pragma mark --------- attr setters ---------
 
 t_max_err sheep_mode_setter(t_myObj *self, void *attr, long ac, t_atom *av)
 {
@@ -265,11 +263,12 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     
     for(int count = 0; count < vs; count += kAudioBlockSize) {
         
-        double pitch = pitch_;
-        pitch += freq_in[count];
-        CONSTRAIN(pitch, -128.0, 128.0);
-        int16_t val = (pitch - 12.0) * 128.0;   // need to go an octave lower, why?
-        generator->set_pitch(val);
+        double pitchf = pitch_;
+        pitchf += freq_in[count];
+        CONSTRAIN(pitchf, -128.0, 128.0);
+//        int16_t val = (pitch - 12.0) * 128.0;   // need to go an octave lower, why?
+        int16_t pitch = (pitchf) * 128.0;
+        generator->set_pitch(pitch);
         
         double shape = shape_;
         shape += shape_in[count];
@@ -318,6 +317,11 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
             outs[1][index] = (double)sample.unipolar / 65536.0;
             outs[2][index] = sample.flags & tides::FLAG_END_OF_ATTACK;
             outs[3][index] = ( sample.flags & tides::FLAG_END_OF_RELEASE ) >> 1;
+            
+            // easter egg plotting...
+//            self->plotter.Run();
+//            outs[0][index] = self->plotter.x() / 32768.0;
+//            outs[1][index] = self->plotter.y() / 32768.0;
         }
 
         generator->Process();
@@ -332,7 +336,7 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
 void myObj_dsp64(t_myObj* self, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags)
 {
     // is a signal connected to the trigger/clock input?
-    self->trig_connected = count[5];
+    self->trig_connected = count[5];        // TODO: make use of this!
     self->clock_connected = count[6];
     
     
@@ -360,19 +364,19 @@ void myObj_assist(t_myObj* self, void* unused, t_assist_function io, long index,
 	if (io == ASSIST_INLET) {
 		switch (index) {
 			case 0:
-                strncpy(string_dest,"(signal) PITCH", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal/float) PITCH", ASSIST_STRING_MAXSIZE); break;
             case 1:
-                strncpy(string_dest,"(signal) SHAPE", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal/float) SHAPE", ASSIST_STRING_MAXSIZE); break;
             case 2:
-                strncpy(string_dest,"(signal) SLOPE", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal/float) SLOPE", ASSIST_STRING_MAXSIZE); break;
             case 3:
-                strncpy(string_dest,"(signal) SMOOTHNESS", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal/float) SMOOTHNESS", ASSIST_STRING_MAXSIZE); break;
             case 4:
                 strncpy(string_dest,"(signal) FREEZE IN", ASSIST_STRING_MAXSIZE); break;
             case 5:
                 strncpy(string_dest,"(signal) TRIG IN", ASSIST_STRING_MAXSIZE); break;
             case 6:
-                strncpy(string_dest,"(signal) CLOCK IN", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal) CLOCK IN (int) on/off", ASSIST_STRING_MAXSIZE); break;
 		}
 	}
 	else if (io == ASSIST_OUTLET) {

@@ -226,25 +226,7 @@ void myObj_pw(t_myObj* self, double m) {
 }
 
 
-void myObj_feat_mode(t_myObj *self, long m) {
-    
-}
-
-t_max_err sheep_mode_setter(t_myObj *self, void *attr, long ac, t_atom *av)
-{
-    if (ac && av) {
-//        t_atom_long m = atom_getlong(av);
-//        self->sheep = ( m != 0 );
-//        self->generator.set_sheep( self->sheep );
-//        if (!self->sheep) // switch to last selected ramp_mode, when sheep goes off
-//            self->generator.set_mode(self->ramp_mode);
-        
-    }
-    
-    return MAX_ERR_NONE;
-}
-
-
+#pragma mark --------- attr setters ---------
 
 t_max_err ramp_mode_setter(t_myObj *self, void *attr, long ac, t_atom *av)
 {
@@ -312,7 +294,8 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
         double pitchf = pitch_;
         pitchf += freq_in[count];
         CONSTRAIN(pitchf, -128.0, 128.0);
-        int16_t pitch = (pitchf - 12.0) * 128.0;   // need to go an octave lower, why?
+//        int16_t pitch = (pitchf - 12.0) * 128.0;   // need to go an octave lower, why?
+        int16_t pitch = (pitchf) * 128.0; 
         if(quant) {
             uint16_t semi = pitch >> 7;
             uint16_t octaves = semi / 12 ;
@@ -399,7 +382,6 @@ void myObj_dsp64(t_myObj* self, t_object* dsp64, short* count, double samplerate
     if(samplerate != self->sr) {
         self->sr = samplerate;
         self->sr_pitch_correction = log2(kSampleRate / self->sr) * 12.0;
-//        object_post(NULL, "sr_scale: %f", self->sr_pitch_correction);
     }
     
         object_method_direct(void, (t_object*, t_object*, t_perfroutine64, long, void*),
@@ -467,15 +449,7 @@ void ext_main(void* r) {
 	class_dspinit(this_class);
 	class_register(CLASS_BOX, this_class);
     
-    // ATTRIBUTES ..............
-    // sheep mode
-//    CLASS_ATTR_CHAR(this_class, "sheep", 0, t_myObj, sheep);
-//    CLASS_ATTR_ENUMINDEX(this_class, "sheep", 0, "OFF ON");
-//    CLASS_ATTR_STYLE_LABEL(this_class, "sheep", 0, "onoff", "sheep mode");
-//    CLASS_ATTR_FILTER_CLIP(this_class, "sheep", 0, 1);
-//    CLASS_ATTR_ACCESSORS(this_class, "sheep", NULL, (method)sheep_mode_setter);
-//    CLASS_ATTR_SAVE(this_class, "sheep", 0);
-    
+    // ATTRIBUTES ..............    
     // quantization on/off
     CLASS_ATTR_CHAR(this_class, "quant", 0, t_myObj, quantize);
     CLASS_ATTR_ENUMINDEX(this_class, "quant", 0, "OFF chromatic major minor whole_tones penta_minor poor_penta fifths");

@@ -89,7 +89,8 @@ class Generator {
     range_ = range;
     clock_divider_ =
       /* harmonic oscillator is sampled at 24kHz */
-      feature_mode_ == FEAT_MODE_HARMONIC ? 1 :             // 2
+//      feature_mode_ == FEAT_MODE_HARMONIC ? 2 :
+      feature_mode_ == FEAT_MODE_HARMONIC ? 1 :             // vb
       range_ == GENERATOR_RANGE_LOW ? 4 : 1;
   }
   
@@ -104,7 +105,7 @@ class Generator {
     if (sync_) {
       ComputeFrequencyRatio(pitch);
     }
-    pitch_ = pitch + (12 << 7) + fm;
+      pitch_ = pitch; // + (12 << 7) + fm;   // vb
   }
 
   void set_pitch(int16_t pitch, int16_t fm) {
@@ -112,11 +113,12 @@ class Generator {
       ComputeFrequencyRatio(pitch);
     }
 
-    pitch += (12 << 7) - (60 << 7) * static_cast<int16_t>(range_);
+//    pitch += (12 << 7) - (60 << 7) * static_cast<int16_t>(range_);
+      pitch -= (60 << 7) * static_cast<int16_t>(range_);  // vb
     if (range_ == GENERATOR_RANGE_LOW) {
       pitch -= (12 << 7);  // One extra octave of super LF stuff!
     }
-    pitch_ = pitch + fm;
+      pitch_ = pitch; // + fm;      // vb
   }
   
   void set_shape(int16_t shape) {

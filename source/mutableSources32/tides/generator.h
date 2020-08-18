@@ -88,7 +88,8 @@ class Generator {
   void set_range(GeneratorRange range) {
     ClearFilterState();
     range_ = range;
-    clock_divider_ = range_ == GENERATOR_RANGE_LOW ? 4 : 1;
+//    clock_divider_ = range_ == GENERATOR_RANGE_LOW ? 4 : 1;
+      clock_divider_ = range_ == GENERATOR_RANGE_LOW ? 2 : 1;       // vb
   }
   
   void set_mode(GeneratorMode mode) {
@@ -102,7 +103,9 @@ class Generator {
     if (sync_) {
       ComputeFrequencyRatio(pitch);
     }
-    pitch += (12 << 7) - (60 << 7) * static_cast<int16_t>(range_);
+//    pitch += (12 << 7) - (60 << 7) * static_cast<int16_t>(range_);
+//      pitch += (12 << 7) - (48 << 7) * static_cast<int16_t>(range_);  // vb
+      pitch -= (48 << 7) * static_cast<int16_t>(range_);    // vb
     if (range_ == GENERATOR_RANGE_LOW) {
       pitch -= (12 << 7);  // One extra octave of super LF stuff!
     }

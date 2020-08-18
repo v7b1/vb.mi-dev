@@ -127,7 +127,8 @@ void Generator::ComputeFrequencyRatio(int16_t pitch) {
   }
   previous_pitch_ = pitch;
   // Corresponds to a 0V CV after calibration
-  pitch -= (36 << 7);
+//  pitch -= (36 << 7);
+    pitch -= (48 << 7);     // vb
   // The range of the control panel knob is 4 octaves.
   pitch = pitch * 12 / (48 << 7);
   bool swap = false;

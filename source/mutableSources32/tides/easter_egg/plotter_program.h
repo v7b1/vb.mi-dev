@@ -1,3 +1,5 @@
+using namespace tides;
+
 PlotInstruction plotter_program[] = {  { PLOT_MOVE_TO, 0, 32768, 9363 },
   { PLOT_LINE_TO, 11, 29258, 12874 },
   { PLOT_LINE_TO, 15, 22236, 12874 },
