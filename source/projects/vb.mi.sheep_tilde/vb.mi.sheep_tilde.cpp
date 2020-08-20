@@ -23,19 +23,19 @@
 
 
 // a clone of mutable instruments' 'Tides(1)' module for maxmsp
+// with inofficial firmware 'SHEEP' - a xy-wavetable synth
 // by volker böhm, august 2020, https://vboehm.net
 
 
 // Original code by Émilie Gillet, https://mutable-instruments.net/
 
 
+#define WAVETABLE_HACK         // sheep mode!
 
 #include "c74_msp.h"
 
 
 #include "tides/generator.h"
-//#include "tides/plotter.h"
-
 #include "stmlib/utils/gate_flags.h"
 
 
@@ -52,9 +52,8 @@ struct t_myObj {
 	t_pxobject	obj;
     
     tides::Generator    generator;
-//    tides::Plotter      plotter;
 
-    tides::GeneratorMode     ramp_mode;
+    tides::GeneratorMode     wt_banks;
     tides::GeneratorRange        range;
     uint8_t     previous_state_;
     
@@ -63,7 +62,6 @@ struct t_myObj {
     bool        clock_connected;
     bool        use_trigger;
     bool        use_clock;
-//    bool        sheep;
     
     double      sr;
     double      sr_pitch_correction;
@@ -72,7 +70,6 @@ struct t_myObj {
 };
 
 
-//#include "tides/easter_egg/plotter_program.h"
 
 void* myObj_new(t_symbol *s, long argc, t_atom *argv)
 {
@@ -104,13 +101,11 @@ void* myObj_new(t_symbol *s, long argc, t_atom *argv)
         self->generator.set_range(tides::GENERATOR_RANGE_HIGH);
         self->generator.set_mode(tides::GENERATOR_MODE_LOOPING);
         self->generator.set_sync(false);
-//        self->plotter.Init(plotter_program, sizeof(plotter_program) / sizeof(PlotInstruction));
 
         
         self->previous_state_ = 0;
         self->use_trigger = false;
         self->use_clock = false;
-//        self->sheep = false;
         
         self->pitch = 60.0;
         self->shape = 0.0;
@@ -196,28 +191,12 @@ void myObj_smooth(t_myObj* self, double m) {
 
 #pragma mark --------- attr setters ---------
 
-//t_max_err sheep_mode_setter(t_myObj *self, void *attr, long ac, t_atom *av)
-//{
-//    if (ac && av) {
-//        t_atom_long m = atom_getlong(av);
-//        self->sheep = ( m != 0 );
-//        self->generator.set_sheep( self->sheep );
-//        if (!self->sheep) // switch to last selected ramp_mode, when sheep goes off
-//            self->generator.set_mode(self->ramp_mode);
-//
-//    }
-//
-//    return MAX_ERR_NONE;
-//}
-
-
-
-t_max_err ramp_mode_setter(t_myObj *self, void *attr, long ac, t_atom *av)
+t_max_err wt_banks_setter(t_myObj *self, void *attr, long ac, t_atom *av)
 {
     if (ac && av) {
         t_atom_long m = atom_getlong(av);
-        self->ramp_mode = tides::GeneratorMode(m);
-        self->generator.set_mode(self->ramp_mode);
+        self->wt_banks = tides::GeneratorMode(m);
+        self->generator.set_mode(self->wt_banks);
     }
     
     return MAX_ERR_NONE;
@@ -318,10 +297,6 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
             outs[2][index] = sample.flags & tides::FLAG_END_OF_ATTACK;
             outs[3][index] = ( sample.flags & tides::FLAG_END_OF_RELEASE ) >> 1;
             
-            // easter egg plotting...
-//            self->plotter.Run();
-//            outs[0][index] = self->plotter.x() / 32768.0;
-//            outs[1][index] = self->plotter.y() / 32768.0;
         }
 
         generator->Process();
@@ -348,7 +323,6 @@ void myObj_dsp64(t_myObj* self, t_object* dsp64, short* count, double samplerate
     if(samplerate != self->sr) {
         self->sr = samplerate;
         self->sr_pitch_correction = log2(kSampleRate / self->sr) * 12.0;
-//        object_post(NULL, "sr_scale: %f", self->sr_pitch_correction);
     }
     
         object_method_direct(void, (t_object*, t_object*, t_perfroutine64, long, void*),
@@ -366,15 +340,15 @@ void myObj_assist(t_myObj* self, void* unused, t_assist_function io, long index,
 			case 0:
                 strncpy(string_dest,"(signal/float) PITCH", ASSIST_STRING_MAXSIZE); break;
             case 1:
-                strncpy(string_dest,"(signal/float) SHAPE", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal/float) X COORD of WAVEMAP", ASSIST_STRING_MAXSIZE); break;
             case 2:
-                strncpy(string_dest,"(signal/float) SLOPE", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal/float) Y COORD of WAVEMAP", ASSIST_STRING_MAXSIZE); break;
             case 3:
                 strncpy(string_dest,"(signal/float) SMOOTHNESS", ASSIST_STRING_MAXSIZE); break;
             case 4:
                 strncpy(string_dest,"(signal) FREEZE IN", ASSIST_STRING_MAXSIZE); break;
             case 5:
-                strncpy(string_dest,"(signal) TRIG/GATE IN", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal) TRIG IN", ASSIST_STRING_MAXSIZE); break;
             case 6:
                 strncpy(string_dest,"(signal) CLOCK IN (int) on/off", ASSIST_STRING_MAXSIZE); break;
 		}
@@ -388,10 +362,10 @@ void myObj_assist(t_myObj* self, void* unused, t_assist_function io, long index,
                 strncpy(string_dest,"(signal) unipolar out", ASSIST_STRING_MAXSIZE);
                 break;
             case 2:
-                strncpy(string_dest,"(signal) high tide", ASSIST_STRING_MAXSIZE);
+                strncpy(string_dest,"(signal) lofi one bit", ASSIST_STRING_MAXSIZE);
                 break;
             case 3:
-                strncpy(string_dest,"(signal) low tide", ASSIST_STRING_MAXSIZE);
+                strncpy(string_dest,"(signal) square sub osc", ASSIST_STRING_MAXSIZE);
                 break;
 		}
 	}
@@ -399,7 +373,7 @@ void myObj_assist(t_myObj* self, void* unused, t_assist_function io, long index,
 
 
 void ext_main(void* r) {
-	this_class = class_new("vb.mi.tds1~", (method)myObj_new, (method)dsp_free, sizeof(t_myObj), 0, A_GIMME, 0);
+	this_class = class_new("vb.mi.sheep~", (method)myObj_new, (method)dsp_free, sizeof(t_myObj), 0, A_GIMME, 0);
 
 	class_addmethod(this_class, (method)myObj_assist,	"assist",	A_CANT,		0);
 	class_addmethod(this_class, (method)myObj_dsp64,	"dsp64",	A_CANT,		0);
@@ -416,21 +390,13 @@ void ext_main(void* r) {
 	class_register(CLASS_BOX, this_class);
     
     // ATTRIBUTES ..............
-//    // sheep mode
-//    CLASS_ATTR_CHAR(this_class, "sheep", 0, t_myObj, sheep);
-//    CLASS_ATTR_ENUMINDEX(this_class, "sheep", 0, "OFF ON");
-//    CLASS_ATTR_STYLE_LABEL(this_class, "sheep", 0, "onoff", "sheep mode");
-//    CLASS_ATTR_FILTER_CLIP(this_class, "sheep", 0, 1);
-//    CLASS_ATTR_ACCESSORS(this_class, "sheep", NULL, (method)sheep_mode_setter);
-//    CLASS_ATTR_SAVE(this_class, "sheep", 0);
-
     // ramp mode
-    CLASS_ATTR_CHAR(this_class, "ramp_mode", 0, t_myObj, ramp_mode);
-    CLASS_ATTR_ENUMINDEX(this_class, "ramp_mode", 0, "AD LOOPING AR");
-    CLASS_ATTR_LABEL(this_class, "ramp_mode", 0, "ramp mode");
-    CLASS_ATTR_FILTER_CLIP(this_class, "ramp_mode", 0, 2);
-    CLASS_ATTR_ACCESSORS(this_class, "ramp_mode", NULL, (method)ramp_mode_setter);
-    CLASS_ATTR_SAVE(this_class, "ramp_mode", 0);
+    CLASS_ATTR_CHAR(this_class, "wt_banks", 0, t_myObj, wt_banks);
+    CLASS_ATTR_ENUMINDEX(this_class, "wt_banks", 0, "HARMONICS PWMish Braids_WMAP");
+    CLASS_ATTR_LABEL(this_class, "wt_banks", 0, "wavetable banks");
+    CLASS_ATTR_FILTER_CLIP(this_class, "wt_banks", 0, 2);
+    CLASS_ATTR_ACCESSORS(this_class, "wt_banks", NULL, (method)wt_banks_setter);
+    CLASS_ATTR_SAVE(this_class, "wt_banks", 0);
 
     // range
     CLASS_ATTR_CHAR(this_class, "range", 0, t_myObj, range);
@@ -442,6 +408,7 @@ void ext_main(void* r) {
 
     
     
-    object_post(NULL, "vb.mi.tds1~ by Volker Böhm -- https://vboehm.net");
+    object_post(NULL, "vb.mi.sheep~ by Volker Böhm -- https://vboehm.net");
     object_post(NULL, "based on mutable instruments' 'tides(1)' module");
+    object_post(NULL, "with inofficial firmware 'sheep' ");
 }

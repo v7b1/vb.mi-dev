@@ -24,9 +24,13 @@
 
 // a clone of mutable instruments' 'Tides(1)' module for maxmsp
 // by volker böhm, august 2020, https://vboehm.net
+// running the alternative firmware "parasite" by Matthias Puech
+// https://github.com/mqtthiqs/parasites
+// in TWO DRUNKS mode
 
 
 // Original code by Émilie Gillet, https://mutable-instruments.net/
+
 
 
 
@@ -34,9 +38,7 @@
 
 
 #include "tides/generator.h"
-//#include "tides/plotter.h"
 
-#include "stmlib/utils/gate_flags.h"
 
 
 const size_t kAudioBlockSize = 16;       // sig vs can't be smaller than this!
@@ -51,11 +53,10 @@ static t_class* this_class = nullptr;
 struct t_myObj {
 	t_pxobject	obj;
     
-    tides::Generator    generator;
-//    tides::Plotter      plotter;
+    tides::Generator        generator;
 
-    tides::GeneratorMode     ramp_mode;
-    tides::GeneratorRange        range;
+    tides::GeneratorMode    ramp_mode;
+    tides::GeneratorRange   range;
     uint8_t     previous_state_;
     
     double      pitch, slope, shape, smooth;
@@ -63,7 +64,7 @@ struct t_myObj {
     bool        clock_connected;
     bool        use_trigger;
     bool        use_clock;
-//    bool        sheep;
+    uint8_t     quantize;
     
     double      sr;
     double      sr_pitch_correction;
@@ -72,7 +73,30 @@ struct t_myObj {
 };
 
 
-//#include "tides/easter_egg/plotter_program.h"
+// quantization stuff
+
+const int16_t kOctave = 12 * 128;
+
+#define SE * 128
+
+const uint16_t quantize_lut[7][12] = {
+    /* semitones */
+    {0, 1 SE, 2 SE, 3 SE, 4 SE, 5 SE, 6 SE, 7 SE, 8 SE, 9 SE, 10 SE, 11 SE},
+    /* ionian */
+    {0, 0, 2 SE, 2 SE, 4 SE, 5 SE, 5 SE, 7 SE, 7 SE, 9 SE, 9 SE, 11 SE},
+    /* aeolian */
+    {0, 0, 2 SE, 3 SE, 3 SE, 5 SE, 5 SE, 7 SE, 8 SE, 8 SE, 10 SE, 10 SE},
+    /* whole tones */
+    {0, 0, 2 SE, 2 SE, 4 SE, 4 SE, 6 SE, 6 SE, 8 SE, 8 SE, 10 SE, 10 SE},
+    /* pentatonic minor */
+    {0, 0, 3 SE, 3 SE, 3 SE, 5 SE, 5 SE, 7 SE, 7 SE, 10 SE, 10 SE, 10 SE},
+    /* pent-3 */
+    {0, 0, 0, 0, 7 SE, 7 SE, 7 SE, 7 SE, 10 SE, 10 SE, 10 SE, 10 SE},
+    /* fifths */
+    {0, 0, 0, 0, 0, 0, 7 SE, 7 SE, 7 SE, 7 SE, 7 SE, 7 SE},
+};
+
+
 
 void* myObj_new(t_symbol *s, long argc, t_atom *argv)
 {
@@ -98,19 +122,20 @@ void* myObj_new(t_symbol *s, long argc, t_atom *argv)
 
         self->sr = sys_getsr();
         self->sr_pitch_correction = log2(kSampleRate / self->sr) * 12.0;
-        
         memset(&self->generator, 0, sizeof(self->generator));
         self->generator.Init();
         self->generator.set_range(tides::GENERATOR_RANGE_HIGH);
         self->generator.set_mode(tides::GENERATOR_MODE_LOOPING);
         self->generator.set_sync(false);
-//        self->plotter.Init(plotter_program, sizeof(plotter_program) / sizeof(PlotInstruction));
+        
+        // 'two drunks' is feature_mode RANDOM
+        self->generator.feature_mode_ = tides::Generator::FEAT_MODE_RANDOM;
 
         
         self->previous_state_ = 0;
         self->use_trigger = false;
         self->use_clock = false;
-//        self->sheep = false;
+        self->quantize = 0;
         
         self->pitch = 60.0;
         self->shape = 0.0;
@@ -143,7 +168,6 @@ void myObj_int(t_myObj* self, long m) {
         case 6:
             bool a = m != 0;
             self->use_clock = a;
-            // TODO: toggling this sometimes crashes (somewhere in Generator::ProcessAudioRate() )
             self->generator.set_sync(a);
             break;
     }
@@ -193,24 +217,14 @@ void myObj_smooth(t_myObj* self, double m) {
     self->smooth = m;
 }
 
+void myObj_pw(t_myObj* self, double m) {
+    CONSTRAIN(m, 0.0, 1.0);
+    uint16_t val = m * 32767.0;
+    self->generator.set_pulse_width(val);
+}
+
 
 #pragma mark --------- attr setters ---------
-
-//t_max_err sheep_mode_setter(t_myObj *self, void *attr, long ac, t_atom *av)
-//{
-//    if (ac && av) {
-//        t_atom_long m = atom_getlong(av);
-//        self->sheep = ( m != 0 );
-//        self->generator.set_sheep( self->sheep );
-//        if (!self->sheep) // switch to last selected ramp_mode, when sheep goes off
-//            self->generator.set_mode(self->ramp_mode);
-//
-//    }
-//
-//    return MAX_ERR_NONE;
-//}
-
-
 
 t_max_err ramp_mode_setter(t_myObj *self, void *attr, long ac, t_atom *av)
 {
@@ -222,6 +236,7 @@ t_max_err ramp_mode_setter(t_myObj *self, void *attr, long ac, t_atom *av)
     
     return MAX_ERR_NONE;
 }
+
 
 
 t_max_err range_setter(t_myObj *self, void *attr, long ac, t_atom *av)
@@ -258,6 +273,7 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     double  shape_ = self->shape;
     double  slope_ = self->slope;
     double  smooth_ = self->smooth;
+    uint8_t quant = self->quantize;
     long    vs = sampleframes;
     
     
@@ -266,9 +282,15 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
         double pitchf = pitch_;
         pitchf += freq_in[count];
         CONSTRAIN(pitchf, -128.0, 128.0);
-//        int16_t val = (pitch - 12.0) * 128.0;   // need to go an octave lower, why?
-        int16_t pitch = (pitchf) * 128.0;
-        generator->set_pitch(pitch);
+//        int16_t pitch = (pitchf - 12.0) * 128.0;   // need to go an octave lower, why?
+        int16_t pitch = (pitchf) * 128.0; 
+        if(quant) {
+            uint16_t semi = pitch >> 7;
+            uint16_t octaves = semi / 12 ;
+            semi -= octaves * 12;
+            pitch = octaves * kOctave + quantize_lut[quant - 1][semi];
+        }
+        generator->set_pitch(pitch, 0);
         
         double shape = shape_;
         shape += shape_in[count];
@@ -313,18 +335,18 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
             const tides::GeneratorSample& sample = generator->Process(state);
 
             
-            outs[0][index] = (double)sample.bipolar / 32768.0;
-            outs[1][index] = (double)sample.unipolar / 65536.0;
-            outs[2][index] = sample.flags & tides::FLAG_END_OF_ATTACK;
+            outs[0][index] = (double)sample.unipolar / 65536.0;
+            outs[1][index] = sample.flags & tides::FLAG_END_OF_ATTACK;
+            outs[2][index] = (double)sample.bipolar / 32768.0;
             outs[3][index] = ( sample.flags & tides::FLAG_END_OF_RELEASE ) >> 1;
-            
-            // easter egg plotting...
-//            self->plotter.Run();
-//            outs[0][index] = self->plotter.x() / 32768.0;
-//            outs[1][index] = self->plotter.y() / 32768.0;
         }
-
-        generator->Process();
+        
+//        if (generator->feature_mode_ == tides::Generator::FEAT_MODE_HARMONIC)
+//            generator->set_pitch_high_range(pitch, 0);
+//        else
+        
+        
+        generator->FillBuffer();
     }
     
     self->previous_state_ = prev_state;
@@ -336,7 +358,7 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
 void myObj_dsp64(t_myObj* self, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags)
 {
     // is a signal connected to the trigger/clock input?
-    self->trig_connected = count[5];        // TODO: make use of this!
+    self->trig_connected = count[5];
     self->clock_connected = count[6];
     
     
@@ -348,7 +370,6 @@ void myObj_dsp64(t_myObj* self, t_object* dsp64, short* count, double samplerate
     if(samplerate != self->sr) {
         self->sr = samplerate;
         self->sr_pitch_correction = log2(kSampleRate / self->sr) * 12.0;
-//        object_post(NULL, "sr_scale: %f", self->sr_pitch_correction);
     }
     
         object_method_direct(void, (t_object*, t_object*, t_perfroutine64, long, void*),
@@ -364,34 +385,34 @@ void myObj_assist(t_myObj* self, void* unused, t_assist_function io, long index,
 	if (io == ASSIST_INLET) {
 		switch (index) {
 			case 0:
-                strncpy(string_dest,"(signal/float) PITCH", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal/float) main CLK frequency", ASSIST_STRING_MAXSIZE); break;
             case 1:
-                strncpy(string_dest,"(signal/float) SHAPE", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal/float) interpolation", ASSIST_STRING_MAXSIZE); break;
             case 2:
-                strncpy(string_dest,"(signal/float) SLOPE", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal/float) CH1 rand CLK, CH2 rand coin toss", ASSIST_STRING_MAXSIZE); break;
             case 3:
-                strncpy(string_dest,"(signal/float) SMOOTHNESS", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal/float) max. step size", ASSIST_STRING_MAXSIZE); break;
             case 4:
-                strncpy(string_dest,"(signal) FREEZE IN", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal) freeze CLKs", ASSIST_STRING_MAXSIZE); break;
             case 5:
-                strncpy(string_dest,"(signal) TRIG/GATE IN", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal) trigger CLKs", ASSIST_STRING_MAXSIZE); break;
             case 6:
-                strncpy(string_dest,"(signal) CLOCK IN (int) on/off", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal) randomize range setting", ASSIST_STRING_MAXSIZE); break;
 		}
 	}
 	else if (io == ASSIST_OUTLET) {
 		switch (index) {
             case 0:
-                strncpy(string_dest,"(signal) bipolar out", ASSIST_STRING_MAXSIZE);
+                strncpy(string_dest,"(signal) CH1 random walk", ASSIST_STRING_MAXSIZE);
                 break;
             case 1:
-                strncpy(string_dest,"(signal) unipolar out", ASSIST_STRING_MAXSIZE);
+                strncpy(string_dest,"(signal) CH1 CLK", ASSIST_STRING_MAXSIZE);
                 break;
             case 2:
-                strncpy(string_dest,"(signal) high tide", ASSIST_STRING_MAXSIZE);
+                strncpy(string_dest,"(signal) CH2 random walk", ASSIST_STRING_MAXSIZE);
                 break;
             case 3:
-                strncpy(string_dest,"(signal) low tide", ASSIST_STRING_MAXSIZE);
+                strncpy(string_dest,"(signal) CH2 CLK", ASSIST_STRING_MAXSIZE);
                 break;
 		}
 	}
@@ -399,7 +420,7 @@ void myObj_assist(t_myObj* self, void* unused, t_assist_function io, long index,
 
 
 void ext_main(void* r) {
-	this_class = class_new("vb.mi.tds1~", (method)myObj_new, (method)dsp_free, sizeof(t_myObj), 0, A_GIMME, 0);
+	this_class = class_new("vb.mi.twodrunks~", (method)myObj_new, (method)dsp_free, sizeof(t_myObj), 0, A_GIMME, 0);
 
 	class_addmethod(this_class, (method)myObj_assist,	"assist",	A_CANT,		0);
 	class_addmethod(this_class, (method)myObj_dsp64,	"dsp64",	A_CANT,		0);
@@ -410,19 +431,28 @@ void ext_main(void* r) {
     class_addmethod(this_class, (method)myObj_shape,    "shape",    A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_slope,    "slope",    A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_smooth,   "smooth",   A_FLOAT, 0);
+    class_addmethod(this_class, (method)myObj_pw,       "pw",   A_FLOAT, 0);
 
     
 	class_dspinit(this_class);
 	class_register(CLASS_BOX, this_class);
     
-    // ATTRIBUTES ..............
-//    // sheep mode
-//    CLASS_ATTR_CHAR(this_class, "sheep", 0, t_myObj, sheep);
-//    CLASS_ATTR_ENUMINDEX(this_class, "sheep", 0, "OFF ON");
-//    CLASS_ATTR_STYLE_LABEL(this_class, "sheep", 0, "onoff", "sheep mode");
-//    CLASS_ATTR_FILTER_CLIP(this_class, "sheep", 0, 1);
-//    CLASS_ATTR_ACCESSORS(this_class, "sheep", NULL, (method)sheep_mode_setter);
-//    CLASS_ATTR_SAVE(this_class, "sheep", 0);
+    // ATTRIBUTES ..............    
+    // quantization on/off
+    CLASS_ATTR_CHAR(this_class, "quant", 0, t_myObj, quantize);
+    CLASS_ATTR_ENUMINDEX(this_class, "quant", 0, "OFF chromatic major minor whole_tones penta_minor poor_penta fifths");
+    CLASS_ATTR_LABEL(this_class, "quant", 0, "quantization");
+    CLASS_ATTR_FILTER_CLIP(this_class, "quant", 0, 7);
+//    CLASS_ATTR_ACCESSORS(this_class, "quant", NULL, (method)quant_mode_setter);
+    CLASS_ATTR_SAVE(this_class, "quant", 0);
+    
+    // feature mode
+//    CLASS_ATTR_CHAR(this_class, "feat_mode", 0, t_myObj, feat_mode);
+//    CLASS_ATTR_ENUMINDEX(this_class, "feat_mode", 0, "FEATURE HARMONIC RANDOM");
+//    CLASS_ATTR_LABEL(this_class, "feat_mode", 0, "feature mode");
+//    CLASS_ATTR_FILTER_CLIP(this_class, "feat_mode", 0, 2);
+//    CLASS_ATTR_ACCESSORS(this_class, "feat_mode", NULL, (method)feat_mode_setter);
+//    CLASS_ATTR_SAVE(this_class, "feat_mode", 0);
 
     // ramp mode
     CLASS_ATTR_CHAR(this_class, "ramp_mode", 0, t_myObj, ramp_mode);
@@ -442,6 +472,6 @@ void ext_main(void* r) {
 
     
     
-    object_post(NULL, "vb.mi.tds1~ by Volker Böhm -- https://vboehm.net");
-    object_post(NULL, "based on mutable instruments' 'tides(1)' module");
+    object_post(NULL, "vb.mi.twodrunks~ by Volker Böhm -- https://vboehm.net");
+    object_post(NULL, "based on mutable instruments' 'tides(parasite)' module");
 }

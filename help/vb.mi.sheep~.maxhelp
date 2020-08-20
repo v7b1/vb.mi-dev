@@ -40,12 +40,37 @@
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-44",
+					"maxclass" : "toggle",
+					"numinlets" : 1,
+					"numoutlets" : 1,
+					"outlettype" : [ "int" ],
+					"parameter_enable" : 0,
+					"patching_rect" : [ 673.5, 423.0, 24.0, 24.0 ]
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-41",
+					"maxclass" : "newobj",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "signal" ],
+					"patching_rect" : [ 640.0, 423.0, 29.5, 23.0 ],
+					"text" : "*~"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-39",
+					"linecount" : 2,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 17.0, 435.0, 264.0, 21.0 ],
-					"text" : "AD and AR modes need trigger/gate input!"
+					"patching_rect" : [ 701.25, 405.5, 246.0, 36.0 ],
+					"text" : "if 'use clck' is off, this cycles through the wavetable banks"
 				}
 
 			}
@@ -59,7 +84,7 @@
 					"outlettype" : [ "bang", "bang", "", "int" ],
 					"parameter_enable" : 0,
 					"parameter_mappable" : 0,
-					"patching_rect" : [ 602.0, 75.0, 307.142822265625, 30.0 ]
+					"patching_rect" : [ 602.0, 74.0, 366.142822265625, 30.0 ]
 				}
 
 			}
@@ -70,8 +95,8 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 602.0, 78.5, 313.0, 21.0 ],
-					"text" : "https://mutable-instruments.net/modules/tides1/"
+					"patching_rect" : [ 602.0, 78.5, 363.0, 21.0 ],
+					"text" : "https://mutable-instruments.net/modules/tides1/firmware/"
 				}
 
 			}
@@ -95,46 +120,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 767.25, 46.5, 158.0, 67.0 ],
-					"text" : ";\rmax launchbrowser https://mutable-instruments.net/modules/tides1/"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"autofit" : 1,
-					"forceaspect" : 1,
-					"id" : "obj-5",
-					"maxclass" : "fpic",
-					"numinlets" : 1,
-					"numoutlets" : 1,
-					"outlettype" : [ "jit_matrix" ],
-					"patching_rect" : [ 710.5, 109.5, 192.0, 192.0 ],
-					"pic" : "tides1_eegg.png"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-81",
-					"linecount" : 3,
-					"maxclass" : "comment",
-					"numinlets" : 1,
-					"numoutlets" : 0,
-					"patching_rect" : [ 31.0, 689.0, 271.0, 50.0 ],
-					"text" : "Low Tide: This output goes high at the end of the decay/release phase, and stays at this level until the envelope is retriggered. "
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-79",
-					"linecount" : 4,
-					"maxclass" : "comment",
-					"numinlets" : 1,
-					"numoutlets" : 0,
-					"patching_rect" : [ 31.0, 620.0, 267.0, 65.0 ],
-					"text" : "High Tide: This output goes high at the end of the attack phase, and stays at this level until the cycle restarts or the envelope is retriggered"
+					"patching_rect" : [ 767.25, 46.5, 264.0, 67.0 ],
+					"text" : ";\rmax launchbrowser https://mutable-instruments.net/modules/tides1/firmware/"
 				}
 
 			}
@@ -144,8 +131,8 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 546.75, 297.0, 74.0, 21.0 ],
-					"text" : "trigger/gate"
+					"patching_rect" : [ 567.0, 294.0, 45.0, 21.0 ],
+					"text" : "trigger"
 				}
 
 			}
@@ -182,7 +169,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 556.25, 476.0, 55.0, 21.0 ],
-					"text" : "low tide"
+					"text" : "sub osc"
 				}
 
 			}
@@ -192,8 +179,8 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 459.0, 476.0, 61.666666666666629, 21.0 ],
-					"text" : "high tide"
+					"patching_rect" : [ 466.0, 476.0, 61.666666666666629, 21.0 ],
+					"text" : "one bit"
 				}
 
 			}
@@ -455,8 +442,20 @@
 					"numinlets" : 3,
 					"numoutlets" : 1,
 					"outlettype" : [ "signal" ],
-					"patching_rect" : [ 639.75, 394.0, 52.0, 23.0 ],
-					"text" : "tri~ 100"
+					"patching_rect" : [ 639.75, 394.0, 40.0, 23.0 ],
+					"text" : "tri~ 4"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-78",
+					"linecount" : 3,
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 32.0, 430.0, 154.0, 50.0 ],
+					"text" : "activate alternative firmware 'sheep' \n(xy wavetable synth)"
 				}
 
 			}
@@ -632,7 +631,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 314.0, 136.5, 82.0, 23.0 ],
-					"text" : "loadmess 48"
+					"text" : "loadmess 30"
 				}
 
 			}
@@ -701,7 +700,7 @@
 					"numoutlets" : 2,
 					"outlettype" : [ "", "bang" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 918.142822265625, 476.0, 50.0, 23.0 ]
+					"patching_rect" : [ 916.0714111328125, 493.0, 50.0, 23.0 ]
 				}
 
 			}
@@ -714,7 +713,7 @@
 					"numoutlets" : 2,
 					"outlettype" : [ "list", "list" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 170.0, 518.0, 90.0, 39.0 ],
+					"patching_rect" : [ 170.0, 510.0, 90.0, 39.0 ],
 					"rows" : 2
 				}
 
@@ -754,7 +753,7 @@
 					"maxclass" : "scope~",
 					"numinlets" : 2,
 					"numoutlets" : 0,
-					"patching_rect" : [ 658.142822265625, 722.0, 258.0, 78.0 ]
+					"patching_rect" : [ 656.0714111328125, 739.0, 258.0, 78.0 ]
 				}
 
 			}
@@ -766,7 +765,7 @@
 					"maxclass" : "scope~",
 					"numinlets" : 2,
 					"numoutlets" : 0,
-					"patching_rect" : [ 658.142822265625, 640.0, 258.0, 78.0 ]
+					"patching_rect" : [ 656.0714111328125, 657.0, 258.0, 78.0 ]
 				}
 
 			}
@@ -1065,12 +1064,12 @@
 					"patching_rect" : [ 361.916666666666686, 344.0, 41.0, 48.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
-							"parameter_initial" : [ 0.5 ],
+							"parameter_initial" : [ -0.63 ],
 							"parameter_initial_enable" : 1,
 							"parameter_longname" : "live.dial",
 							"parameter_mmax" : 1.0,
 							"parameter_mmin" : -1.0,
-							"parameter_shortname" : "shape",
+							"parameter_shortname" : "X",
 							"parameter_type" : 0,
 							"parameter_unitstyle" : 1
 						}
@@ -1092,7 +1091,7 @@
 					"patching_rect" : [ 458.0, 344.0, 41.0, 48.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
-							"parameter_initial" : [ 0 ],
+							"parameter_initial" : [ 0.5 ],
 							"parameter_initial_enable" : 1,
 							"parameter_longname" : "live.dial[2]",
 							"parameter_mmax" : 1.0,
@@ -1119,12 +1118,12 @@
 					"patching_rect" : [ 409.5, 344.0, 41.0, 48.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
-							"parameter_initial" : [ 0 ],
+							"parameter_initial" : [ 0.333 ],
 							"parameter_initial_enable" : 1,
 							"parameter_longname" : "live.dial[1]",
 							"parameter_mmax" : 1.0,
 							"parameter_mmin" : -1.0,
-							"parameter_shortname" : "slope",
+							"parameter_shortname" : "Y",
 							"parameter_type" : 0,
 							"parameter_unitstyle" : 1
 						}
@@ -1138,12 +1137,12 @@
 , 			{
 				"box" : 				{
 					"id" : "obj-94",
-					"linecount" : 4,
+					"linecount" : 5,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 221.5, 14.0, 390.5, 65.0 ],
-					"text" : "a clone of the 'Tides(1)' Eurorack module by Mutable Instruments\nby Volker Böhm, https://vboehm.net\n\nOriginal code by Émilie Gillet"
+					"patching_rect" : [ 221.5, 14.0, 390.5, 79.0 ],
+					"text" : "a clone of the 'Tides(1)' Eurorack module by Mutable Instruments\nwith inofficial firmware 'sheep' - a xy-wavetable synth\nby Volker Böhm, https://vboehm.net\n\nOriginal code by Émilie Gillet"
 				}
 
 			}
@@ -1155,7 +1154,7 @@
 					"maxclass" : "scope~",
 					"numinlets" : 2,
 					"numoutlets" : 0,
-					"patching_rect" : [ 658.142822265625, 558.0, 258.0, 78.0 ]
+					"patching_rect" : [ 656.0714111328125, 575.0, 258.0, 78.0 ]
 				}
 
 			}
@@ -1167,7 +1166,7 @@
 					"maxclass" : "scope~",
 					"numinlets" : 2,
 					"numoutlets" : 0,
-					"patching_rect" : [ 658.142822265625, 476.0, 258.0, 78.0 ]
+					"patching_rect" : [ 656.0714111328125, 493.0, 258.0, 78.0 ]
 				}
 
 			}
@@ -1180,13 +1179,13 @@
 					"numinlets" : 7,
 					"numoutlets" : 4,
 					"outlettype" : [ "signal", "signal", "signal", "signal" ],
-					"patching_rect" : [ 314.0, 445.0, 306.5, 29.0 ],
+					"patching_rect" : [ 314.0, 445.0, 307.0, 29.0 ],
 					"saved_object_attributes" : 					{
-						"ramp_mode" : 0,
-						"range" : 0
+						"range" : 0,
+						"wt_banks" : 1
 					}
 ,
-					"text" : "vb.mi.tds1~"
+					"text" : "vb.mi.sheep~"
 				}
 
 			}
@@ -1199,8 +1198,8 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 26.0, 29.0, 179.0, 36.0 ],
-					"text" : "vb.mi.tds1~"
+					"patching_rect" : [ 20.0, 29.0, 193.0, 36.0 ],
+					"text" : "vb.mi.sheep~"
 				}
 
 			}
@@ -1226,21 +1225,21 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 26.0, 380.0, 192.0, 23.0 ],
-					"text_width" : 95.0
+					"patching_rect" : [ 26.0, 380.0, 203.0, 23.0 ],
+					"text_width" : 83.0
 				}
 
 			}
 , 			{
 				"box" : 				{
-					"attr" : "ramp_mode",
+					"attr" : "wt_banks",
 					"id" : "obj-53",
 					"maxclass" : "attrui",
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 26.0, 354.5, 192.0, 23.0 ],
-					"text_width" : 94.0
+					"patching_rect" : [ 26.0, 354.5, 203.0, 23.0 ],
+					"text_width" : 82.0
 				}
 
 			}
@@ -1372,7 +1371,7 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-1", 5 ],
-					"midpoints" : [ 623.5, 321.0, 563.083333333333371, 321.0 ],
+					"midpoints" : [ 623.5, 315.0, 563.5, 315.0 ],
 					"source" : [ "obj-22", 0 ]
 				}
 
@@ -1394,7 +1393,7 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-1", 6 ],
+					"destination" : [ "obj-41", 0 ],
 					"source" : [ "obj-3", 0 ]
 				}
 
@@ -1450,6 +1449,20 @@
 			}
 , 			{
 				"patchline" : 				{
+					"destination" : [ "obj-1", 6 ],
+					"source" : [ "obj-41", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-41", 1 ],
+					"source" : [ "obj-44", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
 					"destination" : [ "obj-1", 0 ],
 					"source" : [ "obj-45", 0 ]
 				}
@@ -1480,7 +1493,7 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-47", 0 ],
-					"midpoints" : [ 179.5, 565.5, 270.75, 565.5, 270.75, 507.0, 323.0, 507.0 ],
+					"midpoints" : [ 179.5, 559.5, 281.75, 559.5, 281.75, 507.0, 323.0, 507.0 ],
 					"source" : [ "obj-48", 0 ]
 				}
 
@@ -1603,7 +1616,7 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-1", 2 ],
-					"midpoints" : [ 452.5, 419.0, 419.333333333333314, 419.0 ],
+					"midpoints" : [ 452.5, 419.0, 419.5, 419.0 ],
 					"source" : [ "obj-72", 0 ]
 				}
 
@@ -1617,10 +1630,10 @@
 			}
  ],
 		"parameters" : 		{
-			"obj-13" : [ "live.dial[1]", "slope", 0 ],
+			"obj-13" : [ "live.dial[1]", "Y", 0 ],
 			"obj-17" : [ "live.dial[2]", "smooth", 0 ],
 			"obj-19" : [ "live.gain~[2]", "live.gain~", 0 ],
-			"obj-21" : [ "live.dial", "shape", 0 ],
+			"obj-21" : [ "live.dial", "X", 0 ],
 			"parameterbanks" : 			{
 
 			}
@@ -1629,14 +1642,7 @@
 		}
 ,
 		"dependency_cache" : [ 			{
-				"name" : "tides1_eegg.png",
-				"bootpath" : "~/Documents/Max 8/Packages/vb.mi-dev/media",
-				"patcherrelativepath" : "../media",
-				"type" : "PNG",
-				"implicit" : 1
-			}
-, 			{
-				"name" : "vb.mi.tds1~.mxo",
+				"name" : "vb.mi.sheep~.mxo",
 				"type" : "iLaX"
 			}
  ],

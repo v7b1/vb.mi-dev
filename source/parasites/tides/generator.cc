@@ -978,7 +978,7 @@ void Generator::FillBufferHarmonic() {
 
   // pre-compute spectral envelope
   for (uint8_t harm=0; harm<kNumHarmonics; harm++) {
-    uint16_t x = mode() == GENERATOR_MODE_AR ?
+    uint16_t x = mode_ == GENERATOR_MODE_AR ?
       (harm << 16) / kNumHarmonicsPowers :
       (harm << 16) / kNumHarmonics;
 
@@ -995,7 +995,7 @@ void Generator::FillBufferHarmonic() {
 
     // Take care of harmonics which phase increment will be > Nyquist
     const uint32_t kCutoffLow = UINT16_MAX / 2 - UINT16_MAX / 16;
-    const uint32_t kCutoffHigh = UINT16_MAX; //const uint32_t kCutoffHigh = UINT16_MAX / 2;
+    const uint32_t kCutoffHigh = UINT16_MAX / 2; //const uint32_t kCutoffHigh = UINT16_MAX / 2;
 
     uint32_t pi = abs(phase_increment_end) >> 16;
     pi =
@@ -1096,7 +1096,7 @@ void Generator::FillBufferHarmonic() {
       if (mode_ == GENERATOR_MODE_AR) { // power of two harmonics
         if (harm == kNumHarmonicsPowers) break;
         if ((harm & 3) == 0)
-          tn = Interpolate1022(wav_sine1024, phase_ << harm); //tn = Interpolate1121(wav_sine1024, phase_ << harm);
+          tn = Interpolate1022(wav_sine1024, phase_ << harm); //tn = Interpolate1121(wav_sine1024, phase_ << harm); //vb
         else
           tn = 2 * ((tn * tn) >> 15) - 32768;
       } else if (mode() == GENERATOR_MODE_AD) { // odd harmonics
@@ -1116,7 +1116,7 @@ void Generator::FillBufferHarmonic() {
     // normalization
     if (gain <= 65536)
       gain = 65536;		// avoids extreme amplifications
-    gain += 256;
+      gain += 512;  //256;  // vb, bring down higher partials a little
 
     s.bipolar = ((bipolar << 13) / gain) << 3;
     s.unipolar = (((unipolar << 13) / gain) << 3) + 32768;

@@ -22,7 +22,7 @@
 // See http://creativecommons.org/licenses/MIT/ for more information.
 
 
-// a clone of mutable instruments' 'Tides(2)' module for maxmsp
+// the oscillator of mutable instruments' 'Tides(2)' module
 // by volker böhm, july 2020, https://vboehm.net
 
 
@@ -34,8 +34,6 @@
 
 
 #include "tides2/poly_slope_generator.h"
-//#include "tides2/ramp_extractor.h"
-
 
 
 const size_t kAudioBlockSize = 8;       // sig vs can't be smaller than this!
@@ -61,7 +59,7 @@ struct t_myObj {
     float       shape, shape_lp;
     float       slope, slope_lp;
     float       smoothness, smooth_lp;
-    float       shift, shift_lp;
+//    float       shift, shift_lp;
     
     float       sr;
     float       r_sr;
@@ -79,7 +77,7 @@ void* myObj_new(t_symbol *s, long argc, t_atom *argv)
 	
     if(self)
     {
-        dsp_setup((t_pxobject*)self, 5);
+        dsp_setup((t_pxobject*)self, 4);
         outlet_new(self, "signal");
         
         self->sigvs = sys_getblksize();
@@ -104,10 +102,10 @@ void* myObj_new(t_symbol *s, long argc, t_atom *argv)
         self->shape = 0.5f;
         self->slope = 0.5f;
         self->smoothness = 0.5f;
-        self->shift = 0.3f;
+//        self->shift = 0.3f;
         
         
-        self->freq_lp = self->shape_lp = self->slope_lp = self->smooth_lp = self->shift_lp = 0.f;
+        self->freq_lp = self->shape_lp = self->slope_lp = self->smooth_lp;// = self->shift_lp = 0.f;
         
         
         // process attributes
@@ -141,9 +139,9 @@ void myObj_float(t_myObj* self, double m) {
         case 3:
             self->smoothness = m;
             break;
-        case 4:
-            self->shift = m;
-            break;
+//        case 4:
+//            self->shift = m;
+//            break;
     }
     
 }
@@ -168,7 +166,7 @@ void myObj_smooth(t_myObj* self, double m) {
 }
 
 void myObj_shift(t_myObj* self, double m) {
-    self->shift = m;
+//    self->shift = m;
 }
 
 
@@ -194,7 +192,7 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     double  *shape_in = ins[1];
     double  *slope_in = ins[2];
     double  *smooth_in = ins[3];
-    double  *shift_in = ins[4];
+//    double  *shift_in = ins[4];
     
     long vs = sampleframes;
     
@@ -206,17 +204,17 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     stmlib::GateFlags *gate_flags = self->no_gate;
     tides::Range        range = self->range;
     
-    float   frequency, shape, slope, shift, smoothness;
+    float   frequency, shape, slope, smoothness; //shift,
     float   freq_knob = self->frequency;
     float   shape_knob = self->shape;
     float   slope_knob = self->slope;
-    float   shift_knob = self->shift;
+//    float   shift_knob = self->shift;
     float   smoothness_knob = self->smoothness;
     
     float   freq_lp = self->freq_lp;
     float   shape_lp = self->shape_lp;
     float   slope_lp = self->slope_lp;
-    float   shift_lp = self->shift_lp;
+//    float   shift_lp = self->shift_lp;
     float   smooth_lp = self->smooth_lp;
     
     float   r_sr = self->r_sr;
@@ -242,15 +240,15 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
         smoothness = smoothness_knob + (float)smooth_in[count];
         CONSTRAIN(smoothness, 0.f, 1.f);
         ONE_POLE(smooth_lp, smoothness, 0.1f);
-        shift = shift_knob + shift_in[count];
-        CONSTRAIN(shift, 0.f, 1.f);
-        ONE_POLE(shift_lp, shift, 0.1f);
+//        shift = shift_knob + shift_in[count];
+//        CONSTRAIN(shift, 0.f, 1.f);
+//        ONE_POLE(shift_lp, shift, 0.1f);
         
         
         self->poly_slope_generator.Render(tides::RAMP_MODE_LOOPING,
                                           tides::OUTPUT_MODE_SLOPE_PHASE,
                                           range,
-                                          frequency, slope_lp, shape_lp, smooth_lp, shift_lp,
+                                          frequency, slope_lp, shape_lp, smooth_lp, 0.f, //shift_lp,
                                           gate_flags,
                                           NULL,
                                           out, kAudioBlockSize);
@@ -266,7 +264,7 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     
     self->freq_lp = freq_lp;
     self->shape_lp = shape_lp;
-    self->shift_lp = shift_lp;
+//    self->shift_lp = shift_lp;
     self->slope_lp = slope_lp;
     self->smooth_lp = smooth_lp;
 
@@ -301,15 +299,15 @@ void myObj_assist(t_myObj* self, void* unused, t_assist_function io, long index,
 	if (io == ASSIST_INLET) {
 		switch (index) {
 			case 0:
-                strncpy(string_dest,"(signal) FREQ", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal/float) FREQ", ASSIST_STRING_MAXSIZE); break;
             case 1:
-                strncpy(string_dest,"(signal) SHAPE", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal/float) SHAPE", ASSIST_STRING_MAXSIZE); break;
             case 2:
-                strncpy(string_dest,"(signal) SLOPE", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal/float) SLOPE", ASSIST_STRING_MAXSIZE); break;
             case 3:
-                strncpy(string_dest,"(signal) SMOOTHNESS", ASSIST_STRING_MAXSIZE); break;
-            case 4:
-                strncpy(string_dest,"(signal) SHIFT/LEVEL", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal/float) SMOOTHNESS", ASSIST_STRING_MAXSIZE); break;
+//            case 4:
+//                strncpy(string_dest,"(signal/float) SHIFT/LEVEL", ASSIST_STRING_MAXSIZE); break;
 		}
 	}
 	else if (io == ASSIST_OUTLET) {
@@ -341,7 +339,7 @@ void ext_main(void* r) {
     class_addmethod(this_class, (method)myObj_float,    "float",    A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_freq,     "freq",     A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_shape,    "shape",    A_FLOAT, 0);
-    class_addmethod(this_class, (method)myObj_shift,    "shift",    A_FLOAT, 0);
+//    class_addmethod(this_class, (method)myObj_shift,    "shift",    A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_slope,    "slope",    A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_smooth,   "smooth",   A_FLOAT, 0);
     
@@ -374,6 +372,6 @@ void ext_main(void* r) {
     CLASS_ATTR_SAVE(this_class, "range", 0);
     
     
-    object_post(NULL, "vb.mi.tds.osc~ by volker boehm -- https://vboehm.net");
+    object_post(NULL, "vb.mi.tds.osc~ by Volker Böhm -- https://vboehm.net");
     object_post(NULL, "an oscillator based on mutable instruments' 'tides' module");
 }

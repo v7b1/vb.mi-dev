@@ -159,19 +159,16 @@ class Generator {
     while (render_block_ != playback_block_) {
       uint8_t* in = input_samples_[render_block_];
       GeneratorSample* out = output_samples_[render_block_];
-//  #ifndef WAVETABLE_HACK
-        if(!sheep_) {
+  #ifndef WAVETABLE_HACK
       if (range_ == GENERATOR_RANGE_HIGH) {
         ProcessAudioRate(in, out, kBlockSize);
       } else {
         ProcessControlRate(in, out, kBlockSize);
       }
       ProcessFilterWavefolder(out, kBlockSize);
-        }
-//  #else
-        else 
+  #else
       ProcessWavetable(in, out, kBlockSize);
-//  #endif
+  #endif
       render_block_ = (render_block_ + 1) % kNumBlocks;
     }
   }
@@ -195,10 +192,7 @@ class Generator {
   uint32_t clock_divider() const {
     return clock_divider_;
   }
-    
-    void set_sheep(bool b) {
-        sheep_ = b;
-    }
+
 
  private:
   // There are two versions of the rendering code, one optimized for audio, with
@@ -300,7 +294,6 @@ class Generator {
   static const FrequencyRatio frequency_ratios_[];
   static const int16_t num_frequency_ratios_;
     
-    bool sheep_;    // vb
   
   DISALLOW_COPY_AND_ASSIGN(Generator);
 };

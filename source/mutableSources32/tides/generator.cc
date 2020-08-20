@@ -104,8 +104,7 @@ void Generator::Init() {
   phase_increment_ = 9448928;
   local_osc_phase_increment_ = phase_increment_;
   target_phase_increment_ = phase_increment_;
-    
-    sheep_ = false;
+
 }
 
 void Generator::ComputeFrequencyRatio(int16_t pitch) {

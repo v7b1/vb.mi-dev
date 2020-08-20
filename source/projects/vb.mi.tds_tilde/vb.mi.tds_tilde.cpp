@@ -553,6 +553,6 @@ void ext_main(void* r) {
     CLASS_ATTR_SAVE(this_class, "range", 0);
     
     
-    object_post(NULL, "vb.mi.tds~ by volker boehm -- https://vboehm.net");
+    object_post(NULL, "vb.mi.tds~ by Volker Böhm -- https://vboehm.net");
     object_post(NULL, "based on mutable instruments' 'tides' module");
 }
