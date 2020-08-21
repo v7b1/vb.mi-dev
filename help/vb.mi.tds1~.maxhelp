@@ -1182,7 +1182,7 @@
 					"outlettype" : [ "signal", "signal", "signal", "signal" ],
 					"patching_rect" : [ 314.0, 445.0, 306.5, 29.0 ],
 					"saved_object_attributes" : 					{
-						"ramp_mode" : 0,
+						"ramp_mode" : 1,
 						"range" : 0
 					}
 ,

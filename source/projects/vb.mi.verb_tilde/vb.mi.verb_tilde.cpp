@@ -224,8 +224,8 @@ inline void SoftLimit_block(double *inout, size_t size) {
 void myObj_perform64(t_myObj *self, t_object *dsp64, double **ins, long numins,
                      double **outs, long numouts, long sampleframes, long flags, void *userparam){
     
-//    double *inL = ins[0];
-//    double *inR = ins[1];
+    double *inL = ins[0];
+    double *inR = ins[1];
     double *outL = outs[0];
     double *outR = outs[1];
 
@@ -238,8 +238,8 @@ void myObj_perform64(t_myObj *self, t_object *dsp64, double **ins, long numins,
     
     // TODO: can we rely on the fact that input & output vectors are the same?
     // problems might occur, if an inlet is not connected!
-//    std::copy(&inL[0], &inL[size], &outL[0]);
-//    std::copy(&inR[0], &inR[size], &outR[0]);
+    std::copy(&inL[0], &inL[size], &outL[0]);
+    std::copy(&inR[0], &inR[size], &outR[0]);
     
     if(self->bypass)
         return;
