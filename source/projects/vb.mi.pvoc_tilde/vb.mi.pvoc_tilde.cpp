@@ -400,6 +400,6 @@ void ext_main(void* r) {
 	class_register(CLASS_BOX, this_class);
     
     
-    object_post(NULL, "vb.mi.pvoc~ by volker boehm -- https://vboehm.net");
+    object_post(NULL, "vb.mi.pvoc~ by volker böhm -- https://vboehm.net");
     object_post(NULL, "based on mutable instruments' 'clouds' module");
 }

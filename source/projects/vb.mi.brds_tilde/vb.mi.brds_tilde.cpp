@@ -719,6 +719,6 @@ void ext_main(void* r) {
     CLASS_ATTR_STYLE(this_class, "resamp", 0, "onoff");
     
     
-    object_post(NULL, "vb.mi.brds~ by volker boehm -- https://vboehm.net");
+    object_post(NULL, "vb.mi.brds~ by volker böhm -- https://vboehm.net");
     object_post(NULL, "based on mutable instruments' 'braids' module");
 }

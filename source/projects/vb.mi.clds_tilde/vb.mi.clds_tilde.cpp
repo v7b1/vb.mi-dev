@@ -813,6 +813,6 @@ void ext_main(void* r) {
     CLASS_ATTR_FILTER_CLIP(this_class, "drift", 0, 15);
     */
     
-    object_post(NULL, "vb.mi.clds~ by volker boehm -- https://vboehm.net");
+    object_post(NULL, "vb.mi.clds~ by volker böhm -- https://vboehm.net");
     object_post(NULL, "based on mutable instruments' 'clouds' module");
 }
