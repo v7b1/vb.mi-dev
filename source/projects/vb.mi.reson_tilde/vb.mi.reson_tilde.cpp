@@ -100,7 +100,7 @@ void* myObj_new(void) {
             
             self->freqs[i] = f * self->sr;
             self->qs[i] = 500;
-            self->gains[i] = 0.5;
+            self->gains[i] = 0.25;
         }
         
         
@@ -260,6 +260,11 @@ void myObj_setGains(t_myObj *self, t_symbol *mess, short argc, t_atom *argv)
         update_filters(self);
 }
 
+void myObj_xf_resonators(t_myObj *self, double f)
+{
+    CONSTRAIN(f, 0.0, 1.0);
+    self->resonator.xf_resonators(f);
+}
 
 inline void SoftLimit_block(double *inout, size_t size) {
     while(size--) {
@@ -377,6 +382,7 @@ void ext_main(void* r) {
     class_addmethod(this_class, (method)myObj_damping, "damping", A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_spread, "spread", A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_mode, "mode", A_LONG, 0);
+    class_addmethod(this_class, (method)myObj_xf_resonators, "xfade", A_FLOAT, 0);
     
     class_addmethod(this_class, (method)myObj_assist, "assist", A_CANT,0);
     class_dspinit(this_class);

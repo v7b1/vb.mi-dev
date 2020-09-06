@@ -48,6 +48,7 @@ void Resonator::Init(double sr) {
     for (size_t i = 0; i < kMaxModes; ++i) {
         f_[i].Init();
         active_[i] = i;      // map of active filters
+        
     }
 
     for (size_t i = 0; i < kMaxBowedModes; ++i) {
@@ -67,6 +68,8 @@ void Resonator::Init(double sr) {
     modulation_frequency_ = 0.5 * 64.0 / sample_rate_;
     
     calc_wg = calc_res = true;
+    
+    res_gain_ = wg_gain_ = 0.707;
 }
 
 size_t Resonator::ComputeFilters(double *freqs, double *qs, double *gains) {
@@ -181,7 +184,7 @@ void Resonator::Process(
     if(calc_res) {
         for (size_t i = 0; i < num_modes; i++) {
             uint8_t a = active_[i];
-            f_[a].Process_bp_block(in, center, sides, size, amplitudes.Next(), aux_amplitudes.Next());
+            f_[a].Process_bp_block(in, center, sides, size, amplitudes.Next()*res_gain_, aux_amplitudes.Next()*res_gain_);
         }
 
         for (size_t i=0; i<size; ++i)
@@ -191,7 +194,7 @@ void Resonator::Process(
     if(calc_wg) {
         amplitudes.Start();
         for (size_t i = 0; i < num_banded_wg; ++i) {
-            f_bow_[i].Process_bp_norm_block(in, center, size, &d_bow_[i], amplitudes.Next());
+            f_bow_[i].Process_bp_norm_block(in, center, size, &d_bow_[i], amplitudes.Next()*wg_gain_);
            // sum_center += s * amplitudes.Next() * 8.0;
         }
     }

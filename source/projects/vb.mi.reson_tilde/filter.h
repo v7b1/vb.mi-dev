@@ -519,7 +519,7 @@ enum FrequencyApproximation {
                 double s = bp * r_;
                 d->Write(s);
                 
-                *out += s * gain * 8.0;
+                *out += s * gain * 4.0;     // * 8.0;
                 ++out;
                 ++in;
             }

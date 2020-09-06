@@ -81,7 +81,18 @@ class Resonator {
     resolution_ = std::min(resolution, kMaxModes);
   }
   
-    //double* get_
+    inline void xf_resonators(double xf) {
+//        xf *= M_PI * 0.5;
+//        res_gain_ = cos(xf);
+//        wg_gain_ = sin(xf);
+        
+//        res_gain_ = 1.0 - xf;
+//        wg_gain_ = xf;
+        
+        double c = 0.5 * cos(xf * M_PI);
+        res_gain_ = 0.5 + c;
+        wg_gain_ = 0.5 - c;
+    }
   
 
     void setFilters(double *freqs, double* qs, double* gains);
@@ -117,6 +128,8 @@ class Resonator {
     //stmlib::DelayLine<double, kMaxDelayLineSize> d_bow_[kMaxBowedModes];
     stmlib::DelayLine<double, 1024> d_bow_[kMaxBowedModes];
   
+    double res_gain_;
+    double wg_gain_;
   
   DISALLOW_COPY_AND_ASSIGN(Resonator);
 };
