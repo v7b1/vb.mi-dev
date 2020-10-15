@@ -108,6 +108,8 @@ void* myObj_new(void) {
         self = NULL;
     }
     
+    self->x_obj.z_misc = Z_NO_INPLACE;
+    
     return self;
 }
 
