@@ -4,7 +4,7 @@
 		"appversion" : 		{
 			"major" : 8,
 			"minor" : 1,
-			"revision" : 5,
+			"revision" : 7,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -40,6 +40,71 @@
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
+					"hidden" : 1,
+					"id" : "obj-32",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 1,
+					"outlettype" : [ "bang" ],
+					"patching_rect" : [ 108.75, 376.5, 62.0, 23.0 ],
+					"text" : "loadbang"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"hidden" : 1,
+					"id" : "obj-10",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 109.0, 404.5, 74.0, 23.0 ],
+					"text" : "0 0 1, 0 1 1"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"fontface" : 1,
+					"id" : "obj-23",
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 496.0, 92.0, 298.0, 21.0 ],
+					"text" : "https://mutable-instruments.net/modules/tides/"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"handoff" : "",
+					"id" : "obj-12",
+					"maxclass" : "ubutton",
+					"numinlets" : 1,
+					"numoutlets" : 4,
+					"outlettype" : [ "bang", "bang", "", "int" ],
+					"parameter_enable" : 0,
+					"patching_rect" : [ 496.0, 89.0, 298.0, 24.0 ]
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"hidden" : 1,
+					"id" : "obj-6",
+					"linecount" : 2,
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 512.0, 126.0, 391.0, 38.0 ],
+					"text" : ";\rmax launchbrowser https://mutable-instruments.net/modules/tides/"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-3",
 					"maxclass" : "newobj",
 					"numinlets" : 0,
@@ -49,7 +114,7 @@
 						"appversion" : 						{
 							"major" : 8,
 							"minor" : 1,
-							"revision" : 5,
+							"revision" : 7,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -154,12 +219,11 @@
 , 			{
 				"box" : 				{
 					"id" : "obj-27",
-					"linecount" : 2,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 496.0, 76.5, 289.0, 36.0 ],
-					"text" : "for more info please refer to the original manual:\nhttps://mutable-instruments.net/modules/tides/"
+					"patching_rect" : [ 496.0, 71.0, 285.0, 21.0 ],
+					"text" : "for more info please refer to the original manual:"
 				}
 
 			}
@@ -258,7 +322,7 @@
 						"appversion" : 						{
 							"major" : 8,
 							"minor" : 1,
-							"revision" : 5,
+							"revision" : 7,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -865,7 +929,7 @@
 						"appversion" : 						{
 							"major" : 8,
 							"minor" : 1,
-							"revision" : 5,
+							"revision" : 7,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -1180,8 +1244,8 @@
 					"outlettype" : [ "signal", "signal", "signal", "signal" ],
 					"patching_rect" : [ 308.0, 385.0, 307.0, 29.0 ],
 					"saved_object_attributes" : 					{
-						"output_mode" : 3,
-						"ramp_mode" : 1,
+						"output_mode" : 2,
+						"ramp_mode" : 0,
 						"range" : 1
 					}
 ,
@@ -1288,6 +1352,22 @@
 			}
 , 			{
 				"patchline" : 				{
+					"destination" : [ "obj-48", 0 ],
+					"hidden" : 1,
+					"source" : [ "obj-10", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-6", 0 ],
+					"hidden" : 1,
+					"source" : [ "obj-12", 1 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
 					"destination" : [ "obj-1", 2 ],
 					"source" : [ "obj-13", 0 ]
 				}
@@ -1368,6 +1448,14 @@
 				"patchline" : 				{
 					"destination" : [ "obj-1", 6 ],
 					"source" : [ "obj-30", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-10", 0 ],
+					"hidden" : 1,
+					"source" : [ "obj-32", 0 ]
 				}
 
 			}

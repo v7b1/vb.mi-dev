@@ -4,7 +4,7 @@
 		"appversion" : 		{
 			"major" : 8,
 			"minor" : 1,
-			"revision" : 5,
+			"revision" : 7,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -39,6 +39,17 @@
 		"subpatcher_template" : "vb01",
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
+				"box" : 				{
+					"id" : "obj-3",
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 16.5, 216.0, 227.0, 21.0 ],
+					"text" : "can be used in audio range or as LFO"
+				}
+
+			}
+, 			{
 				"box" : 				{
 					"hidden" : 1,
 					"id" : "obj-46",
@@ -194,7 +205,7 @@
 						"appversion" : 						{
 							"major" : 8,
 							"minor" : 1,
-							"revision" : 5,
+							"revision" : 7,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -497,7 +508,7 @@
 					"outlettype" : [ "signal" ],
 					"patching_rect" : [ 245.0, 324.0, 235.0, 29.0 ],
 					"saved_object_attributes" : 					{
-						"range" : 1
+						"range" : 0
 					}
 ,
 					"text" : "vb.mi.tds.osc~"

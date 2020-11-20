@@ -4,7 +4,7 @@
 		"appversion" : 		{
 			"major" : 8,
 			"minor" : 1,
-			"revision" : 5,
+			"revision" : 7,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
@@ -335,7 +335,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 116.0, 73.0, 102.0, 21.0 ],
+					"patching_rect" : [ 105.0, 62.0, 102.0, 21.0 ],
 					"text" : "a resonant filter"
 				}
 
@@ -347,7 +347,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 223.0, 6.0, 360.0, 65.0 ],
+					"patching_rect" : [ 224.0, 14.0, 360.0, 65.0 ],
 					"text" : "a clone of mutable instruments' 'ripples' module for maxmsp, based on the virtual analog model provided by\nAlright Devices https://www.alrightdevices.com/\nfor VCVrack https://vcvrack.com/"
 				}
 
@@ -461,7 +461,7 @@
 						"appversion" : 						{
 							"major" : 8,
 							"minor" : 1,
-							"revision" : 5,
+							"revision" : 7,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -700,7 +700,7 @@
 					"mode" : 0,
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 0.0, 6.0, 218.0, 65.0 ],
+					"patching_rect" : [ 0.0, 6.0, 218.0, 81.0 ],
 					"proportion" : 0.39
 				}
 
