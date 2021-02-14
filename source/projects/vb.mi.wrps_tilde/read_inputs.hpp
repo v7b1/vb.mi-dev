@@ -10,7 +10,6 @@
 
 
 #include "stmlib/stmlib.h"
-#include "warps/settings.h"
 
 namespace warps {
     
@@ -34,7 +33,7 @@ namespace warps {
         ReadInputs() { }
         ~ReadInputs() { }
         
-        void Init(CalibrationData* calibration_data);
+        void Init();
         void Read(Parameters* parameters, double *adc_inputs, short* patched);
         
         inline uint8_t easter_egg_digit() const {
@@ -54,7 +53,7 @@ namespace warps {
         void DetectNormalization();
         
 
-        CalibrationData* calibration_data_;
+//        CalibrationData* calibration_data_;
         
         double lp_state_[ADC_LAST];
         double note_cv_;

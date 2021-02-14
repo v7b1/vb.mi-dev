@@ -67,7 +67,7 @@ struct t_myObj {
     uint8_t     quantize;
     
     double      sr;
-    double      sr_pitch_correction;
+    uint16_t    sr_pitch_correction;
     long        sigvs;
     
 };
@@ -121,7 +121,7 @@ void* myObj_new(t_symbol *s, long argc, t_atom *argv)
         }
 
         self->sr = sys_getsr();
-        self->sr_pitch_correction = log2(kSampleRate / self->sr) * 12.0;
+        self->sr_pitch_correction = log2(kSampleRate / self->sr) * 12.0 * 128.0;
         memset(&self->generator, 0, sizeof(self->generator));
         self->generator.Init();
         self->generator.set_range(tides::GENERATOR_RANGE_HIGH);
@@ -269,27 +269,32 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     
     tides::Generator *generator = &self->generator;
     uint8_t prev_state = self->previous_state_;
-    double  pitch_ = self->pitch + self->sr_pitch_correction;
+    double  pitch_ = self->pitch; // + self->sr_pitch_correction;
     double  shape_ = self->shape;
     double  slope_ = self->slope;
     double  smooth_ = self->smooth;
     uint8_t quant = self->quantize;
+    uint16_t pitch_correction = self->sr_pitch_correction;
     long    vs = sampleframes;
     
     
     for(int count = 0; count < vs; count += kAudioBlockSize) {
         
-        double pitchf = pitch_;
-        pitchf += freq_in[count];
+        double pitchf = pitch_ + freq_in[count];
         CONSTRAIN(pitchf, -128.0, 128.0);
-//        int16_t pitch = (pitchf - 12.0) * 128.0;   // need to go an octave lower, why?
-        int16_t pitch = (pitchf) * 128.0; 
+
+        int16_t pitch; // = (pitchf) * 128.0;
+        
         if(quant) {
-            uint16_t semi = pitch >> 7;
+            int16_t semi = (int16_t)(pitchf + 0.5); //pitch >> 7;
             uint16_t octaves = semi / 12 ;
             semi -= octaves * 12;
-            pitch = octaves * kOctave + quantize_lut[quant - 1][semi];
+            pitch = octaves * kOctave + quantize_lut[quant - 1][semi] + pitch_correction;
         }
+        else {
+            pitch = (pitchf * 128.0) + pitch_correction;
+        }
+        
         generator->set_pitch(pitch, 0);
         
         double shape = shape_;
@@ -369,7 +374,7 @@ void myObj_dsp64(t_myObj* self, t_object* dsp64, short* count, double samplerate
     
     if(samplerate != self->sr) {
         self->sr = samplerate;
-        self->sr_pitch_correction = log2(kSampleRate / self->sr) * 12.0;
+        self->sr_pitch_correction = log2(kSampleRate / self->sr) * 12.0 * 128.0;
     }
     
         object_method_direct(void, (t_object*, t_object*, t_perfroutine64, long, void*),

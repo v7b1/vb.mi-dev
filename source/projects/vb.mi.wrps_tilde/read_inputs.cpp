@@ -12,7 +12,6 @@
 #include <iostream>
 
 #include "stmlib/dsp/dsp.h"
-//#include "stmlib/system/storage.h"
 #include "stmlib/utils/random.h"
 
 #include "warps/dsp/parameters.h"
@@ -23,9 +22,7 @@ namespace warps {
     using namespace std;
     using namespace stmlib;
     
-    void ReadInputs::Init(CalibrationData* calibration_data) {
-        calibration_data_ = calibration_data;
-        
+    void ReadInputs::Init() {
         note_cv_ = 0.0;
         note_pot_ = 0.0;
         fill(&lp_state_[0], &lp_state_[ADC_LAST], 1.0);     // 0.0
@@ -65,13 +62,7 @@ namespace warps {
         BIND(p->modulation_algorithm, ALGORITHM, false, 1.0, 0.08, false);  // unwrap was true, vb
         BIND(p->modulation_parameter, PARAMETER, false, 1.0, 0.08, false);
         
-        /*
-        std::cout << "readInputs pot: " << lp_state_[ADC_LEVEL_1_POT] << "\n";
-        //std::cout << "readInputs algoCalib: " << calibration_data_->offset[ADC_ALGORITHM_CV] << "\n";
-        std::cout << "readInputs cv: " << lp_state_[ADC_LEVEL_1_CV] << "\n";
         
-        std::cout << "readInputs value: " << p->channel_drive[0] << "\n";
-        */
         // Prevent wavefolder bleed caused by a slight offset in the pot or ADC.
         /*
         if (p->modulation_algorithm <= 0.125) {
@@ -92,34 +83,31 @@ namespace warps {
         CONSTRAIN(phase_shift, 0.0, 1.0);
         p->phase_shift = phase_shift;
         
-        // Internal oscillator parameters.  // TODO: check internal oscillator note!
-        double note;
-        //pitch_offset = 66.67;         // 100.00f;
-        //pitch_scale = -84.26;         //-110.00f;
-        //note = calibration_data_->pitch_offset;
-        //note += adc_inputs[ADC_LEVEL_1_CV] * calibration_data_->pitch_scale;
-        note = adc_inputs[ADC_LEVEL_1_CV] * 60.f;
-        double interval = note - note_cv_;
-        if (interval < -0.4 || interval > 0.4) {
-            note_cv_ = note;
-        } else {
-            note_cv_ += 0.1 * interval;
-        }
         
-        note = 60.0 * adc_inputs[ADC_LEVEL_1_POT] + 12.0;
-        note_pot_ += 0.1 * (note - note_pot_);
-        p->note = note_pot_ + note_cv_;
-        
-        // if not patched!
+        // Internal oscillator parameters.
+//        double note;
+//        note = adc_inputs[ADC_LEVEL_1_CV] * 60.f;
+//        double interval = note - note_cv_;
+//        if (interval < -0.4 || interval > 0.4) {
+//            note_cv_ = note;
+//        } else {
+//            note_cv_ += 0.1 * interval;
+//        }
+//
+//        note = 60.0 * adc_inputs[ADC_LEVEL_1_POT] + 12.0;
+//        note_pot_ += 0.1 * (note - note_pot_);
+//        p->note = note_pot_ + note_cv_;
+//
+        // if not patched! this overrides the 'BIND' above!
         for (int32_t i = 0; i < 2; ++i) {
             if (!patched[i]) {
                 double pot = lp_state_[ADC_LEVEL_1_POT + i];
                 p->channel_drive[i] = pot * pot;
             }
         }
-        if (!patched[0]) {
-            p->note = note_pot_ + 24.0;
-        }
+//        if (!patched[0]) {
+//            p->note = note_pot_ + 24.0;
+//        }
     }
     
 }

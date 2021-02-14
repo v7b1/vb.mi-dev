@@ -33,8 +33,6 @@ set(MI_SOURCES
 	${MI_PATH}/dsp/vocoder.h
 	${MI_PATH}/resources.cc
 	${MI_PATH}/resources.h
-	${MI_PATH}/settings.cc
-	${MI_PATH}/settings.h
 )
 
 set(BUILD_SOURCES 

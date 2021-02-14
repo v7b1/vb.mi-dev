@@ -34,7 +34,6 @@
 #include "c74_msp.h"
 
 #include "warps/dsp/modulator.h"
-#include "warps/settings.h"
 #include "read_inputs.hpp"
 
 
@@ -54,7 +53,7 @@ struct t_myObj {
     
     warps::Modulator    *modulator;
     warps::ReadInputs   *read_inputs;
-    warps::Settings     *settings;
+
     double              adc_inputs[warps::ADC_LAST];
     short               patched[2];
     short               easterEgg;
@@ -95,21 +94,16 @@ void* myObj_new(void) {
         memset(self->modulator, 0, sizeof(*t_myObj::modulator));
         self->modulator->Init(self->sr);
         
-        self->settings = new warps::Settings;
-        self->settings->Init();
+        self->modulator->mutable_parameters()->note = 60.f;
         
         self->read_inputs = new warps::ReadInputs;
-        self->read_inputs->Init(self->settings->mutable_calibration_data());
+        self->read_inputs->Init();
 
         
         for(int i=0; i<warps::ADC_LAST; i++)
             self->adc_inputs[i] = 0.0;
 
 
-        /*
-        self->inputshort = (warps::ShortFrame*)sysmem_newptr(kBlockSize*sizeof(warps::ShortFrame));
-        self->outputshort = (warps::ShortFrame*)sysmem_newptr(kBlockSize*sizeof(warps::ShortFrame));
-        */
         self->input = (warps::FloatFrame*)sysmem_newptr(kBlockSize*sizeof(warps::FloatFrame));
         self->output = (warps::FloatFrame*)sysmem_newptrclear(kBlockSize*sizeof(warps::FloatFrame));
     }
@@ -204,7 +198,7 @@ void myObj_int_osc_shape(t_myObj* self, long t) {
     
     //if (!self->easterEgg) {
         self->modulator->mutable_parameters()->carrier_shape = self->carrier_shape;
-    self->settings->mutable_state()->carrier_shape = self->carrier_shape;
+//    self->settings->mutable_state()->carrier_shape = self->carrier_shape;
     //}
 }
 
@@ -231,11 +225,11 @@ void myObj_level2(t_myObj* self, double m) {
 
 void myObj_note(t_myObj* self, double n) {
     //double note = 60.0 * self->adc_inputs[warps::ADC_LEVEL_1_POT] + 12.0;
-    if(self->carrier_shape != 0) {
-        double note = (n-12.0)/60.0;
-        self->adc_inputs[warps::ADC_LEVEL_1_POT] = note;
-        //object_post(NULL, "note: %f", note);
-    }
+//    if(self->carrier_shape != 0) {
+//        double note = (n-12.0)/60.0;
+//        self->adc_inputs[warps::ADC_LEVEL_1_POT] = note;
+//        //object_post(NULL, "note: %f", note);
+//    }
     self->modulator->mutable_parameters()->note = n;
 }
 
