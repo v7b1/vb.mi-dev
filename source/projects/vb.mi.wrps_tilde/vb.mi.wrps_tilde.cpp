@@ -34,6 +34,7 @@
 #include "c74_msp.h"
 
 #include "warps/dsp/modulator.h"
+#include "warps/dsp/oscillator.h"
 #include "read_inputs.hpp"
 
 
@@ -58,6 +59,7 @@ struct t_myObj {
     short               patched[2];
     short               easterEgg;
     uint8_t             carrier_shape;
+    double              pre_gain;
     
     warps::FloatFrame   *input;
     warps::FloatFrame   *output;
@@ -94,7 +96,7 @@ void* myObj_new(void) {
         memset(self->modulator, 0, sizeof(*t_myObj::modulator));
         self->modulator->Init(self->sr);
         
-        self->modulator->mutable_parameters()->note = 60.f;
+        self->modulator->mutable_parameters()->note = 110.0f; // (Hz)
         
         self->read_inputs = new warps::ReadInputs;
         self->read_inputs->Init();
@@ -130,7 +132,7 @@ void myObj_info(t_myObj *self)
     object_post((t_object*)self, "freqShift_pot: %f", p->frequency_shift_pot);
     object_post((t_object*)self, "freqShift_cv: %f", p->frequency_shift_cv);
     
-    object_post((t_object*)self, "phaseShift: %d", p->phase_shift);
+    object_post((t_object*)self, "phaseShift: %f", p->phase_shift);
     object_post((t_object*)self, "note: %f", p->note);
 
 }
@@ -143,12 +145,6 @@ void myObj_int(t_myObj *self, long value)
     long innum = proxy_getinlet((t_object *)self);
     
     switch (innum) {
-        case 0:
-            object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
-            break;
-        case 1:
-            object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
-            break;
         case 2: // ADC_LEVEL_1_POT
             self->patched[0] = value != 0;
             break;
@@ -156,36 +152,46 @@ void myObj_int(t_myObj *self, long value)
             // ADC_LEVEL_2_POT,
             self->patched[1] = value != 0;
             break;
-        case 4:
-            //self->patched[0] = value != 0;
-            object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
-            break;
-        case 5:
-            //self->patched[1] = value != 0;
-            object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
-            break;
         default:
             break;
     }
 }
 
 
+void myObj_float(t_myObj *self, double value)
+{    
+    long innum = proxy_getinlet((t_object *)self);
+    value = clamp(value, 0., 1.);
+    
+    switch (innum) {
+        case 2:
+            self->adc_inputs[warps::ADC_LEVEL_1_POT] = value;
+            break;
+        case 3:
+            self->adc_inputs[warps::ADC_LEVEL_2_POT] = value;
+            break;
+        case 4:
+            self->adc_inputs[warps::ADC_ALGORITHM_POT] = value;
+            break;
+        case 5:
+            self->adc_inputs[warps::ADC_PARAMETER_POT] = value;
+            break;
+            
+    }
+}
+
 
 #pragma mark ----- main pots -----
 
 void myObj_modulation_algo(t_myObj* self, double m) {
     // Selects which signal processing operation is performed on the carrier and modulator.
-    m = clamp(m, 0., 1.);
-    self->adc_inputs[warps::ADC_ALGORITHM_POT] = m;
-    //self->modulator->mutable_parameters()->modulation_algorithm = m;
+    self->adc_inputs[warps::ADC_ALGORITHM_POT] = clamp(m, 0., 1.);
 }
 
 void myObj_modulation_timbre(t_myObj* self, double m) {
-    // Controls the intensity of the high C harmonics created by cross-modulation
+    // Controls the intensity of the high harmonics created by cross-modulation
     // (or provides another dimension of tone control for some algorithms).
-    m = clamp(m, 0., 1.);
-    self->adc_inputs[warps::ADC_PARAMETER_POT] = m;
-    //self->modulator->mutable_parameters()->modulation_parameter = m;
+    self->adc_inputs[warps::ADC_PARAMETER_POT] = clamp(m, 0., 1.);
 }
 
 
@@ -193,13 +199,11 @@ void myObj_modulation_timbre(t_myObj* self, double m) {
 
 void myObj_int_osc_shape(t_myObj* self, long t) {
     // Enables the internal oscillator and selects its waveform.
-    int shape = clamp((int)t, 0, 3);
-    self->carrier_shape = shape;
+    self->carrier_shape = clamp((int)t, 0, 3);
     
-    //if (!self->easterEgg) {
+    if (!self->easterEgg)
         self->modulator->mutable_parameters()->carrier_shape = self->carrier_shape;
-//    self->settings->mutable_state()->carrier_shape = self->carrier_shape;
-    //}
+
 }
 
 
@@ -208,37 +212,29 @@ void myObj_int_osc_shape(t_myObj* self, long t) {
 void myObj_level1(t_myObj* self, double m) {
     // External carrier amplitude or internal oscillator frequency.
     // When the internal oscillator is switched off, this knob controls the amplitude of the carrier, or the amount of amplitude modulation from the channel 1 LEVEL CV input (1). When the internal oscillator is active, this knob controls its frequency.
-    m = clamp(m, 0., 1.);
-    self->adc_inputs[warps::ADC_LEVEL_1_POT] = m;
-    //self->modulator->mutable_parameters()->channel_drive[0] = m;
+    self->adc_inputs[warps::ADC_LEVEL_1_POT] = clamp(m, 0., 1.);
 }
 
 void myObj_level2(t_myObj* self, double m) {
     // This knob controls the amplitude of the modulator, or the amount of amplitude modulation from the channel 2 LEVEL CV input (2). Past a certain amount of gain, the signal soft clips.
-    m = clamp(m, 0., 1.);
-    self->adc_inputs[warps::ADC_LEVEL_2_POT] = m;
-    //self->modulator->mutable_parameters()->channel_drive[1] = m;
+    self->adc_inputs[warps::ADC_LEVEL_2_POT] = clamp(m, 0., 1.);
 }
 
 
 #pragma mark -------- other messages ----------
 
-void myObj_note(t_myObj* self, double n) {
-    //double note = 60.0 * self->adc_inputs[warps::ADC_LEVEL_1_POT] + 12.0;
-//    if(self->carrier_shape != 0) {
-//        double note = (n-12.0)/60.0;
-//        self->adc_inputs[warps::ADC_LEVEL_1_POT] = note;
-//        //object_post(NULL, "note: %f", note);
-//    }
-    self->modulator->mutable_parameters()->note = n;
+void myObj_freq(t_myObj* self, double n) {
+    // set freq (in Hz) of internal oscillator
+    self->modulator->mutable_parameters()->note = clamp(n, 0., 15000.);
 }
+
 
 void myObj_bypass(t_myObj* self,long t) {
     self->modulator->set_bypass(t != 0);
 }
 
 void myObj_easter_egg(t_myObj* self, long t) {
-    /*
+    
     if(t != 0) {
         self->easterEgg = true;
         self->modulator->mutable_parameters()->carrier_shape = 1;
@@ -248,12 +244,18 @@ void myObj_easter_egg(t_myObj* self, long t) {
         self->modulator->mutable_parameters()->carrier_shape = self->carrier_shape;
     }
     self->modulator->set_easter_egg(self->easterEgg);
-     */
-    
-    self->easterEgg = (t != 0);
-    self->modulator->set_easter_egg(self->easterEgg);
+
 }
 
+
+t_max_err gain_setter(t_myObj *self, void *attr, long ac, t_atom *av)
+{
+    if (ac && av) {
+        t_atom_float f = atom_getlong(av);
+        self->pre_gain = f;
+        self->modulator->vocoder_.limiter_pre_gain_ = f * 1.4;
+    }
+}
 
 
 #pragma mark ----- dsp loop ------
@@ -272,7 +274,7 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     
     
     // read 'cv' input signals, store first value of a sig vector
-    for(auto k=0; k<4; k++) {
+    for(int k=0; k<4; k++) {
         // cv inputs are expected in -1. to 1. range
         //adc_inputs[k] = clamp((1.-ins[k+2][0]), 0., 1.);  // leave out first two inlets (which are the audio inputs)
         adc_inputs[k] = ins[k+2][0];
@@ -280,14 +282,13 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     self->read_inputs->Read(self->modulator->mutable_parameters(), adc_inputs, self->patched);
     
     
-    for (auto i=0; i<vs; ++i) {
+    for (int i=0; i<vs; ++i) {
 
         input[count].l = ins[0][i];
         input[count].r = ins[1][i];
         
         count++;
         if(count >= kBlockSize) {
-            //self->modulator->Process(inputshort, outputshort, kBlockSize);
             self->modulator->Processf(input, output, kBlockSize);
             count = 0;
         }
@@ -336,16 +337,16 @@ void myObj_assist(t_myObj* self, void* unused, t_assist_function io, long index,
                 strncpy(string_dest,"(signal) IN modulator", ASSIST_STRING_MAXSIZE);
                 break;
             case 2:
-                strncpy(string_dest,"(signal) LEVEL1 controls carrier amplitude or int osc freq, (int) patch/unpatch", ASSIST_STRING_MAXSIZE);
+                strncpy(string_dest,"(signal/float) LEVEL1 controls carrier amplitude or int osc freq, (int) patch/unpatch", ASSIST_STRING_MAXSIZE);
                 break;
             case 3:
-                strncpy(string_dest,"(signal) LEVEL2 controls modulator amplitude, (int) patch/unpatch", ASSIST_STRING_MAXSIZE);
+                strncpy(string_dest,"(signal/float) LEVEL2 controls modulator amplitude, (int) patch/unpatch", ASSIST_STRING_MAXSIZE);
                 break;
             case 4:
-                strncpy(string_dest,"(signal) ALGO - choose x-fade algorithm", ASSIST_STRING_MAXSIZE);
+                strncpy(string_dest,"(signal/float) ALGO - choose x-fade algorithm", ASSIST_STRING_MAXSIZE);
                 break;
             case 5:
-                strncpy(string_dest,"(signal) TIMBRE", ASSIST_STRING_MAXSIZE);
+                strncpy(string_dest,"(signal/float) TIMBRE", ASSIST_STRING_MAXSIZE);
                 break;
         }
     }
@@ -362,7 +363,8 @@ void myObj_assist(t_myObj* self, void* unused, t_assist_function io, long index,
 }
 
 
-void ext_main(void* r) {
+void ext_main(void* r)
+{
     this_class = class_new("vb.mi.wrps~", (method)myObj_new, (method)myObj_free, sizeof(t_myObj), 0, A_GIMME, 0);
     
     class_addmethod(this_class, (method)myObj_assist,	            "assist",	A_CANT,		0);
@@ -376,16 +378,24 @@ void ext_main(void* r) {
     
     class_addmethod(this_class, (method)myObj_level2,               "level2",   A_FLOAT, 0);
 
-    class_addmethod(this_class, (method)myObj_note,                 "note",     A_FLOAT, 0);
+    class_addmethod(this_class, (method)myObj_freq,                 "freq",     A_FLOAT, 0);
     
     class_addmethod(this_class, (method)myObj_bypass,               "bypass",   A_LONG, 0);
     class_addmethod(this_class, (method)myObj_easter_egg,           "easteregg",A_LONG, 0);
     
     class_addmethod(this_class, (method)myObj_int,                  "int",      A_LONG, 0);
+    class_addmethod(this_class, (method)myObj_float,                "float",    A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_info,	                "info", 0);
     
     class_dspinit(this_class);
     class_register(CLASS_BOX, this_class);
+    
+    
+    CLASS_ATTR_DOUBLE(this_class, "pre_gain", 0, t_myObj, pre_gain);
+    CLASS_ATTR_LABEL(this_class, "pre_gain", 0, "vocoder pre_gain");
+    CLASS_ATTR_FILTER_CLIP(this_class, "pre_gain", 1.0, 10.0);
+    CLASS_ATTR_ACCESSORS(this_class, "pre_gain", NULL, (method)gain_setter);
+    CLASS_ATTR_SAVE(this_class, "pre_gain", 0);
     
     object_post(NULL, "vb.mi.wrps~ by volker böhm --> https://vboehm.net");
     object_post(NULL, "a clone of mutable instruments' 'warps' module");

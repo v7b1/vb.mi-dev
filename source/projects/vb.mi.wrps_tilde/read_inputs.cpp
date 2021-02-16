@@ -9,7 +9,7 @@
 
 #include <algorithm>
 #include <cmath>
-#include <iostream>
+//#include <iostream>
 
 #include "stmlib/dsp/dsp.h"
 #include "stmlib/utils/random.h"
@@ -25,7 +25,7 @@ namespace warps {
     void ReadInputs::Init() {
         note_cv_ = 0.0;
         note_pot_ = 0.0;
-        fill(&lp_state_[0], &lp_state_[ADC_LAST], 1.0);     // 0.0
+        fill(&lp_state_[0], &lp_state_[ADC_LAST], 0.0);
     }
     
     double ReadInputs::UnwrapPot(double x) const {
@@ -57,18 +57,50 @@ namespace warps {
     
     void ReadInputs::Read(Parameters* p, double *adc_inputs, short* patched) {
         // Modulation parameters.
-        BIND(p->channel_drive[0], LEVEL_1, false, 1.6, 0.08, true);     // unipolar input?
-        BIND(p->channel_drive[1], LEVEL_2, false, 1.6, 0.08, true);     // unipolar input?
-        BIND(p->modulation_algorithm, ALGORITHM, false, 1.0, 0.08, false);  // unwrap was true, vb
-        BIND(p->modulation_parameter, PARAMETER, false, 1.0, 0.08, false);
+//        BIND(p->channel_drive[0], LEVEL_1, false, 1.6, 0.08, true);     // unipolar input?
+//        BIND(p->channel_drive[1], LEVEL_2, false, 1.6, 0.08, true);     // unipolar input?
+//        BIND(p->modulation_algorithm, ALGORITHM, false, 1.0, 0.08, false);  // unwrap was true, vb
+//        BIND(p->modulation_parameter, PARAMETER, false, 1.0, 0.08, false);
+        
+        // 2x level --> channel drive
+        for (int32_t i = 0; i < 2; ++i) {
+            int index_pot = ADC_LEVEL_1_POT + i;
+            int index_cv = ADC_LEVEL_1_CV + i;
+            lp_state_[index_pot] += 0.33 * 0.08 * (adc_inputs[index_pot] - lp_state_[index_pot]);
+            lp_state_[index_cv] += 0.08 * (adc_inputs[index_cv] - lp_state_[index_cv]);
+            
+            double pot = lp_state_[index_pot];
+            if (!patched[i]) {
+               p->channel_drive[i] = pot * pot;
+            }
+            else {
+                double cv = lp_state_[index_cv];
+                double value = (pot * pot * cv * 1.6);
+                CONSTRAIN(value, 0.0, 1.0);
+                p->channel_drive[i] = value;
+            }
+        }
         
         
-        // Prevent wavefolder bleed caused by a slight offset in the pot or ADC.
-        /*
-        if (p->modulation_algorithm <= 0.125) {
-            p->modulation_algorithm = p->modulation_algorithm * 1.08 - 0.01;
-            CONSTRAIN(p->modulation_algorithm, 0.0, 1.0);
-        }*/
+        // algorithm
+        lp_state_[ADC_ALGORITHM_POT] += 0.33 * 0.08 * (adc_inputs[ADC_ALGORITHM_POT] - lp_state_[ADC_ALGORITHM_POT]);
+        lp_state_[ADC_ALGORITHM_CV] += 0.08 * (adc_inputs[ADC_ALGORITHM_CV] - lp_state_[ADC_ALGORITHM_CV]);
+        double pot = lp_state_[ADC_ALGORITHM_POT];
+        //pot = UnwrapPot(pot);
+        double cv = lp_state_[ADC_ALGORITHM_CV];
+        double value = (pot + cv);
+        CONSTRAIN(value, 0.0, 1.0);
+        p->modulation_algorithm = value;
+        
+        // timbre/parameter
+        lp_state_[ADC_PARAMETER_POT] += 0.33 * 0.08 * (adc_inputs[ADC_PARAMETER_POT] - lp_state_[ADC_PARAMETER_POT]);
+        lp_state_[ADC_PARAMETER_CV] += 0.08 * (adc_inputs[ADC_PARAMETER_CV] - lp_state_[ADC_PARAMETER_CV]);
+        pot = lp_state_[ADC_PARAMETER_POT];
+        cv = lp_state_[ADC_PARAMETER_CV];
+        value = (pot + cv);
+        CONSTRAIN(value, 0.0, 1.0);
+        p->modulation_parameter = value;
+        
         
         // Easter egg parameter mappings.
         p->frequency_shift_pot = lp_state_[ADC_ALGORITHM_POT];
@@ -99,12 +131,12 @@ namespace warps {
 //        p->note = note_pot_ + note_cv_;
 //
         // if not patched! this overrides the 'BIND' above!
-        for (int32_t i = 0; i < 2; ++i) {
-            if (!patched[i]) {
-                double pot = lp_state_[ADC_LEVEL_1_POT + i];
-                p->channel_drive[i] = pot * pot;
-            }
-        }
+//        for (int32_t i = 0; i < 2; ++i) {
+//            if (!patched[i]) {
+//                double pot = lp_state_[ADC_LEVEL_1_POT + i];
+//                p->channel_drive[i] = pot * pot;
+//            }
+//        }
 //        if (!patched[0]) {
 //            p->note = note_pot_ + 24.0;
 //        }

@@ -4,13 +4,13 @@
 		"appversion" : 		{
 			"major" : 8,
 			"minor" : 1,
-			"revision" : 5,
+			"revision" : 7,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 419.0, 45.0, 1060.0, 911.0 ],
+		"rect" : [ 419.0, 45.0, 1071.0, 905.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 13.0,
@@ -58,7 +58,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 753.0, 802.6844482421875, 232.0, 38.0 ],
+					"patching_rect" : [ 811.0, 804.5, 232.0, 38.0 ],
 					"text" : ";\rmax launchbrowser https://vboehm.net"
 				}
 
@@ -70,7 +70,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 788.5, 857.1844482421875, 161.0, 21.0 ],
+					"patching_rect" : [ 862.0, 850.1844482421875, 161.0, 21.0 ],
 					"text" : "https://vboehm.net, 2020"
 				}
 
@@ -84,7 +84,7 @@
 					"numoutlets" : 4,
 					"outlettype" : [ "bang", "bang", "", "int" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 788.5, 853.6844482421875, 158.142822265625, 28.0 ]
+					"patching_rect" : [ 862.0, 846.6844482421875, 158.142822265625, 28.0 ]
 				}
 
 			}
@@ -332,7 +332,7 @@
 						"appversion" : 						{
 							"major" : 8,
 							"minor" : 1,
-							"revision" : 5,
+							"revision" : 7,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -708,7 +708,7 @@
 						"appversion" : 						{
 							"major" : 8,
 							"minor" : 1,
-							"revision" : 5,
+							"revision" : 7,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -981,7 +981,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 446.5, 308.0, 73.0, 38.0 ],
+					"patching_rect" : [ 446.5, 308.0, 76.0, 38.0 ],
 					"text" : "filter_mode $1"
 				}
 
@@ -2010,7 +2010,7 @@
 				"patchline" : 				{
 					"destination" : [ "obj-53", 0 ],
 					"hidden" : 1,
-					"order" : 4,
+					"order" : 5,
 					"source" : [ "obj-66", 0 ]
 				}
 
@@ -2019,7 +2019,7 @@
 				"patchline" : 				{
 					"destination" : [ "obj-56", 0 ],
 					"hidden" : 1,
-					"order" : 5,
+					"order" : 4,
 					"source" : [ "obj-66", 0 ]
 				}
 

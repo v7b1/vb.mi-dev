@@ -116,6 +116,8 @@ class Vocoder {
   void set_formant_shift(float formant_shift) {
     formant_shift_ = formant_shift;
   }
+    
+    float limiter_pre_gain_;    // vb, make this adjustable
 
  private:
   float release_time_;

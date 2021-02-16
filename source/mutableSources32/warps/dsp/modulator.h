@@ -248,6 +248,8 @@ class Modulator {
 
   inline bool easter_egg() const { return easter_egg_; }
   inline void set_easter_egg(bool easter_egg) { easter_egg_ = easter_egg; }
+    
+    Vocoder vocoder_;   // vb
   
  private:
   template<XmodAlgorithm algorithm_1, XmodAlgorithm algorithm_2>
@@ -316,7 +318,7 @@ class Modulator {
   SampleRateConverter<SRC_UP, kOversampling, 48> src_up_[2];
   SampleRateConverter<SRC_DOWN, kOversampling, 48> src_down_;
 
-  Vocoder vocoder_;
+//  Vocoder vocoder_;
   QuadratureTransform quadrature_transform_[2];
   
   float internal_modulation_[kMaxBlockSize];
