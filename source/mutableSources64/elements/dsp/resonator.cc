@@ -58,6 +58,7 @@ void Resonator::Init() {
   set_damping(0.3);
   set_position(0.999);
   set_resolution(kMaxModes);
+    previous_position_ = 0.0;
   
   bow_signal_ = 0.0;
     
