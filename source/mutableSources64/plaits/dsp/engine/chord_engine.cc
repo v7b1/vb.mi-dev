@@ -32,12 +32,40 @@
 
 #include "plaits/resources.h"
 
-
 namespace plaits {
 
 using namespace std;
 using namespace stmlib;
 
+#ifdef JON_CHORDS
+    
+    // Alternative chord table by Jon Butler jonbutler88@gmail.com
+    const double chords[kChordNumChords][kChordNumNotes] = {
+        // Fixed Intervals
+        { 0.00, 0.01, 11.99, 12.00 },  // Octave
+        { 0.00, 7.01,  7.00, 12.00 },  // Fifth
+        // Minor
+        { 0.00, 3.00,  7.00, 12.00 },  // Minor
+        { 0.00, 3.00,  7.00, 10.00 },  // Minor 7th
+        { 0.00, 3.00, 10.00, 14.00 },  // Minor 9th
+        { 0.00, 3.00, 10.00, 17.00 },  // Minor 11th
+        // Major
+        { 0.00, 4.00,  7.00, 12.00 },  // Major
+        { 0.00, 4.00,  7.00, 11.00 },  // Major 7th
+        { 0.00, 4.00, 11.00, 14.00 },  // Major 9th
+        // Colour Chords
+        { 0.00, 5.00,  7.00, 12.00 },  // Sus4
+        { 0.00, 2.00,  9.00, 16.00 },  // 69
+        { 0.00, 4.00,  7.00,  9.00 },  // 6th
+        { 0.00, 7.00, 16.00, 23.00 },  // 10th (Spread maj7)
+        { 0.00, 4.00,  7.00, 10.00 },  // Dominant 7th
+        { 0.00, 7.00, 10.00, 13.00 },  // Dominant 7th (b9)
+        { 0.00, 3.00,  6.00, 10.00 },  // Half Diminished
+        { 0.00, 3.00,  6.00,  9.00 },  // Fully Diminished
+    };
+    
+#else
+    
 const double chords[kChordNumChords][kChordNumNotes] = {
   { 0.00, 0.01, 11.99, 12.00 },  // OCT
   { 0.00, 7.01,  7.00, 12.00 },  // 5
@@ -51,7 +79,10 @@ const double chords[kChordNumChords][kChordNumNotes] = {
   { 0.00, 4.00,  7.00, 11.00 },  // M7
   { 0.00, 4.00,  7.00, 12.00 },  // M
 };
+    
+#endif  // JON_CHORDS
 
+    
 void ChordEngine::Init(BufferAllocator* allocator) {
   for (int i = 0; i < kChordNumVoices; ++i) {
     divide_down_voice_[i].Init();
@@ -66,11 +97,11 @@ void ChordEngine::Init(BufferAllocator* allocator) {
 
 void ChordEngine::Reset() {
     // vb, this is probably an oversight
-//  for (int i = 0; i < kChordNumChords; ++i) {
+//    for (int i = 0; i < kChordNumChords; ++i) {
 //      for (int j = 0; j < kChordNumVoices; ++j) {     // vb TODO: check that - kChordNumVoices ?
-//      ratios_[i * kChordNumVoices + j] = SemitonesToRatio(chords[i][j]);
+//          ratios_[i * kChordNumVoices + j] = SemitonesToRatio(chords[i][j]);
+//      }
 //    }
-//  }
     for (int i = 0; i < kChordNumChords; ++i) {
         for (int j = 0; j < kChordNumNotes; ++j) {
             ratios_[i * kChordNumVoices + j] = SemitonesToRatio(chords[i][j]);
