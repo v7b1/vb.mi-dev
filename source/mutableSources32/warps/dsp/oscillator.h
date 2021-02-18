@@ -66,13 +66,6 @@ class Oscillator {
   typedef float (Oscillator::*RenderFn)(
       float note, float* mod, float* out, size_t size);
     
-    // vb, try to fix out of bounds sample values, when switching oscillator shapes
-    void reset_phase() {
-        phase_ = 0.0f;
-        high_ = false;
-        lp_state_ = 0.f;
-        next_sample_ = 0.f;
-    }
 
  private:
   float Duck(
