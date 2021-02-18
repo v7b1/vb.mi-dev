@@ -34,8 +34,7 @@
 
 //#include "warps/drivers/debug_pin.h"
 #include "warps/resources.h"
-
-#include <iostream>
+#include <cstdio>
 
 namespace warps {
 
@@ -63,7 +62,7 @@ void Modulator::Init(float sample_rate) {
   previous_parameters_.channel_drive[1] = 0.0f;
   previous_parameters_.modulation_algorithm = 0.0f;
   previous_parameters_.modulation_parameter = 0.0f;
-  previous_parameters_.note = 48.0f;
+  previous_parameters_.note = 110.0f;
 
   feedback_sample_ = 0.0f;
 }
@@ -647,6 +646,13 @@ void Modulator::Processf(FloatFrame* input, FloatFrame* output, size_t size) {
             // Vocoder: saw, pulse, noise.
             OscillatorShape xmod_shape = static_cast<OscillatorShape>(parameters_.carrier_shape - 1);
             OscillatorShape vocoder_shape = static_cast<OscillatorShape>(parameters_.carrier_shape + 1);
+            
+//            // vb, try to fix out of bounds sample values when switching osc shapes
+//            if (parameters_.carrier_shape !=  previous_parameters_.carrier_shape) {
+////                xmod_oscillator_.reset_phase();
+////                xmod_oscillator_.Init(44100.0f);
+//                std::printf("reset phase\n");
+//            }
             
             const float kXmodCarrierGain = 0.5f;
             

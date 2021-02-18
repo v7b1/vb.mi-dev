@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 203.0, 45.0, 1271.0, 970.0 ],
+		"rect" : [ 224.0, 45.0, 1271.0, 970.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 13.0,
@@ -39,6 +39,79 @@
 		"subpatcher_template" : "vb01",
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
+				"box" : 				{
+					"id" : "obj-45",
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 865.0, 300.5, 68.0, 21.0 ],
+					"text" : "decay env"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"hidden" : 1,
+					"id" : "obj-21",
+					"linecount" : 2,
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 982.0, 838.0, 232.0, 38.0 ],
+					"text" : ";\rmax launchbrowser https://vboehm.net"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"fontface" : 1,
+					"id" : "obj-38",
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 982.0, 881.0, 161.0, 21.0 ],
+					"text" : "https://vboehm.net, 2021"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"handoff" : "",
+					"id" : "obj-46",
+					"maxclass" : "ubutton",
+					"numinlets" : 1,
+					"numoutlets" : 4,
+					"outlettype" : [ "bang", "bang", "", "int" ],
+					"parameter_enable" : 0,
+					"patching_rect" : [ 982.0, 878.0, 158.142822265625, 28.0 ]
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-18",
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 834.7142333984375, 371.5, 108.0, 21.0 ],
+					"text" : "modulation on/off"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-10",
+					"maxclass" : "number",
+					"numinlets" : 1,
+					"numoutlets" : 2,
+					"outlettype" : [ "", "bang" ],
+					"parameter_enable" : 0,
+					"patching_rect" : [ 930.0, 219.0, 50.0, 23.0 ]
+				}
+
+			}
+, 			{
 				"box" : 				{
 					"id" : "obj-39",
 					"maxclass" : "comment",
@@ -540,7 +613,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "signal" ],
 					"patching_rect" : [ 841.3570556640625, 268.5, 86.0, 23.0 ],
-					"text" : "slide~ 1 2500"
+					"text" : "slide~ 1 2000"
 				}
 
 			}
@@ -574,8 +647,8 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 329.875, 355.5, 126.0, 79.0 ],
-					"text" : "If int.osc is active, a signal at the carrier input will phase modulate the INT. OSC."
+					"patching_rect" : [ 366.875, 342.5, 126.0, 79.0 ],
+					"text" : "If INT.OSC is active, a signal at the carrier input will phase modulate the INT.OSC."
 				}
 
 			}
@@ -600,7 +673,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 29.5, 479.5, 49.25, 36.0 ],
-					"text" : "amp \ncarrier"
+					"text" : "gain \ncarrier"
 				}
 
 			}
@@ -612,7 +685,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 177.0, 479.5, 41.0, 36.0 ],
-					"text" : "amp\nmod."
+					"text" : "gain\nmod."
 				}
 
 			}
@@ -735,8 +808,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "signal" ],
-					"patching_rect" : [ 646.0, 269.0, 64.0, 23.0 ],
-					"text" : "cycle~ 93"
+					"patching_rect" : [ 646.0, 269.0, 71.0, 23.0 ],
+					"text" : "cycle~ 133"
 				}
 
 			}
@@ -1334,7 +1407,7 @@
 					"patching_rect" : [ 687.5, 509.0, 48.0, 136.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
-							"parameter_initial" : [ -70.0 ],
+							"parameter_initial" : [ -70 ],
 							"parameter_initial_enable" : 1,
 							"parameter_longname" : "live.gain~[1]",
 							"parameter_mmax" : 6.0,
@@ -1732,6 +1805,13 @@
 			}
 , 			{
 				"patchline" : 				{
+					"destination" : [ "obj-80", 2 ],
+					"source" : [ "obj-10", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
 					"destination" : [ "obj-59", 0 ],
 					"source" : [ "obj-107", 0 ]
 				}
@@ -1971,6 +2051,14 @@
 				"patchline" : 				{
 					"destination" : [ "obj-34", 0 ],
 					"source" : [ "obj-41", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-21", 0 ],
+					"hidden" : 1,
+					"source" : [ "obj-46", 1 ]
 				}
 
 			}
