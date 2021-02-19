@@ -730,6 +730,7 @@ void Modulator::Processf(FloatFrame* input, FloatFrame* output, size_t size) {
             
             vocoder_.set_release_time(release_time * (2.0f - release_time));
             vocoder_.set_formant_shift(parameters_.modulation_parameter);
+            vocoder_.set_limiter_pre_gain(parameters_.limiter_pre_gain);
             vocoder_.Process(modulator, carrier, main_output, size);
         }
         
@@ -787,7 +788,6 @@ void Modulator::Processf(FloatFrame* input, FloatFrame* output, size_t size) {
             fill(&aux_output[0], &aux_output[size], 0.0f);
         }
         
-        //std::cout << "carrier: " << (parameters_.carrier_shape ? 1 : 0)  << "\n";
         // Convert audio inputs to float and apply VCA/saturation (5.8% per channel)
         //short* input_samples = &input->l;
         for (int32_t i = parameters_.carrier_shape ? 1 : 0; i < 2; ++i) {

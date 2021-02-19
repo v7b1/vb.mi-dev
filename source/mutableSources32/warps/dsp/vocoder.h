@@ -117,11 +117,14 @@ class Vocoder {
     formant_shift_ = formant_shift;
   }
     
-    float limiter_pre_gain_;    // vb, make this adjustable
+    void set_limiter_pre_gain(float gain) {
+        limiter_pre_gain_ = gain * 1.4f;
+    }
 
  private:
   float release_time_;
   float formant_shift_;
+    float limiter_pre_gain_;    // vb
   
   BandGain previous_gain_[kNumBands];
   BandGain gain_[kNumBands];

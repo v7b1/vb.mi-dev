@@ -105,13 +105,10 @@ namespace warps {
         // Easter egg parameter mappings.
         p->frequency_shift_pot = lp_state_[ADC_ALGORITHM_POT];
         float frequency_shift_cv = lp_state_[ADC_ALGORITHM_CV];
-        //float frequency_shift_cv = -lp_state_[ADC_ALGORITHM_CV];
-        //frequency_shift_cv += calibration_data_->offset[ADC_ALGORITHM_CV];      // 0.495f;
-        
-        p->frequency_shift_cv = frequency_shift_cv; // * 2.0;
+        p->frequency_shift_cv = frequency_shift_cv * 0.5f;  // vb, range is too wide!
         CONSTRAIN(p->frequency_shift_cv, -1.0, 1.0);
         
-        double phase_shift = lp_state_[ADC_ALGORITHM_POT] + frequency_shift_cv; // * 2.0;
+        double phase_shift = lp_state_[ADC_ALGORITHM_POT] + frequency_shift_cv;
         CONSTRAIN(phase_shift, 0.0, 1.0);
         p->phase_shift = phase_shift;
         

@@ -45,7 +45,7 @@ using namespace c74::max;
 // TODO: work on block size and SR, use libsamplerate for downsampling?
 // original SR: 96 kHz, block size: 60
 
-const size_t kBlockSize = 96;       // has to stay like that TODO: why?
+const size_t kBlockSize = 60; //96;       // has to stay like that TODO: why?
 
 static t_class* this_class = nullptr;
 
@@ -185,6 +185,7 @@ void myObj_float(t_myObj *self, double value)
 
 void myObj_modulation_algo(t_myObj* self, double m) {
     // Selects which signal processing operation is performed on the carrier and modulator.
+    m *= 0.125;
     self->adc_inputs[warps::ADC_ALGORITHM_POT] = clamp(m, 0., 1.);
 }
 
@@ -201,7 +202,7 @@ void myObj_int_osc_shape(t_myObj* self, long t) {
     // Enables the internal oscillator and selects its waveform.
     self->carrier_shape = clamp((int)t, 0, 3);
     
-    if (!self->easterEgg)
+//    if (!self->easterEgg)
         self->modulator->mutable_parameters()->carrier_shape = self->carrier_shape;
 
 }
@@ -235,14 +236,15 @@ void myObj_bypass(t_myObj* self,long t) {
 
 void myObj_easter_egg(t_myObj* self, long t) {
     
-    if(t != 0) {
-        self->easterEgg = true;
-        self->modulator->mutable_parameters()->carrier_shape = 1;
-    }
-    else {
-        self->easterEgg = false;
-        self->modulator->mutable_parameters()->carrier_shape = self->carrier_shape;
-    }
+//    if(t != 0) {
+//        self->easterEgg = true;
+//        self->modulator->mutable_parameters()->carrier_shape = 1;
+//    }
+//    else {
+//        self->easterEgg = false;
+//        self->modulator->mutable_parameters()->carrier_shape = self->carrier_shape;
+//    }
+    self->easterEgg = ( t != 0 );
     self->modulator->set_easter_egg(self->easterEgg);
 
 }
@@ -253,7 +255,7 @@ t_max_err gain_setter(t_myObj *self, void *attr, long ac, t_atom *av)
     if (ac && av) {
         t_atom_float f = atom_getlong(av);
         self->pre_gain = f;
-        self->modulator->vocoder_.limiter_pre_gain_ = f * 1.4;
+        self->modulator->mutable_parameters()->limiter_pre_gain = f * 1.4;
     }
 }
 
@@ -275,8 +277,8 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     
     // read 'cv' input signals, store first value of a sig vector
     for(int k=0; k<4; k++) {
-        // cv inputs are expected in -1. to 1. range
-        //adc_inputs[k] = clamp((1.-ins[k+2][0]), 0., 1.);  // leave out first two inlets (which are the audio inputs)
+        // cv inputs are expected in 0. to 1. range
+        // leave out first two inlets (which are the audio inputs)
         adc_inputs[k] = ins[k+2][0];
     }
     self->read_inputs->Read(self->modulator->mutable_parameters(), adc_inputs, self->patched);
