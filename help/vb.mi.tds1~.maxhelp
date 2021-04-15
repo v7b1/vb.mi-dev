@@ -4,13 +4,13 @@
 		"appversion" : 		{
 			"major" : 8,
 			"minor" : 1,
-			"revision" : 5,
+			"revision" : 7,
 			"architecture" : "x64",
 			"modernui" : 1
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 147.0, 45.0, 1042.0, 938.0 ],
+		"rect" : [ 534.0, 45.0, 1042.0, 938.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 13.0,
@@ -243,7 +243,7 @@
 						"appversion" : 						{
 							"major" : 8,
 							"minor" : 1,
-							"revision" : 5,
+							"revision" : 7,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -571,7 +571,7 @@
 					"numoutlets" : 2,
 					"outlettype" : [ "", "bang" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 653.5, 273.0, 44.0, 23.0 ]
+					"patching_rect" : [ 661.0, 273.0, 44.0, 23.0 ]
 				}
 
 			}
@@ -582,8 +582,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "signal" ],
-					"patching_rect" : [ 614.0, 273.0, 38.0, 23.0 ],
-					"text" : "<~ 0."
+					"patching_rect" : [ 614.0, 273.0, 45.0, 23.0 ],
+					"text" : "<~ 0.2"
 				}
 
 			}
@@ -619,7 +619,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 701.25, 359.0, 239.892822265625, 21.0 ],
-					"text" : "clock input can be any  stable oscillator."
+					"text" : "clock input can be any stable oscillator."
 				}
 
 			}
@@ -864,7 +864,7 @@
 						"appversion" : 						{
 							"major" : 8,
 							"minor" : 1,
-							"revision" : 5,
+							"revision" : 7,
 							"architecture" : "x64",
 							"modernui" : 1
 						}
@@ -1182,7 +1182,7 @@
 					"outlettype" : [ "signal", "signal", "signal", "signal" ],
 					"patching_rect" : [ 314.0, 445.0, 306.5, 29.0 ],
 					"saved_object_attributes" : 					{
-						"ramp_mode" : 1,
+						"ramp_mode" : 2,
 						"range" : 0
 					}
 ,

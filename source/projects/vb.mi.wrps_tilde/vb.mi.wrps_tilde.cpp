@@ -105,7 +105,7 @@ void* myObj_new(void) {
         for(int i=0; i<warps::ADC_LAST; i++)
             self->adc_inputs[i] = 0.0;
 
-
+        // TODO: check memory size: should it be warps::kMaxBlockSize?
         self->input = (warps::FloatFrame*)sysmem_newptr(kBlockSize*sizeof(warps::FloatFrame));
         self->output = (warps::FloatFrame*)sysmem_newptrclear(kBlockSize*sizeof(warps::FloatFrame));
     }
