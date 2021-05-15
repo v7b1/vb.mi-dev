@@ -35,12 +35,14 @@ include_directories(
     ${MI_PATH}
 )
 
+# add preprocessor macro TEST to avoid asm functions
+target_compile_definitions(${PROJECT_NAME} PUBLIC TEST)
 
 # create groups in our project
 source_group(TREE ${MI_PATH} FILES ${MI_SOURCES})
 
-
+if(APPLE)
 target_link_libraries(${PROJECT_NAME} PUBLIC "-framework Accelerate")
-
+endif()
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-api/script/max-posttarget.cmake)

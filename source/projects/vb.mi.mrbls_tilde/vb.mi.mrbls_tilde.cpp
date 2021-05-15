@@ -32,6 +32,7 @@
 
 
 #include "c74_msp.h"
+#include <time.h>
 
 #include "dsp.h"
 #include "read_inputs.hpp"
@@ -52,7 +53,9 @@
 #include "stmlib/dsp/units.h"
 #include "stmlib/utils/gate_flags.h"
 
+#ifdef __APPLE__
 #include "Accelerate/Accelerate.h"
+#endif
 
 //#include <iostream>
 
@@ -128,11 +131,11 @@ struct t_myObj {
     void                *info_out;
 };
 
-unsigned long long rdtsc() {
-    unsigned int lo,hi;
-    __asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
-    return ((unsigned long long)hi << 32) | lo;
-}
+//unsigned long long rdtsc() {
+//    unsigned int lo,hi;
+//    __asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
+//    return ((unsigned long long)hi << 32) | lo;
+//}
 
 void Init(t_myObj *self)
 {
@@ -143,7 +146,8 @@ void Init(t_myObj *self)
     self->scale_recorder.Init();
 
    
-    self->random_generator.Init( rdtsc() );  // use time stamp counter as seed, good?
+//    self->random_generator.Init( rdtsc() );  // use time stamp counter as seed, good?
+    self->random_generator.Init( (unsigned int)time(NULL) );
     self->random_stream.Init(&self->random_generator);
     self->t_generator.Init(&self->random_stream, self->sr);
     self->xy_generator.Init(&self->random_stream, self->sr);
@@ -631,14 +635,24 @@ void dsp_loop(t_myObj* self, double** ins, double** outs, long blockSize, long o
     if(self->clock_connected[0] && block->input_patched[0]) {
         vectorsum = 0.0;
         clock_input = ins[0]+offset;
+#ifdef __APPLE__
         vDSP_sveD(clock_input, 1, &vectorsum, size);
+#else
+        for(int i=0; i<size; ++i)
+            vectorsum += clock_input[i];
+#endif
         if(vectorsum > 0.5) inClocks[0] = 255;
     }
     if(self->clock_connected[1] && block->input_patched[1]) {
         xy_clock_source = CLOCK_SOURCE_EXTERNAL;
         vectorsum = 0.0;
         clock_input = ins[ADC_CHANNEL_LAST+1]+offset;
+#ifdef __APPLE__
         vDSP_sveD(clock_input, 1, &vectorsum, size);
+#else
+        for(int i=0; i<size; ++i)
+            vectorsum += clock_input[i];
+#endif
         if(vectorsum > 0.5) {
             inClocks[1] = 255;
             //object_post(NULL, "ping! - clockSrc: %d", xy_clock_source);

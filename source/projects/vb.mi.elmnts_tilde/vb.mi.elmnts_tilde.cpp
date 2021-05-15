@@ -37,9 +37,9 @@
 #include "elements/dsp/dsp.h"
 #include "elements/dsp/part.h"
 #include "read_inputs.hpp"
-
+#ifdef __APPLE__
 #include "Accelerate/Accelerate.h"
-
+#endif
 
 using namespace c74::max;
 
@@ -524,7 +524,13 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
         
         if(gate_connected) {        // check if gate signal is connected
             double trigger = 0.0;
+#ifdef __APPLE__
             vDSP_sveD(gate_in+count, 1, &trigger, size);   // calc sum of input block
+#else
+            for(int i=0; i<size; ++i) {
+                trigger += gate_in[i+count];
+            }
+#endif
             ps->gate |= trigger != 0.0;
         }
 
