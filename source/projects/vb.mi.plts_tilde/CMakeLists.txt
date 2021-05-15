@@ -138,7 +138,9 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC TEST)
 source_group(TREE ${MUTABLE_PATH} FILES ${STMLIB_SOURCES} ${MI_SOURCES})
 
 
+if(APPLE)
 target_link_libraries(${PROJECT_NAME} PUBLIC "-framework Accelerate")
+endif()
 
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-api/script/max-posttarget.cmake)
