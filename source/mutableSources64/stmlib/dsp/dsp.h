@@ -138,18 +138,10 @@ inline double SoftClip(double x) {
   }
 #else
   inline int32_t Clip16(int32_t x) {
-      /*
+      
     int32_t result = 0;
-      // TODO: replace assembler
     __asm ("ssat %0, %1, %2" : "=r" (result) :  "I" (16), "r" (x) );
-    return result;*/
-      if (x < -32768) {
-          return -32768;
-      } else if (x > 32767) {
-          return 32767;
-      } else {
-          return x;
-      }
+    return result;
   }
   inline uint32_t ClipU16(int32_t x) {
     uint32_t result;
@@ -165,9 +157,7 @@ inline double SoftClip(double x) {
 #else
   inline double Sqrt(double x) {
     double result;
-      // TODO: replace assembler
-    //__asm ("vsqrt.f32 %0, %1" : "=w" (result) : "w" (x) );
-      result = std::sqrt(x);
+    __asm ("vsqrt.f32 %0, %1" : "=w" (result) : "w" (x) );
     return result;
   }
 #endif

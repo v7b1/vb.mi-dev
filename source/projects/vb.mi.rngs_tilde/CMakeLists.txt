@@ -8,6 +8,10 @@ set(MUTABLE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../mutableSources64")
 set(STMLIB_PATH ${MUTABLE_PATH}/stmlib)
 set(MI_PATH ${MUTABLE_PATH}/rings)
 
+if(MSVC)
+add_definitions(-D_USE_MATH_DEFINES) # defines M_PI with MSVC
+endif()
+
 set(STMLIB_SOURCES 
 	${STMLIB_PATH}/stmlib.h
 	${STMLIB_PATH}/utils/random.cc
@@ -74,12 +78,14 @@ add_library(
 	${BUILD_SOURCES}
 )
 
+# add preprocessor macro to avoid asm functions
+target_compile_definitions(${PROJECT_NAME} PUBLIC TEST)
 
 # create groups in our project
 source_group(TREE ${MUTABLE_PATH} FILES ${STMLIB_SOURCES} ${MI_SOURCES})
 
-
+if(APPLE)
 target_link_libraries(${PROJECT_NAME} PUBLIC "-framework Accelerate")
-
+endif()
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-api/script/max-posttarget.cmake)
