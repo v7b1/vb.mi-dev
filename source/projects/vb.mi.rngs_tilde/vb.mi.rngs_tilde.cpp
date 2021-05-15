@@ -38,7 +38,7 @@
 #include "rings/dsp/string_synth_part.h"
 #include "rings/dsp/dsp.h"
 
-#if __APPLE__
+#ifdef __APPLE__
 #include "Accelerate/Accelerate.h"
 #endif
 
@@ -360,7 +360,7 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     // will not be used, if internal exciter is off
     // TODO: should we check for internal_exciter?
     if(self->strum_connected && !self->performance_state.internal_strum) {
-#if __APPLE__
+#ifdef __APPLE__
         vDSP_sveD(strum, 1, &trigger, vs);  // calc sum of trigger input
 #else
         for(int i=0; i<vs; ++i)

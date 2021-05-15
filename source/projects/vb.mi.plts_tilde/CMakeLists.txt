@@ -131,6 +131,8 @@ add_library(
 	${BUILD_SOURCES}
 )
 
+# add preprocessor macro TEST to avoid asm functions
+target_compile_definitions(${PROJECT_NAME} PUBLIC TEST)
 
 # create groups in our project
 source_group(TREE ${MUTABLE_PATH} FILES ${STMLIB_SOURCES} ${MI_SOURCES})

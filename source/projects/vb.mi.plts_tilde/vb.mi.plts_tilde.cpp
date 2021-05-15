@@ -34,12 +34,13 @@
 
 #include "plaits/dsp/dsp.h"
 #include "plaits/dsp/voice.h"
-
+#ifdef __APPLE__
 #include "Accelerate/Accelerate.h"
-
+#endif
 
 
 //#define ENABLE_LFO_MODE
+#pragma warning (disable : 4068 )
 
 using namespace c74::max;
 
@@ -360,8 +361,12 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
         if(self->modulations.trigger_patched) {
             // calc sum of trigger input
             double vectorsum = 0.0;
-            
+#ifdef __APPLE__
             vDSP_sveD(trig_input+count, 1, &vectorsum, size);
+#else
+            for(int i=0; i<size; ++i)
+                vectorsum += trig_input[i+count];
+#endif
             self->modulations.trigger = vectorsum;
         }
         
