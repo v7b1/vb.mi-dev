@@ -50,9 +50,13 @@ namespace stmlib {
     
     inline int16_t Interpolate88(const int16_t* table, uint16_t index);
     
+    inline int16_t Interpolate923(const int16_t* table, uint32_t phase);
+    
     inline int16_t Interpolate1022(const int16_t* table, uint32_t phase);
     
-    inline int16_t Interpolate115(const int16_t* table, uint32_t phase);
+    inline int16_t Interpolate1121(const int16_t* table, uint32_t phase);
+    
+    inline int16_t Interpolate115(const int16_t* table, uint16_t phase);
     
     inline int16_t Crossfade(
                              const int16_t* table_a,

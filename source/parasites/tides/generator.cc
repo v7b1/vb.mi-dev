@@ -1099,7 +1099,8 @@ void Generator::FillBufferHarmonic() {
           tn = Interpolate1022(wav_sine1024, phase_ << harm); //tn = Interpolate1121(wav_sine1024, phase_ << harm); //vb
         else
           tn = 2 * ((tn * tn) >> 15) - 32768;
-      } else if (mode() == GENERATOR_MODE_AD) { // odd harmonics
+//      } else if (mode() == GENERATOR_MODE_AD) { // odd harmonics
+          } else if (mode_ == GENERATOR_MODE_AD) { // odd harmonics
         tn = ((sine * tn) >> 14) - tn1;
         tn1 = t;
         t = tn;
