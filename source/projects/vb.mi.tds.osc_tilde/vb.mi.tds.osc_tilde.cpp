@@ -59,7 +59,6 @@ struct t_myObj {
     float       shape, shape_lp;
     float       slope, slope_lp;
     float       smoothness, smooth_lp;
-//    float       shift, shift_lp;
     
     float       sr;
     float       r_sr;
@@ -102,10 +101,9 @@ void* myObj_new(t_symbol *s, long argc, t_atom *argv)
         self->shape = 0.5f;
         self->slope = 0.5f;
         self->smoothness = 0.5f;
-//        self->shift = 0.3f;
         
         
-        self->freq_lp = self->shape_lp = self->slope_lp = self->smooth_lp;// = self->shift_lp = 0.f;
+        self->freq_lp = self->shape_lp = self->slope_lp = self->smooth_lp;
         
         
         // process attributes
@@ -139,9 +137,6 @@ void myObj_float(t_myObj* self, double m) {
         case 3:
             self->smoothness = m;
             break;
-//        case 4:
-//            self->shift = m;
-//            break;
     }
     
 }
@@ -165,11 +160,6 @@ void myObj_smooth(t_myObj* self, double m) {
     self->smoothness = m;
 }
 
-void myObj_shift(t_myObj* self, double m) {
-//    self->shift = m;
-}
-
-
 
 
 t_max_err range_setter(t_myObj *self, void *attr, long ac, t_atom *av)
@@ -192,7 +182,8 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     double  *shape_in = ins[1];
     double  *slope_in = ins[2];
     double  *smooth_in = ins[3];
-//    double  *shift_in = ins[4];
+    
+    double  *output = outs[0];
     
     long vs = sampleframes;
     
@@ -204,17 +195,15 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     stmlib::GateFlags *gate_flags = self->no_gate;
     tides::Range        range = self->range;
     
-    float   frequency, shape, slope, smoothness; //shift,
+    float   frequency, shape, slope, smoothness;
     float   freq_knob = self->frequency;
     float   shape_knob = self->shape;
     float   slope_knob = self->slope;
-//    float   shift_knob = self->shift;
     float   smoothness_knob = self->smoothness;
     
     float   freq_lp = self->freq_lp;
     float   shape_lp = self->shape_lp;
     float   slope_lp = self->slope_lp;
-//    float   shift_lp = self->shift_lp;
     float   smooth_lp = self->smooth_lp;
     
     float   r_sr = self->r_sr;
@@ -228,7 +217,7 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
 //         ONE_POLE(freq_lp, frequency, 0.3f);
 //         frequency = freq_lp;
 
-        
+        // TODO: do we need the onepole smoothing? 8 samples is very short...
         
         // parameter inputs
         shape = shape_knob + (float)shape_in[count];
@@ -248,23 +237,23 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
         self->poly_slope_generator.Render(tides::RAMP_MODE_LOOPING,
                                           tides::OUTPUT_MODE_SLOPE_PHASE,
                                           range,
-                                          frequency, slope_lp, shape_lp, smooth_lp, 0.f, //shift_lp,
+                                          frequency, slope_lp, shape_lp, smooth_lp, 0.f,
                                           gate_flags,
                                           NULL,
                                           out, kAudioBlockSize);
 
 
         for(int i=0; i<kAudioBlockSize; ++i) {
-            for(int j=0; j<kNumOutputs; ++j) {
-                outs[j][i + count] = out[i].channel[j] * 0.2f;
-            }
+//            for(int j=0; j<kNumOutputs; ++j) {
+//                outs[j][i + count] = out[i].channel[j] * 0.2f;
+//            }
+            output[i + count] = out[i].channel[0] * 0.2f;
         }
         
     }
     
     self->freq_lp = freq_lp;
     self->shape_lp = shape_lp;
-//    self->shift_lp = shift_lp;
     self->slope_lp = slope_lp;
     self->smooth_lp = smooth_lp;
 
@@ -306,8 +295,6 @@ void myObj_assist(t_myObj* self, void* unused, t_assist_function io, long index,
                 strncpy(string_dest,"(signal/float) SLOPE", ASSIST_STRING_MAXSIZE); break;
             case 3:
                 strncpy(string_dest,"(signal/float) SMOOTHNESS", ASSIST_STRING_MAXSIZE); break;
-//            case 4:
-//                strncpy(string_dest,"(signal/float) SHIFT/LEVEL", ASSIST_STRING_MAXSIZE); break;
 		}
 	}
 	else if (io == ASSIST_OUTLET) {
@@ -335,11 +322,9 @@ void ext_main(void* r) {
 	class_addmethod(this_class, (method)myObj_assist,	"assist",	A_CANT,		0);
 	class_addmethod(this_class, (method)myObj_dsp64,	"dsp64",	A_CANT,		0);
 
-//    class_addmethod(this_class, (method)myObj_int,      "int",      A_LONG, 0);
     class_addmethod(this_class, (method)myObj_float,    "float",    A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_freq,     "freq",     A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_shape,    "shape",    A_FLOAT, 0);
-//    class_addmethod(this_class, (method)myObj_shift,    "shift",    A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_slope,    "slope",    A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_smooth,   "smooth",   A_FLOAT, 0);
     
@@ -347,21 +332,6 @@ void ext_main(void* r) {
 	class_register(CLASS_BOX, this_class);
     
     // ATTRIBUTES ..............
-    // output mode
-//    CLASS_ATTR_CHAR(this_class, "output_mode", 0, t_myObj, output_mode);
-//    CLASS_ATTR_ENUMINDEX(this_class, "output_mode", 0, "GATE AMPLITUDE PHASE FREQUENCY");
-//    CLASS_ATTR_LABEL(this_class, "output_mode", 0, "output mode");
-//    CLASS_ATTR_FILTER_CLIP(this_class, "output_mode", 0, 3);
-//    CLASS_ATTR_ACCESSORS(this_class, "output_mode", NULL, (method)output_mode_setter);
-//    CLASS_ATTR_SAVE(this_class, "output_mode", 0);
-//
-//    // ramp mode
-//    CLASS_ATTR_CHAR(this_class, "ramp_mode", 0, t_myObj, ramp_mode);
-//    CLASS_ATTR_ENUMINDEX(this_class, "ramp_mode", 0, "AD LOOPING AR");
-//    CLASS_ATTR_LABEL(this_class, "ramp_mode", 0, "ramp mode");
-//    CLASS_ATTR_FILTER_CLIP(this_class, "ramp_mode", 0, 2);
-//    CLASS_ATTR_ACCESSORS(this_class, "ramp_mode", NULL, (method)ramp_mode_setter);
-//    CLASS_ATTR_SAVE(this_class, "ramp_mode", 0);
     
     // range
     CLASS_ATTR_CHAR(this_class, "range", 0, t_myObj, range);

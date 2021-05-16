@@ -6,14 +6,11 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-api/script/max-pretarget.cmake)
 # paths to our sources
 set(MUTABLE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../mutableSources32")
 set(STMLIB_PATH ${MUTABLE_PATH}/stmlib)
-# set(MI_PATH ${MUTABLE_PATH}/tides2)
 set(MI_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tides2")
 
 
 
 set(MI_SOURCES
-#	${MI_PATH}/ramp_generator.h
-#	${MI_PATH}/ramp_shaper.h
 	${MI_PATH}/resources.cc
 	${MI_PATH}/resources.h
 	${MI_PATH}/poly_slope_generator.cc
@@ -35,7 +32,6 @@ include_directories(
 add_library( 
 	${PROJECT_NAME} 
 	MODULE
-	#${STMLIB_SOURCES}
 	${MI_SOURCES}
 	${BUILD_SOURCES}
 )

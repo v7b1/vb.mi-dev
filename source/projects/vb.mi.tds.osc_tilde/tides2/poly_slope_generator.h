@@ -198,19 +198,12 @@ class PolySlopeGenerator {
       ratio *= ratio;
       ratio *= ratio;
       
-        // TODO: check this out
-      float f[4];
-      size_t last_channel = output_mode == OUTPUT_MODE_GATES ? 1 : num_channels;
-      for (size_t i = 0; i < last_channel; ++i) {
-        size_t source = output_mode == OUTPUT_MODE_FREQUENCY ? i : 0;
-        f[i] = ramp_generator_.frequency(source) * 0.5f;
-        f[i] += (1.0f - f[i]) * ratio;
-      }
-//      if (output_mode == OUTPUT_MODE_GATES) {
-//        filter_.Process<1>(f, &out[0].channel[0], size);
-//      } else {
-        filter_.Process<num_channels>(f, &out[0].channel[0], size);
-//      }
+        float f;
+
+        f = ramp_generator_.frequency(0) * 0.5f;
+        f += (1.0f - f) * ratio;
+        filter_.Process<num_channels>(&f, &out[0].channel[0], size);
+        
     }
   }
   
@@ -253,15 +246,15 @@ class PolySlopeGenerator {
       const float f0 = fm.Next();
       const float pw = pwm.Next();
       const float shift = shift_modulation.Next();
-      const float step = shift * (1.0f / (num_channels - 1));
+//        const float step = shift * (1.0f / (num_channels - 1));
 //      const float partial_step = shift * (1.0f / num_channels);
       const float fold = fold_modulation.Next();
 
-      float per_channel_pw[num_channels];
-      const float pw_increment = (shift > 0.0f ? (1.0f - pw) : pw) * step;
-      for (size_t j = 0; j < num_channels; ++j) {
-        per_channel_pw[j] = pw + pw_increment * float(j);
-      }
+//      float per_channel_pw[num_channels];
+//      const float pw_increment = (shift > 0.0f ? (1.0f - pw) : pw) * step;
+//      for (size_t j = 0; j < num_channels; ++j) {
+//        per_channel_pw[j] = pw + pw_increment * float(j);
+//      }
 
       // Increment ramps.
 //      if (output_mode == OUTPUT_MODE_SLOPE_PHASE && ramp_mode == RAMP_MODE_AR) {
