@@ -69,9 +69,10 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC TEST)
 # create groups in our project
 source_group(TREE ${MUTABLE_PATH} FILES ${MI_SOURCES} ${STMLIB_SOURCES})
 
-
+if(APPLE)
 target_link_libraries(${PROJECT_NAME} PUBLIC "-framework Accelerate")
-# target_link_libraries(${PROJECT_NAME} "-framework Accelerate")
+endif()
+
 target_link_libraries(${PROJECT_NAME} PUBLIC ${LIB_PATH}/libsamplerate.a)
 # target_link_libraries(${PROJECT_NAME} -lsamplerate)
 

@@ -42,7 +42,9 @@
 #include "braids/quantizer_scales.h"
 #include "braids/vco_jitter_source.h"
 
+#ifdef __APPLE__
 #include "Accelerate/Accelerate.h"
+#endif
 #include "samplerate.h"
 
 
@@ -405,7 +407,12 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
         // detect trigger
         if(trig_connected) {
             double sum = 0.0;
+#ifdef __APPLE__
             vDSP_sveD(trigger_cv+count, 1, &sum, kAudioBlockSize);
+#else
+            for(int i=0; i<kAudioBlockSize; ++i)
+                sum += trigger_cv[i+count];
+#endif
             bool trigger = sum != 0.0;
             trigger_flag |= (trigger && (!self->last_trig));
             self->last_trig = trigger;
@@ -511,7 +518,12 @@ void myObj_perform64_no_resamp(t_myObj* self, t_object* dsp64, double** ins, lon
         // detect trigger
         if(trig_connected) {
             double sum = 0.0;
+#ifdef __APPLE__
             vDSP_sveD(trigger_cv+count, 1, &sum, kAudioBlockSize);
+#else
+            for(int i=0; i<kAudioBlockSize; ++i)
+                sum += trigger_cv[i+count];
+#endif
             bool trigger = sum != 0.0;
             trigger_flag |= (trigger && (!self->last_trig));
             self->last_trig = trigger;

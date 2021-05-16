@@ -257,6 +257,7 @@ t_max_err gain_setter(t_myObj *self, void *attr, long ac, t_atom *av)
         self->pre_gain = f;
         self->modulator->mutable_parameters()->limiter_pre_gain = f * 1.4;
     }
+    return MAX_ERR_NONE;
 }
 
 
