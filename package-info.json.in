@@ -1,7 +1,7 @@
 {
 	"author" : "volker böhm",
 	"description" : "clones of several eurorack modules originally created by mutable instruments",
-	"homepatcher" : "max-devkit.maxpat",
+	"homepatcher" : "none",
 	"max_version_min" : "7.1",
 	"name" : "vb.mi-dev",
 	"os" : {
