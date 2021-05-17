@@ -7,7 +7,10 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-api/script/max-pretarget.cmake)
 set(MUTABLE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../mutableSources32")
 set(STMLIB_PATH ${MUTABLE_PATH}/stmlib)
 set(MI_PATH ${MUTABLE_PATH}/braids)
-set(LIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../libs")
+set(LIBSR_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../libs/libsamplerate")
+
+#set(LIBSR_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libsamplerate/build/src")
+#set(LIBSRI_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libsamplerate/include")
 
 set(STMLIB_SOURCES 
 	${STMLIB_PATH}/stmlib.h
@@ -49,7 +52,7 @@ set(BUILD_SOURCES
 include_directories( 
 	"${C74_INCLUDES}"
     ${MUTABLE_PATH}
-	${LIB_PATH}
+	${LIBSR_PATH}/include
 )
 
 
@@ -70,11 +73,11 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC TEST)
 source_group(TREE ${MUTABLE_PATH} FILES ${MI_SOURCES} ${STMLIB_SOURCES})
 
 if(APPLE)
-target_link_libraries(${PROJECT_NAME} PUBLIC "-framework Accelerate")
+	target_link_libraries(${PROJECT_NAME} PUBLIC "-framework Accelerate")
+	target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBSR_PATH}/build/src/libsamplerate.a)
+else()
+	target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBSR_PATH}/build/src/Release/samplerate.lib)
 endif()
 
-target_link_libraries(${PROJECT_NAME} PUBLIC ${LIB_PATH}/libsamplerate.a)
-# target_link_libraries(${PROJECT_NAME} -lsamplerate)
-
-
+        
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-api/script/max-posttarget.cmake)

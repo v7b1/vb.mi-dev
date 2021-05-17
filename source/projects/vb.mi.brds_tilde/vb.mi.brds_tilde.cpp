@@ -427,12 +427,13 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     }
     
     // copy and type cast output samples from 'float' to 'double'
+#ifdef __APPLE__
     vDSP_vspdp(samples, 1, outs[0], 1, vs);
-    /*
+#else
     for(int i=0; i<vs; ++i) {
-        // cast float data to double and output
         outs[0][i] = (double)samples[i];
-    }*/
+    }
+#endif
     
     self->trigger_flag = trigger_flag;
     
