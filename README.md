@@ -24,27 +24,35 @@ https://vboehm.net/downloads (look for vb.mi-objects)
 
 0. Clone the code from Github, including submodules: 
    `git clone --recurse-submodules https://github.com/v7b1/vb.mi-dev.git`
+
 1. `cd vb.mi-dev` to change directories (cd) into the folder
-2. `mkdir build` to create a folder with your various build files
-3. `cd build` to put yourself into that folder
-4. Now you can generate the projects for your chosen build environment:
+
+2. ##### Build libsamplerate
+
+   - `cd source/libs/libsamplerate`
+   - `mkdir build && cd build`
+   - `cmake -DLIBSAMPLERATE_EXAMPLES=OFF -DBUILD_TESTING=OFF ..` 
+   - `cmake --build . --config 'Release'`
+   - `cd ../../../..`
+
+3. `mkdir build` to create a folder with your various build files
+
+4. `cd build` to put yourself into that folder
+
+5. Now you can generate the projects for your chosen build environment:
 
 ### Mac 
 
-You can build on the command line using Makefiles (not tested, yet), or you can generate an Xcode project and use the GUI to build.
+You can build on the command line using Makefiles, or you can generate an Xcode project and use the GUI to build.
 
-* Xcode: Run `cmake -G Xcode ..` and then run `cmake --build .` or open the Xcode project from this "build" folder and use the GUI.
-* Make: Run `cmake ..` and then run `cmake --build .` or `make`.  Note that the Xcode project is preferrable because it is able to substitute values for e.g. the Info.plist files in your builds.
+* Xcode: Run `cmake -G Xcode ..` and then run `cmake --build . --config 'Release'` or open the Xcode project from this "build" folder and use the GUI.
+* Make: Run `cmake ..` and then run `cmake --build . --config 'Release'`.  Note that the Xcode project is preferrable because it is able to substitute values for e.g. the Info.plist files in your builds.
 
 ### Windows
 
 Note: this is untested, but should work something like this:
 
-If you are using Visual Studio, You can run `cmake --help` to get a list of the options available.  Assuming some version of Visual Studio 2017, the commands to generate the projects will look like this:
+`cmake ..` 
 
-* 32 bit: `cmake -G "Visual Studio 15 2017" ..`
-* 64 bit: `cmake -G "Visual Studio 15 2017 Win64" ..`
+`cmake --build . --config 'Release'`
 
-Having generated the projects, you can now build by opening the .sln file in the build folder with the Visual Studio app (just double-click the .sln file) or you can build on the command line like this:
-
-`cmake --build . --config Release`
