@@ -30,7 +30,6 @@
 
 
 
-// TODO: implement external clock
 // TODO: gate mode ?
 // TODO: make pattern length user definable
 
@@ -67,9 +66,11 @@ struct t_myObj {
     long        sigvs;
     
     uint8_t     mode, swing, config;
-    uint8_t     clock_connected, previous_tick;
+    uint8_t     previous_tick;
     
-    uint8_t     clock_ratio;    // new
+//    uint8_t     map_x, map_y, randomness;
+//    uint8_t     bd_density, sd_density, hh_density;
+    uint8_t     ext_clock;
     double      c;
     
 };
@@ -100,7 +101,6 @@ void* myObj_new(t_symbol *s, long argc, t_atom *argv)
 
         self->sr = sys_getsr();
         self->c = ((1L<<32) * 8) / (120 * self->sr / COUNTMAX );
-        object_post(NULL, "c; %f", self->c);
         
         self->clock.Init();
         self->pattern_generator.Init();
@@ -112,8 +112,6 @@ void* myObj_new(t_symbol *s, long argc, t_atom *argv)
         self->clock_resolution = grids::CLOCK_RESOLUTION_24_PPQN;
         self->count = 0;
         self->previous_tick = 0;
-        self->clock_ratio = 0;
-        
         
         // process attributes
         attr_args_process(self, argc, argv);
@@ -149,21 +147,28 @@ void myObj_hard_reset(t_myObj* self) {
 void myObj_int(t_myObj* self, long m) {
     
     long innum = proxy_getinlet((t_object *)self);
-
-    switch (innum) {
-        case 0:
-            uint16_t bpm = m;
-            clamp(bpm, uint16_t(20), uint16_t(511));
-            
-            if (bpm != self->clock.bpm() && !self->clock.locked()) {
-//                self->clock.Update(bpm, self->pattern_generator.clock_resolution());
-                self->clock.Update_vb(bpm, self->pattern_generator.clock_resolution(), self->c);
-            }
-
-            break;
-//        case 6:
-
-//            break;
+    
+    if (innum == 0) {
+        uint16_t bpm = m;
+        clamp(bpm, uint16_t(20), uint16_t(511));
+        
+        if (bpm != self->clock.bpm() && !self->clock.locked()) {
+            self->clock.Update_vb(bpm, self->pattern_generator.clock_resolution(), self->c);
+        }
+    }
+    else {
+        grids::PatternGeneratorSettings* settings = self->pattern_generator.mutable_settings();
+        uint8_t mm = m;
+        if (innum == 1)
+            settings->options.drums.x = mm;
+        else if (innum == 2)
+            settings->options.drums.y = mm;
+        else if (innum == 3)
+            settings->options.drums.randomness = mm;
+        else {
+            settings->density[innum - 4] = mm;
+        }
+        
     }
 }
 
@@ -171,21 +176,29 @@ void myObj_int(t_myObj* self, long m) {
 void myObj_float(t_myObj* self, double m) {
     
     long innum = proxy_getinlet((t_object *)self);
-//
-//    switch (innum) {
-//        case 0:
-//            break;
-//        case 1:
-//            self->shape = m;
-//            break;
-//        case 2:
-//            self->slope = m;
-//            break;
-//        case 3:
-//            self->smooth = m;
-//            break;
-//
-//    }
+
+    if (innum == 0) {
+        uint16_t bpm = m + 0.5;
+        clamp(bpm, uint16_t(20), uint16_t(511));
+
+        if (bpm != self->clock.bpm() && !self->clock.locked()) {
+            self->clock.Update_vb(bpm, self->pattern_generator.clock_resolution(), self->c);
+        }
+    }
+    else {
+        grids::PatternGeneratorSettings* settings = self->pattern_generator.mutable_settings();
+        uint8_t mm = m * 255.0;
+        if (innum == 1)
+            settings->options.drums.x = mm;
+        else if (innum == 2)
+            settings->options.drums.y = mm;
+        else if (innum == 3)
+            settings->options.drums.randomness = mm;
+        else {
+            settings->density[innum - 4] = mm;
+        }
+        
+    }
     
 }
 
@@ -257,8 +270,7 @@ t_max_err resolution_setter(t_myObj *self, void *attr, long ac, t_atom *av)
         clamp(m, 0L, 2L);
         self->clock_resolution = m;
         self->pattern_generator.set_clock_resolution(m);
-        object_post(NULL, "reso: %ld", m);
-        
+     
         self->clock.Update_vb(self->clock.bpm(), self->pattern_generator.clock_resolution(), self->c);
         self->pattern_generator.Reset();
 //        self->clock.Reset();
@@ -273,15 +285,14 @@ t_max_err resolution_setter(t_myObj *self, void *attr, long ac, t_atom *av)
 void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, double** outs, long numouts, long sampleframes, long flags, void* userparam)
 {
     
-//    uint16_t    bpm = ins[0][0];
     double      *clock_input = ins[0];
     // use overflow to limit data range to uint8
-    uint8_t     map_x = ins[1][0] * 255.0;
-    uint8_t     map_y = ins[2][0] * 255.0;
-    uint8_t     randomness = ins[3][0] * 255.0;
-    uint8_t     bd_density = ins[4][0] * 255.0;
-    uint8_t     sd_density = ins[5][0] * 255.0;
-    uint8_t     hh_density = ins[6][0] * 255.0;
+//    uint8_t     map_x = ins[1][0] * 255.0;
+//    uint8_t     map_y = ins[2][0] * 255.0;
+//    uint8_t     randomness = ins[3][0] * 255.0;
+//    uint8_t     bd_density = ins[4][0] * 255.0;
+//    uint8_t     sd_density = ins[5][0] * 255.0;
+//    uint8_t     hh_density = ins[6][0] * 255.0;
     
     
     if (self->obj.z_disabled)
@@ -292,25 +303,20 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     grids::PatternGenerator *pattern_generator = &self->pattern_generator;
     grids::PatternGeneratorSettings* settings = pattern_generator->mutable_settings();
     
-//    clamp(bpm, uint16_t(20), uint16_t(511));
-//
-//    if (bpm != clock->bpm() && !clock->locked()) {
-//        clock->Update(bpm, pattern_generator->clock_resolution());
-//    }
     
-    settings->options.drums.x = map_x;
-    settings->options.drums.y = map_y;
-    settings->options.drums.randomness = randomness;
-    settings->density[0] = bd_density;
-    settings->density[1] = sd_density;
-    settings->density[2] = hh_density;
+//    settings->options.drums.x = self->map_x;
+//    settings->options.drums.y = self->map_y;
+//    settings->options.drums.randomness = self->randomness;
+//    settings->density[0] = self->bd_density;
+//    settings->density[1] = self->sd_density;
+//    settings->density[2] = self->hh_density;
     
     uint8_t state = pattern_generator->state();
     uint8_t count = self->count;
     uint8_t previous_tick = self->previous_tick;
+    uint8_t ext_clock = self->ext_clock;
     
-    uint8_t increment = ticks_granularity[pattern_generator->clock_resolution()]; // 6, 3, 1
-//    uint8_t increment = 1 << self->clock_ratio;
+    uint8_t increment = ticks_granularity[pattern_generator->clock_resolution()];
     uint8_t sum = 0;
     
     for(int i=0; i<sampleframes; ++i) {
@@ -322,10 +328,9 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
             
             uint8_t num_ticks = 0;
             
-            // check for external clock signal
-            if(self->clock_connected) {
+            // external clock input
+            if(ext_clock) {
                 uint8_t tick = (sum != 0);
-//                sum = 0;
                 if (tick && !(previous_tick)) {
                     num_ticks = increment;
                 }
@@ -379,9 +384,6 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
 
 void myObj_dsp64(t_myObj* self, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags)
 {
-    // is a signal connected to the trigger/clock input?
-    self->clock_connected = count[0];
-    
     if(samplerate != self->sr) {
         self->sr = samplerate;
         self->c = ((1L<<32) * 8) / (120 * self->sr / COUNTMAX );
@@ -465,6 +467,11 @@ void ext_main(void* r) {
     CLASS_ATTR_STYLE_LABEL(this_class, "swing", 0, "onoff", "swing on/off");
     CLASS_ATTR_ACCESSORS(this_class, "swing", NULL, (method)swing_setter);
     CLASS_ATTR_SAVE(this_class, "swing", 0);
+    
+    // ext clock
+    CLASS_ATTR_CHAR(this_class, "ext_clock", 0, t_myObj, ext_clock);
+    CLASS_ATTR_STYLE_LABEL(this_class, "ext_clock", 0, "onoff", "swing on/off");
+    CLASS_ATTR_SAVE(this_class, "ext_clock", 0);
     
     // output config selection
     CLASS_ATTR_CHAR(this_class, "config", 0, t_myObj, config);

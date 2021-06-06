@@ -16,7 +16,7 @@
 // -----------------------------------------------------------------------------
 //
 // (non)Global clock.
-// vb, hopefully not global anymore in the end...
+// vb, shouldn't be global...
 
 #include "grids/clock.h"
 #include "grids/resources.h"

@@ -8,6 +8,10 @@
 		"macintosh" : {
 			"platform" : [ "x64" ],
 			"min_version" : "none"
+		},
+		"windows" : {
+			"platform" : [ "x64" ],
+			"min_version" : "none"
 		}
 	},
 	"package_extra" : {

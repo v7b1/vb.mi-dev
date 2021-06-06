@@ -23,36 +23,63 @@ https://vboehm.net/downloads (look for vb.mi-objects)
 (Mostly copying from https://github.com/Cycling74/max-devkit ReadMe.md)
 
 0. Clone the code from Github, including submodules: 
-   `git clone --recurse-submodules https://github.com/v7b1/vb.mi-dev.git`
+   
+   ```bash
+   git clone --recurse-submodules https://github.com/v7b1/vb.mi-dev.git
+   ```
+   
+1. change directories (cd) into the project folder:
 
-1. `cd vb.mi-dev` to change directories (cd) into the folder
+   ```bash
+   cd vb.mi-dev
+   ```
 
 2. ##### Build libsamplerate
 
-   - `cd source/libs/libsamplerate`
-   - `mkdir build && cd build`
-   - `cmake -DLIBSAMPLERATE_EXAMPLES=OFF -DBUILD_TESTING=OFF ..` 
-   - `cmake --build . --config 'Release'`
-   - `cd ../../../..`
+   ```bash
+   cd source/libs/libsamplerate
+   mkdir build && cd build
+   cmake -DLIBSAMPLERATE_EXAMPLES=OFF -DBUILD_TESTING=OFF ..
+   cmake --build . --config 'Release'
+   cd ../../../..
+   ```
 
-3. `mkdir build` to create a folder with your various build files
+3. create a folder with your various build files and step inside:
 
-4. `cd build` to put yourself into that folder
+   ```bash
+   mkdir build && cd build
+   ```
 
-5. Now you can generate the projects for your chosen build environment:
+Now you can generate the projects for your chosen build environment.
 
-### Mac 
+### Mac
 
 You can build on the command line using Makefiles, or you can generate an Xcode project and use the GUI to build.
 
-* Xcode: Run `cmake -G Xcode ..` and then run `cmake --build . --config 'Release'` or open the Xcode project from this "build" folder and use the GUI.
-* Make: Run `cmake ..` and then run `cmake --build . --config 'Release'`.  Note that the Xcode project is preferrable because it is able to substitute values for e.g. the Info.plist files in your builds.
+* Xcode: 
+
+  ```bash
+  cmake -G Xcode ..
+  cmake --build . --config 'Release'
+  ```
+
+  or, instead of the second step, open the Xcode project and use the GUI.
+
+* Make: 
+
+  ```bash
+  cmake ..
+  cmake --build . --config 'Release'
+  ```
+
+  Note that the Xcode project is preferrable because it is able to substitute values for e.g. the Info.plist files in your builds.
 
 ### Windows
 
 Note: this is untested, but should work something like this:
 
-`cmake ..` 
-
-`cmake --build . --config 'Release'`
+```bash
+cmake ..
+cmake --build . --config 'Release'
+```
 
