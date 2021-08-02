@@ -34,6 +34,8 @@
 #include "elements/dsp/dsp.h"
 #include "elements/resources.h"
 
+#include <cstdio>
+
 
 //namespace elements {
 
@@ -147,11 +149,16 @@ size_t Resonator::ComputeFilters(double *freqs, double *qs, double *gains) {
                 while (period >= kMaxDelayLineSize) period >>= 1;
                 d_bow_[i].set_delay(period);
                 f_bow_[i].set_g_q(f_[i].g(), 1.0 + partial_frequency * 1500.0);
+                
+                printf("[%zu]: period: %zu -- freq: %f\n", i, period, partial_frequency);
             }
             
         }
 
         num_modes_ = num_modes;
+        printf("num_modes: %zu\n", num_modes);
+        for (size_t i = 0; i < num_modes; ++i)
+            printf("active[%zu]: %hhu\n", i, active_[i]);
     }
     
     
@@ -194,7 +201,9 @@ void Resonator::Process(
     if(calc_wg) {
         amplitudes.Start();
         for (size_t i = 0; i < num_banded_wg; ++i) {
-            f_bow_[i].Process_bp_norm_block(in, center, size, &d_bow_[i], amplitudes.Next()*wg_gain_);
+            uint8_t a = active_[i];
+            if (a < kMaxBowedModes)
+                f_bow_[a].Process_bp_norm_block(in, center, size, &d_bow_[a], amplitudes.Next()*wg_gain_);
            // sum_center += s * amplitudes.Next() * 8.0;
         }
     }

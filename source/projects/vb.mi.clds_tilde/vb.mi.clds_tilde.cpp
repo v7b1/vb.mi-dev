@@ -187,38 +187,68 @@ void myObj_bang(t_myObj* self) {
     self->processor->mutable_parameters()->trigger = true;
 }
 
+
+void myObj_int(t_myObj* self, long m) {
+    long innum = proxy_getinlet((t_object *)self);
+    
+    switch (innum) {
+        case 2:
+            self->pot_value_[PARAM_PITCH] = m;
+            break;
+        case 8:
+            self->freeze = m != 0;
+            break;
+    }
+}
+
+void myObj_float(t_myObj* self, double m) {
+    
+    long innum = proxy_getinlet((t_object *)self);
+    
+    switch (innum) {
+        case 2:
+            self->pot_value_[PARAM_PITCH] = m;
+            break;
+        case 3:
+            self->pot_value_[PARAM_POSITION] = clamp(m, 0., 1.);
+            break;
+        case 4:
+            self->pot_value_[PARAM_SIZE] = clamp(m, 0., 1.);
+            break;
+        case 5:
+            self->pot_value_[PARAM_DENSITY] = clamp(m, 0., 1.);
+            break;
+        case 6:
+            self->pot_value_[PARAM_TEXTURE] = clamp(m, 0., 1.);
+            break;
+        case 7:
+            self->pot_value_[PARAM_DRYWET] = clamp(m, 0., 1.);
+            break;
+    }
+    
+}
+
 void myObj_position(t_myObj* self, double m) {
     m = clamp(m, 0., 1.);
-    //self->position = m;
-    //self->processor->mutable_parameters()->position = m;
     self->pot_value_[PARAM_POSITION] = m;
 }
 
 void myObj_size(t_myObj* self, double m) {
     m = clamp(m, 0., 1.);
-    //self->size = m;
-    //self->processor->mutable_parameters()->size = m;
     self->pot_value_[PARAM_SIZE] = m;
 }
 
 void myObj_pitch(t_myObj* self, double m) {
-    //m = clamp(m, 0., 1.);
-    //self->pitch = m;
-    //self->processor->mutable_parameters()->pitch = m;  // ???
     self->pot_value_[PARAM_PITCH] = m;
 }
 
 void myObj_density(t_myObj* self, double m) {
     m = clamp(m, 0., 1.);
-    //self->density = m;
-    //self->processor->mutable_parameters()->density = m;
     self->pot_value_[PARAM_DENSITY] = m;
 }
 
-
 void myObj_texture(t_myObj* self, double m) {
     m = clamp(m, 0., 1.);
-    //self->texture = m;
     self->pot_value_[PARAM_TEXTURE] = m;
 }
 
@@ -227,27 +257,20 @@ void myObj_texture(t_myObj* self, double m) {
 
 void myObj_drywet(t_myObj *self, double m) {
     m = clamp(m, 0., 1.);
-    //self->dry_wet = m;
-    //self->processor->mutable_parameters()->dry_wet = m;
     self->pot_value_[PARAM_DRYWET] = m;
 }
 
 void myObj_spread(t_myObj *self, double m) {
     m = clamp(m, 0., 1.);
-    //self->stereo_spread = m;
     self->processor->mutable_parameters()->stereo_spread = m;
-    //self->pot_value_[POT_SPREAD] = m;
 }
 void myObj_reverb(t_myObj *self, double m) {
     m = clamp(m, 0., 1.);
-    //self->reverb = m;
     self->processor->mutable_parameters()->reverb = m;
-    //self->pot_value_[POT_REVERB] = m;
 }
 
 void myObj_feedback(t_myObj *self, double m) {
     m = clamp(m, 0., 1.);
-    //self->feedback = m;
     self->processor->mutable_parameters()->feedback = m;
     //self->pot_value_[POT_FEEDBACK] = m;
 }
@@ -758,23 +781,23 @@ void myObj_assist(t_myObj* self, void* unused, t_assist_function io, long index,
 	if (io == ASSIST_INLET) {
 		switch (index) {
             case 0:
-                strncpy(string_dest,"(signal) IN L", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal) IN L, (bang) grain trigger", ASSIST_STRING_MAXSIZE); break;
             case 1:
                 strncpy(string_dest,"(signal) IN R", ASSIST_STRING_MAXSIZE); break;
 			case 2:
-                strncpy(string_dest,"(signal) V/OCT", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal/float/int) PITCH", ASSIST_STRING_MAXSIZE); break;
             case 3:
-                strncpy(string_dest,"(signal) POSITION", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal/float) POSITION", ASSIST_STRING_MAXSIZE); break;
             case 4:
-                strncpy(string_dest,"(signal) SIZE", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal/float) SIZE", ASSIST_STRING_MAXSIZE); break;
             case 5:
-                strncpy(string_dest,"(signal) DENSITY", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal/float) DENSITY", ASSIST_STRING_MAXSIZE); break;
             case 6:
-                strncpy(string_dest,"(signal) TEXTURE", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal/float) TEXTURE", ASSIST_STRING_MAXSIZE); break;
             case 7:
-                strncpy(string_dest,"(signal) DRY_WET", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal/float) DRY_WET", ASSIST_STRING_MAXSIZE); break;
             case 8:
-                strncpy(string_dest,"(signal) FREEZE", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal/int) FREEZE", ASSIST_STRING_MAXSIZE); break;
             case 9:
                 strncpy(string_dest,"(signal) TRIGGER", ASSIST_STRING_MAXSIZE); break;
 		}
@@ -799,6 +822,8 @@ void ext_main(void* r) {
 	class_addmethod(this_class, (method)myObj_dsp64,	"dsp64",	A_CANT,		0);
 
     class_addmethod(this_class, (method)myObj_bang,    "bang", 0);
+    class_addmethod(this_class, (method)myObj_float,    "float", A_FLOAT, 0);
+    class_addmethod(this_class, (method)myObj_int,    "int", A_LONG, 0);
     class_addmethod(this_class, (method)myObj_position,    "position", A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_size,     "size",        A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_pitch,   "pitch", A_FLOAT, 0);
