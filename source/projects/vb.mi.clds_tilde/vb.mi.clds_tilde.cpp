@@ -90,7 +90,7 @@ struct t_myObj {
     
     double      sr;
     long        sigvs;
-    
+    bool        bypass;
     bool        gate_connected;
     bool        trig_connected;
     
@@ -123,7 +123,7 @@ void* myObj_new(long size_in_ms) {
         }
 
         self->sr = sys_getsr();
-        
+        self->bypass = false;
         
         int largeBufSize = 118784;
         int smallBufSize = 65536-128;
@@ -303,7 +303,8 @@ void myObj_lofi(t_myObj *self, long m) {
 }
 
 void myObj_bypass(t_myObj *self, long n) {
-    self->processor->set_bypass(n != 0);
+//    self->processor->set_bypass(n != 0);
+    self->bypass = n != 0;
 }
 
 
@@ -358,6 +359,11 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     if (self->obj.z_disabled)
         return;
     
+    if (self->bypass) {
+        std::copy(&inL[0], &inL[vs], &outL[0]);
+        std::copy(&inR[0], &inR[vs], &outR[0]);
+        return;
+    }
     
     clouds::FloatFrame  *input = self->input;
     clouds::FloatFrame  *output = self->output;

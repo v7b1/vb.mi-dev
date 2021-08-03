@@ -173,20 +173,18 @@ void GranularProcessor::Process(
     ShortFrame* output,
     size_t size) {*/
 void GranularProcessor::Process(
-                                    FloatFrame* in,
-                                    FloatFrame* out_,
-                                    size_t size) {
+     FloatFrame* in,
+     FloatFrame* out_,
+     size_t size) {
   // TIC
-  if (bypass_) {
-    //copy(&input[0], &input[size], &output[0]);
-      copy(&in_[0], &in_[size], &out_[0]);
-    return;
-  }
+//  if (bypass_) {
+//    //copy(&input[0], &input[size], &output[0]);
+//      copy(&in_[0], &in_[size], &out_[0]);
+//    return;
+//  }
   
   if (silence_ || reset_buffers_ ||
       previous_playback_mode_ != playback_mode_) {
-    //short* output_samples = &output[0].l;
-    //fill(&output_samples[0], &output_samples[size << 1], 0);
       float* output_samples = &out_[0].l;
       fill(&output_samples[0], &output_samples[size << 1], 0);
     return;
