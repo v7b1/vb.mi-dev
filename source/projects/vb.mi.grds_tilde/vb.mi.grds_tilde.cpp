@@ -65,7 +65,7 @@ struct t_myObj {
     double      sr_pitch_correction;
     long        sigvs;
     
-    uint8_t     mode, swing, config;
+    uint8_t     mode, swing, config, gate_mode;
     uint8_t     previous_tick;
     
 //    uint8_t     map_x, map_y, randomness;
@@ -279,6 +279,16 @@ t_max_err resolution_setter(t_myObj *self, void *attr, long ac, t_atom *av)
     return MAX_ERR_NONE;
 }
 
+t_max_err gate_setter(t_myObj *self, void *attr, long ac, t_atom *av)
+{
+    if (ac && av) {
+        t_atom_long m = atom_getlong(av);
+        self->gate_mode = m != 0;
+        self->pattern_generator.set_gate_mode(self->gate_mode);
+    }
+    
+    return MAX_ERR_NONE;
+}
 
 #pragma mark -------- DSP Loop ----------
 
@@ -488,6 +498,12 @@ void ext_main(void* r) {
     CLASS_ATTR_FILTER_CLIP(this_class, "resolution", 0, 2);
     CLASS_ATTR_ACCESSORS(this_class, "resolution", NULL, (method)resolution_setter);
     CLASS_ATTR_SAVE(this_class, "resolution", 0);
+    
+    // trigger/gate mode
+    CLASS_ATTR_CHAR(this_class, "gate_mode", 0, t_myObj, gate_mode);
+    CLASS_ATTR_STYLE_LABEL(this_class, "gate_mode", 0, "onoff", "gate mode on/off");
+    CLASS_ATTR_ACCESSORS(this_class, "gate_mode", NULL, (method)gate_setter);
+    CLASS_ATTR_SAVE(this_class, "gate_mode", 0);
 
     
     object_post(NULL, "vb.mi.grds~ by Volker Böhm -- https://vboehm.net");
