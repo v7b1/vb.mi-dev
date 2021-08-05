@@ -30,7 +30,6 @@
 
 
 
-// TODO: gate mode ?
 // TODO: make pattern length user definable
 
 #include "c74_msp.h"
@@ -46,7 +45,7 @@
 
 using namespace c74::max;
 
-#define COUNTMAX 4  // 6
+#define COUNTMAX 4
 
 static t_class* this_class = nullptr;
 
@@ -62,16 +61,13 @@ struct t_myObj {
     uint8_t     count;
     
     double      sr;
-    double      sr_pitch_correction;
+    uint32_t    c;      // factor for bpm calculation
     long        sigvs;
     
     uint8_t     mode, swing, config, gate_mode;
     uint8_t     previous_tick;
     
-//    uint8_t     map_x, map_y, randomness;
-//    uint8_t     bd_density, sd_density, hh_density;
     uint8_t     ext_clock;
-    double      c;
     
 };
 
@@ -94,7 +90,6 @@ void* myObj_new(t_symbol *s, long argc, t_atom *argv)
         outlet_new(self, "signal");
         outlet_new(self, "signal");
         outlet_new(self, "signal");
-        outlet_new(self, "signal"); // one more...
         
         self->sigvs = sys_getblksize();
         
@@ -105,7 +100,7 @@ void* myObj_new(t_symbol *s, long argc, t_atom *argv)
         self->clock.Init();
         self->pattern_generator.Init();
         
-        self->mode = 1;     // drum mode
+        self->mode = 0;     // drum mode
         self->swing = 0;
         self->config = 0;
         self->swing_amount = 0;
@@ -153,7 +148,7 @@ void myObj_int(t_myObj* self, long m) {
         clamp(bpm, uint16_t(20), uint16_t(511));
         
         if (bpm != self->clock.bpm() && !self->clock.locked()) {
-            self->clock.Update_vb(bpm, self->pattern_generator.clock_resolution(), self->c);
+            self->clock.Update_vb(bpm, self->c);
         }
     }
     else {
@@ -182,7 +177,7 @@ void myObj_float(t_myObj* self, double m) {
         clamp(bpm, uint16_t(20), uint16_t(511));
 
         if (bpm != self->clock.bpm() && !self->clock.locked()) {
-            self->clock.Update_vb(bpm, self->pattern_generator.clock_resolution(), self->c);
+            self->clock.Update_vb(bpm, self->c);
         }
     }
     else {
@@ -271,7 +266,7 @@ t_max_err resolution_setter(t_myObj *self, void *attr, long ac, t_atom *av)
         self->clock_resolution = m;
         self->pattern_generator.set_clock_resolution(m);
      
-        self->clock.Update_vb(self->clock.bpm(), self->pattern_generator.clock_resolution(), self->c);
+        self->clock.Update_vb(self->clock.bpm(), self->c);
         self->pattern_generator.Reset();
 //        self->clock.Reset();
     }
@@ -382,7 +377,7 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
         for(int k=0; k<8; k++) {
             outs[k][i] = (state >> k) & 1;
         }
-        outs[8][i] = sum;
+        
     }
     
     self->count = count;
@@ -397,6 +392,9 @@ void myObj_dsp64(t_myObj* self, t_object* dsp64, short* count, double samplerate
     if(samplerate != self->sr) {
         self->sr = samplerate;
         self->c = ((1L<<32) * 8) / (120 * self->sr / COUNTMAX );
+        if ( !self->clock.locked() ) {
+            self->clock.Update_vb(self->clock.bpm(), self->c);
+        }
     }
     
         object_method_direct(void, (t_object*, t_object*, t_perfroutine64, long, void*),
@@ -414,17 +412,17 @@ void myObj_assist(t_myObj* self, void* unused, t_assist_function io, long index,
 			case 0:
                 strncpy(string_dest,"(signal/int) ext. clock / BPM", ASSIST_STRING_MAXSIZE); break;
             case 1:
-                strncpy(string_dest,"(signal) MAP_X", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(float) MAP_X", ASSIST_STRING_MAXSIZE); break;
             case 2:
-                strncpy(string_dest,"(signal) MAP_Y", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(float) MAP_Y", ASSIST_STRING_MAXSIZE); break;
             case 3:
-                strncpy(string_dest,"(signal) CHOAS / SWING", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(float) CHOAS / SWING", ASSIST_STRING_MAXSIZE); break;
             case 4:
-                strncpy(string_dest,"(signal) Density 1", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(float) Density 1", ASSIST_STRING_MAXSIZE); break;
             case 5:
-                strncpy(string_dest,"(signal) Density 2", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(float) Density 2", ASSIST_STRING_MAXSIZE); break;
             case 6:
-                strncpy(string_dest,"(signal) Density 3", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(float) Density 3", ASSIST_STRING_MAXSIZE); break;
 		}
 	}
 	else if (io == ASSIST_OUTLET) {
@@ -436,14 +434,16 @@ void myObj_assist(t_myObj* self, void* unused, t_assist_function io, long index,
             case 2:
                 strncpy(string_dest,"(signal) HH trigger", ASSIST_STRING_MAXSIZE); break;
             case 3:
-                strncpy(string_dest,"(signal) BD accent", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal) BD accent / all accents", ASSIST_STRING_MAXSIZE); break;
             case 4:
-                strncpy(string_dest,"(signal) SD accent", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal) SD accent / clock out", ASSIST_STRING_MAXSIZE); break;
             case 5:
-                strncpy(string_dest,"(signal) HH accent", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal) HH accent / reset signal", ASSIST_STRING_MAXSIZE); break;
             case 6:
-                strncpy(string_dest,"(signal) CLOCK IN (int) on/off", ASSIST_STRING_MAXSIZE); break;
-        }   //TODO: sort out outlet assists
+                strncpy(string_dest,"(signal) 16th pulses", ASSIST_STRING_MAXSIZE); break;
+            case 7:
+                strncpy(string_dest,"(signal) random 32nd pulses", ASSIST_STRING_MAXSIZE); break;
+        }
 	}
 }
 

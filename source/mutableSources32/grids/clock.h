@@ -38,7 +38,7 @@ class Clock {
     locked_ = false;
   }
   void Update(uint16_t bpm, ClockResolution resolution);
-    void Update_vb(uint16_t bpm, ClockResolution resolution, double c);  // vb
+    void Update_vb(uint16_t bpm, uint32_t c);  // vb
   
   void Reset() {
     phase_ = 0;
