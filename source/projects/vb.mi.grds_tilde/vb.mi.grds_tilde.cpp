@@ -68,6 +68,7 @@ struct t_myObj {
     uint8_t     previous_tick;
     
     uint8_t     ext_clock;
+    bool        reset_;
     
 };
 
@@ -107,6 +108,7 @@ void* myObj_new(t_symbol *s, long argc, t_atom *argv)
         self->clock_resolution = grids::CLOCK_RESOLUTION_24_PPQN;
         self->count = 0;
         self->previous_tick = 0;
+        self->reset_ = false;
         
         grids::PatternGeneratorSettings* settings = self->pattern_generator.mutable_settings();
         settings->options.drums.x = 128;
@@ -142,6 +144,7 @@ void myObj_bang(t_myObj* self) {
 void myObj_hard_reset(t_myObj* self) {
     
     self->pattern_generator.Reset();
+    //    self->pattern_generator.Retrigger();      // TODO: check this out
     self->clock.Reset();
     
 }
@@ -155,7 +158,7 @@ void myObj_int(t_myObj* self, long m) {
         double bpm = clamp(m, 20L, 511L);
         
         if (bpm != self->clock.bpm() && !self->clock.locked()) {
-            self->clock.Update_f(bpm, self->c);
+            self->clock.Update_f(bpm, self->c, self->pattern_generator.clock_resolution());
         }
     }
     else {
@@ -180,11 +183,10 @@ void myObj_float(t_myObj* self, double m) {
     long innum = proxy_getinlet((t_object *)self);
 
     if (innum == 0) {
-//        double bpm = m + 0.5;
         double bpm = clamp(m, 20.0, 511.0);
 
         if (bpm != self->clock.bpm() && !self->clock.locked()) {
-            self->clock.Update_f(bpm, self->c);
+            self->clock.Update_f(bpm, self->c, self->pattern_generator.clock_resolution());
         }
     }
     else {
@@ -273,9 +275,8 @@ t_max_err resolution_setter(t_myObj *self, void *attr, long ac, t_atom *av)
         self->clock_resolution = m;
         self->pattern_generator.set_clock_resolution(m);
      
-        self->clock.Update_f(self->clock.bpm(), self->c);
+        self->clock.Update_f(self->clock.bpm(), self->c, self->pattern_generator.clock_resolution());
         self->pattern_generator.Reset();
-//        self->clock.Reset();
     }
 
     return MAX_ERR_NONE;
@@ -400,7 +401,7 @@ void myObj_dsp64(t_myObj* self, t_object* dsp64, short* count, double samplerate
         self->sr = samplerate;
         self->c = ((1L<<32) * 8) / (120 * self->sr / COUNTMAX );
         if ( !self->clock.locked() ) {
-            self->clock.Update_f(self->clock.bpm(), self->c);
+            self->clock.Update_f(self->clock.bpm(), self->c, self->pattern_generator.clock_resolution());
         }
     }
     
