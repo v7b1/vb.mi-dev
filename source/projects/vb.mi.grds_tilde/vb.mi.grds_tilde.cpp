@@ -108,6 +108,14 @@ void* myObj_new(t_symbol *s, long argc, t_atom *argv)
         self->count = 0;
         self->previous_tick = 0;
         
+        grids::PatternGeneratorSettings* settings = self->pattern_generator.mutable_settings();
+        settings->options.drums.x = 128;
+        settings->options.drums.y = 128;
+        settings->options.drums.randomness = 128;
+        settings->density[0] = 64;
+        settings->density[1] = 128;
+        settings->density[2] = 192;
+        
         // process attributes
         attr_args_process(self, argc, argv);
         

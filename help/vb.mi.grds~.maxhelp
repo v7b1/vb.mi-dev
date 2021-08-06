@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 100.0, 45.0, 876.0, 952.0 ],
+		"rect" : [ 100.0, 45.0, 1009.0, 945.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 13.0,
@@ -39,6 +39,18 @@
 		"subpatcher_template" : "vb01",
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
+				"box" : 				{
+					"id" : "obj-8",
+					"linecount" : 3,
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 653.0, 396.0, 332.0, 50.0 ],
+					"text" : "OUTPUS 4, 5 and 6\nconfig \"Accents\": BD accents, SD accents, HH accents\nconfig \"Clock_Info\": all accents, CLK, RESET"
+				}
+
+			}
+, 			{
 				"box" : 				{
 					"id" : "obj-14",
 					"maxclass" : "comment",
@@ -1096,7 +1108,7 @@
 					"outlettype" : [ "signal", "signal", "signal", "signal", "signal", "signal", "signal", "signal" ],
 					"patching_rect" : [ 269.5, 368.0, 355.0, 23.0 ],
 					"saved_object_attributes" : 					{
-						"config" : 1,
+						"config" : 0,
 						"ext_clock" : 0,
 						"gate_mode" : 0,
 						"mode" : 0,
