@@ -61,7 +61,7 @@ struct t_myObj {
     uint8_t     count;
     
     double      sr;
-    uint32_t    c;      // factor for bpm calculation
+    double      c;      // factor for bpm calculation
     long        sigvs;
     
     uint8_t     mode, swing, config, gate_mode;
@@ -97,7 +97,7 @@ void* myObj_new(t_symbol *s, long argc, t_atom *argv)
         self->sr = sys_getsr();
         self->c = ((1L<<32) * 8) / (120 * self->sr / COUNTMAX );
         
-        self->clock.Init();
+        self->clock.Init(self->c);
         self->pattern_generator.Init();
         
         self->mode = 0;     // drum mode
@@ -144,11 +144,10 @@ void myObj_int(t_myObj* self, long m) {
     long innum = proxy_getinlet((t_object *)self);
     
     if (innum == 0) {
-        uint16_t bpm = m;
-        clamp(bpm, uint16_t(20), uint16_t(511));
+        double bpm = clamp(m, 20L, 511L);
         
         if (bpm != self->clock.bpm() && !self->clock.locked()) {
-            self->clock.Update_vb(bpm, self->c);
+            self->clock.Update_f(bpm, self->c);
         }
     }
     else {
@@ -173,11 +172,11 @@ void myObj_float(t_myObj* self, double m) {
     long innum = proxy_getinlet((t_object *)self);
 
     if (innum == 0) {
-        uint16_t bpm = m + 0.5;
-        clamp(bpm, uint16_t(20), uint16_t(511));
+//        double bpm = m + 0.5;
+        double bpm = clamp(m, 20.0, 511.0);
 
         if (bpm != self->clock.bpm() && !self->clock.locked()) {
-            self->clock.Update_vb(bpm, self->c);
+            self->clock.Update_f(bpm, self->c);
         }
     }
     else {
@@ -204,7 +203,7 @@ void myObj_print(t_myObj *self) {
     grids::PatternGeneratorSettings* settings = pg->mutable_settings();
     
     object_post((t_object*)self, "----- INFO -----");
-    object_post((t_object*)self, "clock bpm: %d", clock->bpm());
+    object_post((t_object*)self, "clock bpm: %f", clock->bpm());
     object_post((t_object*)self, "clock locked: %d", clock->locked());
     object_post((t_object*)self, "pg swing amount: %d", pg->swing_amount());
     object_post((t_object*)self, "pg output mode: %d", pg->output_mode());
@@ -266,7 +265,7 @@ t_max_err resolution_setter(t_myObj *self, void *attr, long ac, t_atom *av)
         self->clock_resolution = m;
         self->pattern_generator.set_clock_resolution(m);
      
-        self->clock.Update_vb(self->clock.bpm(), self->c);
+        self->clock.Update_f(self->clock.bpm(), self->c);
         self->pattern_generator.Reset();
 //        self->clock.Reset();
     }
@@ -393,7 +392,7 @@ void myObj_dsp64(t_myObj* self, t_object* dsp64, short* count, double samplerate
         self->sr = samplerate;
         self->c = ((1L<<32) * 8) / (120 * self->sr / COUNTMAX );
         if ( !self->clock.locked() ) {
-            self->clock.Update_vb(self->clock.bpm(), self->c);
+            self->clock.Update_f(self->clock.bpm(), self->c);
         }
     }
     
@@ -410,7 +409,7 @@ void myObj_assist(t_myObj* self, void* unused, t_assist_function io, long index,
 	if (io == ASSIST_INLET) {
 		switch (index) {
 			case 0:
-                strncpy(string_dest,"(signal/int) ext. clock / BPM", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal) ext. clock (float/int) BPM", ASSIST_STRING_MAXSIZE); break;
             case 1:
                 strncpy(string_dest,"(float) MAP_X", ASSIST_STRING_MAXSIZE); break;
             case 2:

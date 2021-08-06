@@ -35,9 +35,9 @@ void Clock::Update(uint16_t bpm, ClockResolution resolution) {
   }
 }
     
-    void Clock::Update_vb(uint16_t bpm, uint32_t c) {
+    void Clock::Update_f(double bpm, double c) {
         bpm_ = bpm;
-        phase_increment_ = bpm * c;
+        phase_increment_ = (bpm * c) + 0.5;
         phase_increment_ = (phase_increment_ << 1) + phase_increment_;
     }
 
