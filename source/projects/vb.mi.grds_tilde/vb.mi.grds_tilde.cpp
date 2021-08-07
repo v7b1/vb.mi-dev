@@ -69,6 +69,7 @@ struct t_myObj {
     
     uint8_t     ext_clock;
     bool        reset_;
+    bool        start_;
     
 };
 
@@ -109,6 +110,7 @@ void* myObj_new(t_symbol *s, long argc, t_atom *argv)
         self->count = 0;
         self->previous_tick = 0;
         self->reset_ = false;
+        self->start_ = false;
         
         grids::PatternGeneratorSettings* settings = self->pattern_generator.mutable_settings();
         settings->options.drums.x = 128;
@@ -155,11 +157,13 @@ void myObj_int(t_myObj* self, long m) {
     long innum = proxy_getinlet((t_object *)self);
     
     if (innum == 0) {
-        double bpm = clamp(m, 20L, 511L);
-        
-        if (bpm != self->clock.bpm() && !self->clock.locked()) {
-            self->clock.Update_f(bpm, self->c, self->pattern_generator.clock_resolution());
-        }
+//        double bpm = clamp(m, 20L, 511L);
+//
+//        if (bpm != self->clock.bpm() && !self->clock.locked()) {
+//            self->clock.Update_f(bpm, self->c, self->pattern_generator.clock_resolution());
+//        }
+        // int in first inlet means start/stop
+        self->start_ = m != 0;
     }
     else {
         grids::PatternGeneratorSettings* settings = self->pattern_generator.mutable_settings();
@@ -311,6 +315,12 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     if (self->obj.z_disabled)
         return;
     
+    if (!self->start_) {
+        for(int k=0; k<8; k++) {
+            memset(outs[k], 0, sampleframes * sizeof(double));
+        }
+        return;
+    }
     
     grids::Clock *clock = &self->clock;
     grids::PatternGenerator *pattern_generator = &self->pattern_generator;
