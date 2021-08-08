@@ -31,7 +31,6 @@ namespace grids {
 using namespace avrlib;
 
 
-    // TODO: this one static ok?
 static const uint8_t* drum_map[5][5] = {
   { node_10, node_8, node_0, node_9, node_11 },
   { node_15, node_7, node_13, node_12, node_6 },

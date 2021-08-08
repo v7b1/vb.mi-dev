@@ -167,7 +167,8 @@ void myObj_int(t_myObj* self, long m) {
     }
     else {
         grids::PatternGeneratorSettings* settings = self->pattern_generator.mutable_settings();
-        uint8_t mm = m;
+        uint8_t mm = clamp(m, 1L, 32L);
+        mm = (mm - 1) << 3;
         if (innum == 1)
             settings->options.drums.x = mm;
         else if (innum == 2)
@@ -175,6 +176,7 @@ void myObj_int(t_myObj* self, long m) {
         else if (innum == 3)
             settings->options.drums.randomness = mm;
         else {
+            mm = m;
             settings->density[innum - 4] = mm;
         }
         
@@ -208,6 +210,20 @@ void myObj_float(t_myObj* self, double m) {
         
     }
     
+}
+
+
+void myObj_euclid(t_myObj *self, long a, long b, long c) {
+
+    grids::PatternGeneratorSettings* settings = self->pattern_generator.mutable_settings();
+    
+    uint8_t index = clamp(a, 0L, 2L);
+    uint8_t steps = clamp(b, 1L, 32L);
+    uint8_t notes = clamp(c, 0L, 32L);
+    
+    uint8_t density = ((float)notes / (float)steps) * 255.0;
+    settings->options.euclidean_length[index] = (steps - 1) << 3;
+    settings->density[index] = density;
 }
 
 
@@ -476,6 +492,8 @@ void ext_main(void* r) {
     class_addmethod(this_class, (method)myObj_hard_reset,     "reset",     0L);
     class_addmethod(this_class, (method)myObj_bang,     "bang",     0L);
     class_addmethod(this_class, (method)myObj_print,     "info",     0L);
+    
+    class_addmethod(this_class, (method)myObj_euclid,     "euclid",  A_LONG, A_LONG, A_LONG,   0L);
     
 	class_dspinit(this_class);
 	class_register(CLASS_BOX, this_class);
