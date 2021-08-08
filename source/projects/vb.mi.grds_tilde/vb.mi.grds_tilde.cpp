@@ -157,30 +157,24 @@ void myObj_int(t_myObj* self, long m) {
     long innum = proxy_getinlet((t_object *)self);
     
     if (innum == 0) {
-//        double bpm = clamp(m, 20L, 511L);
-//
-//        if (bpm != self->clock.bpm() && !self->clock.locked()) {
-//            self->clock.Update_f(bpm, self->c, self->pattern_generator.clock_resolution());
-//        }
-        // int in first inlet means start/stop
         self->start_ = m != 0;
     }
-    else {
-        grids::PatternGeneratorSettings* settings = self->pattern_generator.mutable_settings();
-        uint8_t mm = clamp(m, 1L, 32L);
-        mm = (mm - 1) << 3;
-        if (innum == 1)
-            settings->options.drums.x = mm;
-        else if (innum == 2)
-            settings->options.drums.y = mm;
-        else if (innum == 3)
-            settings->options.drums.randomness = mm;
-        else {
-            mm = m;
-            settings->density[innum - 4] = mm;
-        }
-        
-    }
+//    else {
+//        grids::PatternGeneratorSettings* settings = self->pattern_generator.mutable_settings();
+//        uint8_t mm = clamp(m, 1L, 32L);
+//        mm = (mm - 1) << 3;
+//        if (innum == 1)
+//            settings->options.drums.x = mm;
+//        else if (innum == 2)
+//            settings->options.drums.y = mm;
+//        else if (innum == 3)
+//            settings->options.drums.randomness = mm;
+//        else {
+//            mm = m;
+//            settings->density[innum - 4] = mm;
+//        }
+//
+//    }
 }
 
 
@@ -444,7 +438,7 @@ void myObj_assist(t_myObj* self, void* unused, t_assist_function io, long index,
 	if (io == ASSIST_INLET) {
 		switch (index) {
 			case 0:
-                strncpy(string_dest,"(signal) ext. clock (float/int) BPM", ASSIST_STRING_MAXSIZE); break;
+                strncpy(string_dest,"(signal) ext. clock (int) start/stop (float) BPM", ASSIST_STRING_MAXSIZE); break;
             case 1:
                 strncpy(string_dest,"(float) MAP_X", ASSIST_STRING_MAXSIZE); break;
             case 2:
