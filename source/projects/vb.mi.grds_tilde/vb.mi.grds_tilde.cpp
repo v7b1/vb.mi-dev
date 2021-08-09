@@ -66,6 +66,8 @@ struct t_myObj {
     
     uint8_t     mode, swing, config, gate_mode;
     uint8_t     previous_tick;
+    bool        previous_clock_in, previous_reset_in;
+    bool        reset_connected;
     
     uint8_t     ext_clock;
     bool        reset_;
@@ -83,7 +85,7 @@ void* myObj_new(t_symbol *s, long argc, t_atom *argv)
 	
     if(self)
     {
-        dsp_setup((t_pxobject*)self, 7);
+        dsp_setup((t_pxobject*)self, 8);
         outlet_new(self, "signal");
         outlet_new(self, "signal");
         outlet_new(self, "signal");
@@ -109,6 +111,8 @@ void* myObj_new(t_symbol *s, long argc, t_atom *argv)
         self->clock_resolution = grids::CLOCK_RESOLUTION_24_PPQN;
         self->count = 0;
         self->previous_tick = 0;
+        self->previous_clock_in = self->previous_reset_in = false;
+        self->reset_connected = false;
         self->reset_ = false;
         self->start_ = false;
         
@@ -313,6 +317,7 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
 {
     
     double      *clock_input = ins[0];
+    double      *reset_input = ins[7];
     // use overflow to limit data range to uint8
 //    uint8_t     map_x = ins[1][0] * 255.0;
 //    uint8_t     map_y = ins[2][0] * 255.0;
@@ -346,15 +351,19 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     
     uint8_t state = pattern_generator->state();
     uint8_t count = self->count;
-    uint8_t previous_tick = self->previous_tick;
+    bool    previous_clock_in = self->previous_clock_in;
+    bool    previous_reset_in = self->previous_reset_in;
+    bool    reset_connected = self->reset_connected;
     uint8_t ext_clock = self->ext_clock;
     
     uint8_t increment = ticks_granularity[pattern_generator->clock_resolution()];
-    uint8_t sum = 0;
+    uint16_t sum_clock_in = 0;
+    uint16_t sum_reset_in = 0;
     
     for(int i=0; i<sampleframes; ++i) {
         
-        sum += (clock_input[i] > 0.1);
+        sum_clock_in += (clock_input[i] > 0.1);
+        sum_reset_in += (reset_input[i] > 0.1);
         
         if(count >= COUNTMAX) {
             count = 0;
@@ -363,15 +372,15 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
             
             // external clock input
             if(ext_clock) {
-                uint8_t tick = (sum != 0);
-                if (tick && !(previous_tick)) {
+                bool clock_in = (sum_clock_in > 0);
+                if (clock_in && !previous_clock_in) {
                     num_ticks = increment;
                 }
-                if (!tick && previous_tick) {
+                else if (!clock_in && previous_clock_in) {
                     pattern_generator->ClockFallingEdge();
-                    sum = 0;
+                    sum_clock_in = 0;
                 }
-                previous_tick = tick;
+                previous_clock_in = clock_in;
             }
             else {
                 clock->Tick();
@@ -384,13 +393,23 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
                 }
             }
             
+            // handle reset input
+            if (reset_connected) {
+                bool reset_in = (sum_reset_in > 0);
+                if (reset_in && !previous_reset_in)
+                    pattern_generator->Reset();
+                else if (!reset_in && previous_reset_in)
+                    sum_reset_in = 0;
+                
+                previous_reset_in = reset_in;
+            }
+            
             
             if (num_ticks) {
                 self->swing_amount = pattern_generator->swing_amount();
                 pattern_generator->TickClock(num_ticks);
             }
             
-            // TODO: add reset here?
             
             state = pattern_generator->state();
             pattern_generator->IncrementPulseCounter();
@@ -409,7 +428,8 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     }
     
     self->count = count;
-    self->previous_tick = previous_tick;
+    self->previous_clock_in = previous_clock_in;
+    self->previous_reset_in = previous_reset_in;
 
 }
 
@@ -417,7 +437,8 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
 
 void myObj_dsp64(t_myObj* self, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags)
 {
-    if(samplerate != self->sr) {
+    self->reset_connected = count[7];
+    if (samplerate != self->sr) {
         self->sr = samplerate;
         self->c = ((1L<<32) * 8) / (120 * self->sr / COUNTMAX );
         if ( !self->clock.locked() ) {
@@ -451,6 +472,8 @@ void myObj_assist(t_myObj* self, void* unused, t_assist_function io, long index,
                 strncpy(string_dest,"(float) Density 2", ASSIST_STRING_MAXSIZE); break;
             case 6:
                 strncpy(string_dest,"(float) Density 3", ASSIST_STRING_MAXSIZE); break;
+            case 7:
+                strncpy(string_dest,"(signal) Reset trigger", ASSIST_STRING_MAXSIZE); break;
 		}
 	}
 	else if (io == ASSIST_OUTLET) {
