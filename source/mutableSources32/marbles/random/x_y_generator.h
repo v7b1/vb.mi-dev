@@ -115,6 +115,8 @@ class XYGenerator {
   RampDivider ramp_divider_;
   
   int external_clock_stabilization_counter_;
+    
+    bool use_shifted_sequences_[kNumChannels];
   
   DISALLOW_COPY_AND_ASSIGN(XYGenerator);
 };

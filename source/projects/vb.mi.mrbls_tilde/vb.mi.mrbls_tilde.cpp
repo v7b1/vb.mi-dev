@@ -699,7 +699,9 @@ void dsp_loop(t_myObj* self, double** ins, double** outs, long blockSize, long o
     t_generator->set_rate(parameters[ADC_CHANNEL_T_RATE]);
     t_generator->set_bias(parameters[ADC_CHANNEL_T_BIAS]);
     t_generator->set_jitter(parameters[ADC_CHANNEL_T_JITTER]);
-    t_generator->set_deja_vu(state.t_deja_vu ? deja_vu : 0.0f);
+    t_generator->set_deja_vu(state.t_deja_vu == DEJA_VU_LOCKED
+                             ? 0.5f
+                             : (state.t_deja_vu == DEJA_VU_ON ? deja_vu : 0.0f));
     t_generator->set_length(deja_vu_length);
     t_generator->set_pulse_width_mean(float(state.t_pulse_width_mean) / 256.0f);
     t_generator->set_pulse_width_std(float(state.t_pulse_width_std) / 256.0f);
@@ -745,7 +747,9 @@ void dsp_loop(t_myObj* self, double** ins, double** outs, long blockSize, long o
         x.spread = parameters[ADC_CHANNEL_X_SPREAD];
         x.bias = parameters[ADC_CHANNEL_X_BIAS];
         x.steps = parameters[ADC_CHANNEL_X_STEPS];
-        x.deja_vu = state.x_deja_vu ? deja_vu : 0.0f;
+        x.deja_vu = state.x_deja_vu == DEJA_VU_LOCKED
+            ? 0.5f
+            : (state.x_deja_vu == DEJA_VU_ON ? deja_vu : 0.0f);
         x.length = deja_vu_length;
         x.ratio.p = 1;
         x.ratio.q = 1;

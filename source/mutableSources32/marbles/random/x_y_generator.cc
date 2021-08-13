@@ -45,6 +45,11 @@ void XYGenerator::Init(RandomStream* random_stream, float sr) {
   ramp_extractor_.Init(8000.0f / sr);
   ramp_divider_.Init();
   external_clock_stabilization_counter_ = 16;
+    
+    fill(
+         &use_shifted_sequences_[0],
+         &use_shifted_sequences_[kNumChannels],
+         false);
 }
 
 const uint32_t hashes[kNumXChannels] = {
@@ -168,6 +173,8 @@ void XYGenerator::Process(
     sequence->Record();
     sequence->set_length(settings.length);
     sequence->set_deja_vu(settings.deja_vu);
+      
+      bool use_shifted_sequences = false;
     
     // When all channels follow the same clock, the deja-vu random looping will
     // follow the same pattern and the constant-mode input will be shifted!
@@ -175,6 +182,8 @@ void XYGenerator::Process(
         && i > 0 && i < kNumXChannels) {
       sequence = &random_sequence_[0];
       if (settings.register_mode) {
+          use_shifted_sequences = true;
+          
         if (settings.control_mode == CONTROL_MODE_IDENTICAL) {
           sequence->ReplayShifted(i);
         } else if (settings.control_mode == CONTROL_MODE_BUMP) {
@@ -186,6 +195,11 @@ void XYGenerator::Process(
         sequence->ReplayPseudoRandom(hashes[i]);
       }
     }
+      
+      if (!use_shifted_sequences && use_shifted_sequences_[i]) {
+          sequence->Clone(random_sequence_[0]);
+      }
+      use_shifted_sequences_[i] = use_shifted_sequences;
     
     channel.Process(sequence, channel_ramp[i], &output[i], size, kNumChannels);
   }

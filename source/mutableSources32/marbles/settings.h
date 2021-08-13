@@ -39,19 +39,6 @@
 #include "marbles/random/quantizer.h"
 
 namespace marbles {
-    /*
-    enum AdcParameter {
-        ADC_CHANNEL_DEJA_VU_AMOUNT,
-        ADC_CHANNEL_DEJA_VU_LENGTH,
-        ADC_CHANNEL_X_SPREAD_2 = ADC_CHANNEL_DEJA_VU_LENGTH,
-        ADC_CHANNEL_T_RATE,
-        ADC_CHANNEL_T_BIAS,
-        ADC_CHANNEL_T_JITTER,
-        ADC_CHANNEL_X_SPREAD,
-        ADC_CHANNEL_X_BIAS,
-        ADC_CHANNEL_X_STEPS,
-        ADC_CHANNEL_LAST
-    };*/
     
     enum AdcParameter {
         ADC_CHANNEL_T_RATE,
@@ -116,6 +103,12 @@ struct State {
 
   enum { tag = 0x54415453 };
 };
+    
+    enum DejaVuState {
+        DEJA_VU_OFF,
+        DEJA_VU_ON,
+        DEJA_VU_LOCKED
+    };
 
 class Settings {
  public:
