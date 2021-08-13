@@ -419,12 +419,38 @@ void myObj_scale_info(t_myObj *self) {
 
 void myObj_t(t_myObj *self, long b) {
     State* state = self->settings.mutable_state();
-    state->t_deja_vu = (b != 0);
+//    state->t_deja_vu = (b != 0);
+    switch (b) {
+        case 0:
+            state->t_deja_vu = DEJA_VU_OFF;
+            break;
+        case 1:
+            state->t_deja_vu = DEJA_VU_ON;
+            break;
+        case 2:
+            state->t_deja_vu = DEJA_VU_LOCKED;
+            break;
+        default:
+            state->t_deja_vu = DEJA_VU_OFF;
+    }
 }
 
 void myObj_x(t_myObj *self, long b) {
     State* state = self->settings.mutable_state();
-    state->x_deja_vu = (b != 0);
+//    state->x_deja_vu = (b != 0);
+    switch (b) {
+        case 0:
+            state->x_deja_vu = DEJA_VU_OFF;
+            break;
+        case 1:
+            state->x_deja_vu = DEJA_VU_ON;
+            break;
+        case 2:
+            state->x_deja_vu = DEJA_VU_LOCKED;
+            break;
+        default:
+            state->x_deja_vu = DEJA_VU_OFF;
+    }
 }
 
 

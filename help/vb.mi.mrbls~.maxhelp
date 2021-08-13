@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 11.0, 45.0, 1649.0, 980.0 ],
+		"rect" : [ 0.0, 45.0, 1649.0, 980.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 13.0,
@@ -40,13 +40,82 @@
 		"assistshowspatchername" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-171",
+					"linecount" : 3,
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 938.5, 93.0, 150.0, 50.0 ],
+					"text" : "super-lock locks the sequence disregarding the 'deja-vu' settings"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-168",
+					"maxclass" : "live.tab",
+					"num_lines_patching" : 1,
+					"num_lines_presentation" : 1,
+					"numinlets" : 1,
+					"numoutlets" : 3,
+					"outlettype" : [ "", "", "float" ],
+					"parameter_enable" : 1,
+					"patching_rect" : [ 192.500000000000114, 108.0, 100.0, 20.0 ],
+					"presentation" : 1,
+					"presentation_rect" : [ 56.5, 93.0, 100.0, 20.0 ],
+					"saved_attribute_attributes" : 					{
+						"valueof" : 						{
+							"parameter_enum" : [ "off", "on", "super" ],
+							"parameter_longname" : "live.tab[1]",
+							"parameter_mmax" : 2,
+							"parameter_shortname" : "live.tab",
+							"parameter_type" : 2,
+							"parameter_unitstyle" : 9
+						}
+
+					}
+,
+					"varname" : "live.tab[1]"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-123",
+					"maxclass" : "live.tab",
+					"num_lines_patching" : 1,
+					"num_lines_presentation" : 1,
+					"numinlets" : 1,
+					"numoutlets" : 3,
+					"outlettype" : [ "", "", "float" ],
+					"parameter_enable" : 1,
+					"patching_rect" : [ 830.333333333333485, 108.0, 100.0, 20.0 ],
+					"presentation" : 1,
+					"presentation_rect" : [ 280.5, 93.0, 100.0, 20.0 ],
+					"saved_attribute_attributes" : 					{
+						"valueof" : 						{
+							"parameter_enum" : [ "off", "on", "super" ],
+							"parameter_longname" : "live.tab",
+							"parameter_mmax" : 2,
+							"parameter_shortname" : "live.tab",
+							"parameter_type" : 2,
+							"parameter_unitstyle" : 9
+						}
+
+					}
+,
+					"varname" : "live.tab"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-34",
 					"linecount" : 4,
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 261.000000000000114, 0.0, 363.0, 65.0 ],
-					"presentation_linecount" : 5,
 					"text" : "a clone of the 'MARBLES' module by mutable instruments\nby Volker Böhm, https://vboehm.net\n\nOriginal code by Émilie Gillet"
 				}
 
@@ -6255,8 +6324,6 @@
 					"outlettype" : [ "" ],
 					"parameter_enable" : 1,
 					"patching_rect" : [ 860.5, 137.0, 42.0, 42.0 ],
-					"presentation" : 1,
-					"presentation_rect" : [ 323.75, 67.0, 39.5, 42.0 ],
 					"rounded" : 83.0,
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
@@ -6293,8 +6360,6 @@
 					"outlettype" : [ "" ],
 					"parameter_enable" : 1,
 					"patching_rect" : [ 222.0, 137.0, 42.0, 42.0 ],
-					"presentation" : 1,
-					"presentation_rect" : [ 67.0, 67.0, 39.5, 42.0 ],
 					"rounded" : 83.0,
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
@@ -8657,6 +8722,13 @@
 			}
 , 			{
 				"patchline" : 				{
+					"destination" : [ "obj-111", 0 ],
+					"source" : [ "obj-123", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
 					"destination" : [ "obj-119", 1 ],
 					"source" : [ "obj-124", 0 ]
 				}
@@ -8879,6 +8951,13 @@
 				"patchline" : 				{
 					"destination" : [ "obj-166", 0 ],
 					"source" : [ "obj-167", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-68", 0 ],
+					"source" : [ "obj-168", 0 ]
 				}
 
 			}
@@ -9262,6 +9341,7 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-1", 5 ],
+					"midpoints" : [ 572.285714285714334, 428.75, 586.796296296296418, 428.75 ],
 					"source" : [ "obj-71", 0 ]
 				}
 
@@ -9423,7 +9503,9 @@
 			"obj-105" : [ "live.toggle", "live.toggle", 0 ],
 			"obj-114" : [ "live.gain~[3]", "live.gain~", 0 ],
 			"obj-115" : [ "live.toggle[1]", "live.toggle", 0 ],
+			"obj-123" : [ "live.tab", "live.tab", 0 ],
 			"obj-134" : [ "live.gain~[4]", "live.gain~", 0 ],
+			"obj-168" : [ "live.tab[1]", "live.tab", 0 ],
 			"obj-169" : [ "live.toggle[2]", "live.toggle[2]", 0 ],
 			"obj-18" : [ "live.dial", "rate", 0 ],
 			"obj-23" : [ "live.toggle[3]", "live.toggle[2]", 0 ],
@@ -9515,8 +9597,8 @@
 , 			{
 				"name" : "newobjYellow-1",
 				"default" : 				{
-					"fontsize" : [ 12.059008 ],
-					"accentcolor" : [ 0.82517, 0.78181, 0.059545, 1.0 ]
+					"accentcolor" : [ 0.82517, 0.78181, 0.059545, 1.0 ],
+					"fontsize" : [ 12.059008 ]
 				}
 ,
 				"parentstyle" : "",
