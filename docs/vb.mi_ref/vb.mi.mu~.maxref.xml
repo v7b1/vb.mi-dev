@@ -8,7 +8,9 @@
 		µ-law companding for degrading an audio signal
 	</digest>
 	<description>
-        <o>vb.mi.mu~</o> takes any given signal and reduces its quality by applying µ-law companding. The techique is taken from the 'Clouds' Eurorack module by Mutable Instruments. (Original author: Émilie Gillet).
+        <o>vb.mi.mu~</o> takes any given signal and reduces its quality by applying µ-law companding. The techique is taken from the 'Clouds' Eurorack module by Mutable Instruments.
+        <br />
+        (Original author: Émilie Gillet).
 	</description>
 	<!--METADATA-->
 	<metadatalist>
@@ -45,38 +47,30 @@
 		</outlet>
 	</outletlist>
 	<!--ARGUMENTS-->
-	<!--<objarglist>
-		<objarg name="resampling-frequency-ratio" optional="1" type="float">
+	<objarglist>
+		<objarg name="gain" optional="1" type="float">
 			<digest>
-				Resampling frequency ratio
+				Pre-processing gain
 			</digest>
 			<description>
-				The first argument sets the resampling frequency ratio, as described above. If this argument is not supplied, the default value is 1.0.
+				Raise the input gain by this amount. Values bigger than 1.0 add soft distortion.
 			</description>
 		</objarg>
-		<objarg name="number-of-quantization-bits" optional="1" type="int">
-			<digest>
-				Number of quantization bits
-			</digest>
-			<description>
-				The second argument sets the number of bits used to quantize the input signal. If this argument is not supplied, the default value is 24.
-			</description>
-		</objarg>
-	</objarglist> -->
+	</objarglist>
 	<!--MESSAGES-->
 	<methodlist>
-		<!--<method name="int">
+		<method name="bypass">
 			<arglist>
-				<arg name="number-of-quantization-bits" type="int" optional="0" />
+				<arg name="bypass" type="int" optional="0" />
 			</arglist>
 			<digest>
-				Set the number of quantization bits
+				Pass input to the output unchanged
 			</digest>
 			<description>
-				In right inlet: The number of bits used to quantize the input signal. This value must be in the range 1-52. Fewer bits mean lower signal quality.
+				Bypass the soft distortion and µ-law companding, and simply copy input to output.
 			</description>
 		</method>
-		<method name="float">
+		<!--<method name="float">
 			<arglist>
 				<arg name="resampling-frequency-ratio" type="float" optional="0" />
 			</arglist>
@@ -98,7 +92,7 @@
 		</method>
 	</methodlist>
 	<!--ATTRIBUTES-->
-    <attributelist>
+    <!--<attributelist>
         <attribute name="gain" get="0" set="1" type="float" size="1">
             <digest>
                 pre-processing gain
@@ -107,7 +101,7 @@
                 raise the input gain by this amount. Values bigger than 1.0 add soft distortion.
             </description>
         </attribute>
-    </attributelist>
+    </attributelist>-->
             
 	<!--EXAMPLE-->
 	<!--<examplelist>
@@ -122,9 +116,6 @@
 		<entry name="signal">
 			<description>
 				The output signal is the input signal after being µ-law companded to deliberately reduce it's quality and dynamic range. It is intended for creating &quot;low-fi&quot; effects.
-				<br />
-				<br />
-				Note: Use caution when listening to the output of this object. Quantizing to a small number of bits can create very loud, noisy signals.
 			</description>
 		</entry>
 	</misc>

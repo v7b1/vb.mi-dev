@@ -44,21 +44,26 @@ struct t_myObj {
     t_pxobject  x_obj;
     double      gain;
     bool        bypass;
+    bool        gain_connected;
     
 };
 
 
 
-void* myObj_new(void) {
+void* myObj_new(t_symbol *s, long argc, t_atom *argv) {
     t_myObj* self = (t_myObj*)object_alloc(this_class);
     
     if(self)
     {
-        dsp_setup((t_pxobject*)self, 1);
+        dsp_setup((t_pxobject*)self, 2);
         outlet_new(self, "signal");
 
         self->gain = 1.0;
         self->bypass = false;
+        
+        if (argc && argv) {
+            self->gain = atom_getfloat(argv);
+        }
     }
     else {
         object_free(self);
@@ -72,6 +77,10 @@ void* myObj_new(void) {
 
 void myObj_bypass(t_myObj *self, long input) {
     self->bypass = ( input != 0);
+}
+
+void myObj_float(t_myObj *self, double input) {
+    self->gain = input;
 }
 
 
@@ -162,8 +171,8 @@ void myObj_perform64(t_myObj *self, t_object *dsp64, double **ins, long numins,
                      double **outs, long numouts, long sampleframes, long flags, void *userparam){
     
     double *in = ins[0];
+    double *input_gain = ins[1];
     double *out = outs[0];
-    double gain = self->gain;
     
     long vs = sampleframes;
     
@@ -171,18 +180,35 @@ void myObj_perform64(t_myObj *self, t_object *dsp64, double **ins, long numins,
         return;
 
     
-    if(self->bypass)
+    if (self->bypass) {
+        memcpy(out, in, vs * sizeof(double));
         return;
+    }
     
     
-    for (size_t i = 0; i < vs; ++i) {
-        double input = SoftClip(in[i] * gain);
-        int16_t pcm_in = input * 32767.0;
-        uint8_t companded = Lin2MuLaw(pcm_in);
+    if (self->gain_connected) {
         
-        int16_t pcm_out = MuLaw2Lin(companded);
-        out[i] = pcm_out / 32767.0;
-        
+        for (size_t i = 0; i < vs; ++i) {
+            double input = SoftClip(in[i] * input_gain[i]);
+            int16_t pcm_in = input * 32767.0;
+            uint8_t companded = Lin2MuLaw(pcm_in);
+            
+            int16_t pcm_out = MuLaw2Lin(companded);
+            out[i] = pcm_out / 32767.0;
+            
+        }
+    }
+    else {
+        double gain = self->gain;
+        for (size_t i = 0; i < vs; ++i) {
+            double input = SoftClip(in[i] * gain);
+            int16_t pcm_in = input * 32767.0;
+            uint8_t companded = Lin2MuLaw(pcm_in);
+            
+            int16_t pcm_out = MuLaw2Lin(companded);
+            out[i] = pcm_out / 32767.0;
+            
+        }
     }
 
 }
@@ -190,6 +216,7 @@ void myObj_perform64(t_myObj *self, t_object *dsp64, double **ins, long numins,
 
 void myObj_dsp64(t_myObj* self, t_object* dsp64, short* count, double samplerate, long maxvectorsize, long flags)
 {
+    self->gain_connected = count[1];
     object_method_direct(void, (t_object*, t_object*, t_perfroutine64, long, void*),
                          dsp64, gensym("dsp_add64"), (t_object*)self, (t_perfroutine64)myObj_perform64, 0, NULL);
 }
@@ -202,10 +229,10 @@ void myObj_assist(t_myObj* self, void* unused, t_assist_function io, long index,
     if (io == ASSIST_INLET) {
         switch (index) {
             case 0:
-                strncpy(string_dest,"(signal) audio inL", ASSIST_STRING_MAXSIZE);
+                strncpy(string_dest,"(signal) audio in", ASSIST_STRING_MAXSIZE);
                 break;
             case 1:
-                strncpy(string_dest,"(signal) audio inR", ASSIST_STRING_MAXSIZE);
+                strncpy(string_dest,"(signal/float) pre-processing gain", ASSIST_STRING_MAXSIZE);
                 break;
             
         }
@@ -215,9 +242,9 @@ void myObj_assist(t_myObj* self, void* unused, t_assist_function io, long index,
             case 0:
                 strncpy(string_dest,"(signal) OUTL", ASSIST_STRING_MAXSIZE);
                 break;
-            case 1:
-                strncpy(string_dest,"(signal) OUTR", ASSIST_STRING_MAXSIZE);
-                break;
+//            case 1:
+//                strncpy(string_dest,"(signal) OUTR", ASSIST_STRING_MAXSIZE);
+//                break;
         }
     }
 }
@@ -227,15 +254,16 @@ void ext_main(void* r) {
     this_class = class_new("vb.mi.mu~", (method)myObj_new, (method)dsp_free, sizeof(t_myObj), 0, A_GIMME, 0);
     
     class_addmethod(this_class, (method)myObj_dsp64, "dsp64", A_CANT, 0);
+    class_addmethod(this_class, (method)myObj_float, "float", A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_bypass, "bypass", A_LONG, 0);
     
     class_addmethod(this_class, (method)myObj_assist, "assist", A_CANT,0);
     class_dspinit(this_class);
     class_register(CLASS_BOX, this_class);
     
-    // attributes ====
-    CLASS_ATTR_DOUBLE(this_class,"gain", 0, t_myObj, gain);
-    CLASS_ATTR_SAVE(this_class, "gain", 0);
+//    // attributes ====
+//    CLASS_ATTR_DOUBLE(this_class,"gain", 0, t_myObj, gain);
+//    CLASS_ATTR_SAVE(this_class, "gain", 0);
 
     
     object_post(NULL, "vb.mi.mu~ by volker böhm --> https://vboehm.net");

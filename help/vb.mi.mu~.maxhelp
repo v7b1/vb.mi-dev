@@ -105,6 +105,30 @@
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
+									"id" : "obj-9",
+									"linecount" : 3,
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 284.0, 190.0, 150.0, 50.0 ],
+									"text" : "pre-processing gain. \nValues bigger than 1.0 will add soft-distortion"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-14",
+									"maxclass" : "toggle",
+									"numinlets" : 1,
+									"numoutlets" : 1,
+									"outlettype" : [ "int" ],
+									"parameter_enable" : 0,
+									"patching_rect" : [ 22.0, 194.0, 24.0, 24.0 ]
+								}
+
+							}
+, 							{
+								"box" : 								{
 									"id" : "obj-8",
 									"local" : 1,
 									"maxclass" : "ezdac~",
@@ -134,19 +158,7 @@
 									"numoutlets" : 2,
 									"outlettype" : [ "", "bang" ],
 									"parameter_enable" : 0,
-									"patching_rect" : [ 263.5, 188.0, 50.0, 23.0 ]
-								}
-
-							}
-, 							{
-								"box" : 								{
-									"id" : "obj-10",
-									"maxclass" : "message",
-									"numinlets" : 2,
-									"numoutlets" : 1,
-									"outlettype" : [ "" ],
-									"patching_rect" : [ 263.5, 218.0, 51.0, 23.0 ],
-									"text" : "gain $1"
+									"patching_rect" : [ 228.5, 200.0, 50.0, 23.0 ]
 								}
 
 							}
@@ -207,15 +219,11 @@
 								"box" : 								{
 									"id" : "obj-1",
 									"maxclass" : "newobj",
-									"numinlets" : 1,
+									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "signal" ],
-									"patching_rect" : [ 110.5, 271.0, 125.0, 23.0 ],
-									"saved_object_attributes" : 									{
-										"gain" : 2.0
-									}
-,
-									"text" : "vb.mi.mu~ @gain 2."
+									"patching_rect" : [ 110.5, 271.0, 83.0, 23.0 ],
+									"text" : "vb.mi.mu~ 2."
 								}
 
 							}
@@ -247,7 +255,19 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"parameter_enable" : 0,
-									"patching_rect" : [ 270.0, 271.0, 100.0, 24.0 ]
+									"patching_rect" : [ 202.0, 271.0, 148.070503234863281, 39.0 ]
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-10",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 22.5, 227.0, 68.0, 23.0 ],
+									"text" : "bypass $1"
 								}
 
 							}
@@ -285,8 +305,15 @@
 							}
 , 							{
 								"patchline" : 								{
-									"destination" : [ "obj-10", 0 ],
+									"destination" : [ "obj-1", 1 ],
 									"source" : [ "obj-12", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-10", 0 ],
+									"source" : [ "obj-14", 0 ]
 								}
 
 							}
