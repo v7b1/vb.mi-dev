@@ -92,19 +92,13 @@ void ChordEngine::Init(BufferAllocator* allocator) {
   morph_lp_ = 0.0;
   timbre_lp_ = 0.0;
   
-  ratios_ = allocator->Allocate<double>(kChordNumChords * kChordNumVoices);
+  ratios_ = allocator->Allocate<double>(kChordNumChords * kChordNumNotes);
 }
 
 void ChordEngine::Reset() {
-    // vb, this is probably an oversight
-//    for (int i = 0; i < kChordNumChords; ++i) {
-//      for (int j = 0; j < kChordNumVoices; ++j) {     // vb TODO: check that - kChordNumVoices ?
-//          ratios_[i * kChordNumVoices + j] = SemitonesToRatio(chords[i][j]);
-//      }
-//    }
     for (int i = 0; i < kChordNumChords; ++i) {
         for (int j = 0; j < kChordNumNotes; ++j) {
-            ratios_[i * kChordNumVoices + j] = SemitonesToRatio(chords[i][j]);
+            ratios_[i * kChordNumNotes + j] = SemitonesToRatio(chords[i][j]);
         }
     }
 }
@@ -143,7 +137,7 @@ int ChordEngine::ComputeChordInversion(
     double inversion,
     double* ratios,
     double* amplitudes) {
-  const double* base_ratio = &ratios_[chord_index * kChordNumVoices];
+  const double* base_ratio = &ratios_[chord_index * kChordNumNotes];
   inversion = inversion * double(kChordNumNotes * 5);
 
   MAKE_INTEGRAL_FRACTIONAL(inversion);
