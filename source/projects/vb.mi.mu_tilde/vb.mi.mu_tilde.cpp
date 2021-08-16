@@ -240,7 +240,7 @@ void myObj_assist(t_myObj* self, void* unused, t_assist_function io, long index,
     else if (io == ASSIST_OUTLET) {
         switch (index) {
             case 0:
-                strncpy(string_dest,"(signal) OUTL", ASSIST_STRING_MAXSIZE);
+                strncpy(string_dest,"(signal) audio out", ASSIST_STRING_MAXSIZE);
                 break;
 //            case 1:
 //                strncpy(string_dest,"(signal) OUTR", ASSIST_STRING_MAXSIZE);

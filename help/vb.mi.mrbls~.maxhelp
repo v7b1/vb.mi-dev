@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 291.0, 86.0, 885.0, 790.0 ],
+		"rect" : [ 408.0, 81.0, 953.0, 823.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 13.0,
@@ -57,7 +57,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 0.0, 26.0, 885.0, 764.0 ],
+						"rect" : [ 0.0, 26.0, 953.0, 797.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 13.0,
@@ -3227,8 +3227,8 @@
 , 							{
 								"name" : "rsliderGold",
 								"default" : 								{
-									"color" : [ 0.646639, 0.821777, 0.854593, 1.0 ],
-									"bgcolor" : [ 0.764706, 0.592157, 0.101961, 1.0 ]
+									"bgcolor" : [ 0.764706, 0.592157, 0.101961, 1.0 ],
+									"color" : [ 0.646639, 0.821777, 0.854593, 1.0 ]
 								}
 ,
 								"parentstyle" : "",
@@ -3286,7 +3286,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 291.0, 112.0, 885.0, 764.0 ],
+						"rect" : [ 408.0, 107.0, 953.0, 797.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 13.0,
@@ -3317,14 +3317,28 @@
 						"assistshowspatchername" : 0,
 						"boxes" : [ 							{
 								"box" : 								{
+									"bgcolor" : [ 0.850980392156863, 0.549019607843137, 0.0, 0.52 ],
 									"fontface" : 1,
-									"id" : "obj-16",
+									"id" : "obj-38",
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 479.928571428571558, 198.5, 367.0, 21.0 ],
+									"presentation_linecount" : 2,
+									"text" : "https://mutable-instruments.net/modules/marbles/manual/"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-153",
 									"linecount" : 2,
 									"maxclass" : "comment",
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 476.428571428571558, 144.5, 367.0, 36.0 ],
-									"text" : "Original MI manual\nhttps://mutable-instruments.net/modules/marbles/manual/"
+									"patching_rect" : [ 532.261904761904816, 158.5, 246.0, 36.0 ],
+									"text" : "Please refer to the manual of the original \nmodule for further explanations:",
+									"textjustification" : 1
 								}
 
 							}
@@ -3337,7 +3351,7 @@
 									"numoutlets" : 4,
 									"outlettype" : [ "bang", "bang", "", "int" ],
 									"parameter_enable" : 0,
-									"patching_rect" : [ 474.095238095238301, 144.5, 379.571428571428442, 35.0 ]
+									"patching_rect" : [ 479.928571428571558, 198.5, 367.0, 21.0 ]
 								}
 
 							}
@@ -3350,7 +3364,7 @@
 									"numinlets" : 2,
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
-									"patching_rect" : [ 476.428571428571558, 171.0, 328.0, 52.0 ],
+									"patching_rect" : [ 499.428571428571558, 207.0, 328.0, 52.0 ],
 									"text" : ";\rmax launchbrowser www.mutable-instruments.net/modules/marbles/manual"
 								}
 
@@ -4443,8 +4457,8 @@
 , 							{
 								"name" : "rsliderGold",
 								"default" : 								{
-									"color" : [ 0.646639, 0.821777, 0.854593, 1.0 ],
-									"bgcolor" : [ 0.764706, 0.592157, 0.101961, 1.0 ]
+									"bgcolor" : [ 0.764706, 0.592157, 0.101961, 1.0 ],
+									"color" : [ 0.646639, 0.821777, 0.854593, 1.0 ]
 								}
 ,
 								"parentstyle" : "",
@@ -4500,7 +4514,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 0.0, 26.0, 885.0, 764.0 ],
+						"rect" : [ 0.0, 26.0, 953.0, 797.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 13.0,

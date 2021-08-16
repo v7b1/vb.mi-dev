@@ -60,6 +60,7 @@ struct t_myObj {
     plaits::Patch       patch;
     double              transposition_;
     double              octave_;
+    long                engine;
     short               trigger_connected;
     short               trigger_toggle;
     
@@ -72,7 +73,7 @@ struct t_myObj {
 
 
 
-void* myObj_new(void) {
+void* myObj_new(t_symbol *s, long argc, t_atom *argv) {
     t_myObj* self = (t_myObj*)object_alloc(this_class);
     
     if(self)
@@ -121,6 +122,9 @@ void* myObj_new(void) {
         
         self->voice_ = new plaits::Voice;
         self->voice_->Init(&allocator);
+        
+        // process attributes
+        attr_args_process(self, argc, argv);
 
     }
     else {
@@ -202,7 +206,7 @@ void myObj_int(t_myObj *self, long value)
     
     switch (innum) {
         case 0:
-            self->patch.engine = clamp(value, 0L, 32L);
+            self->patch.engine = self->engine = clamp(value, 0L, 15L);
             break;
         case 1:
             object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
@@ -263,6 +267,16 @@ void myObj_float(t_myObj *self, double value)
 
 void myObj_choose_engine(t_myObj* self, long e) {
     self->patch.engine = e;
+}
+
+t_max_err engine_setter(t_myObj *self, void *attr, long ac, t_atom *av)
+{
+    if (ac && av) {
+        t_atom_long m = atom_getlong(av);
+        self->patch.engine = self->engine = m;
+    }
+    
+    return MAX_ERR_NONE;
 }
 
 void myObj_get_engine(t_myObj* self) {
@@ -485,7 +499,7 @@ void ext_main(void* r) {
     
     class_addmethod(this_class, (method)myObj_note,	"note",	A_FLOAT, 0);
     
-    class_addmethod(this_class, (method)myObj_choose_engine,      "engine",      A_LONG, 0);
+//    class_addmethod(this_class, (method)myObj_choose_engine,      "engine",      A_LONG, 0);
     class_addmethod(this_class, (method)myObj_get_engine,      "get_engine", 0);
     class_addmethod(this_class, (method)myObj_int,  "int",      A_LONG, 0);
     class_addmethod(this_class, (method)myObj_float,  "float",      A_FLOAT, 0);
@@ -493,6 +507,14 @@ void ext_main(void* r) {
     
     class_dspinit(this_class);
     class_register(CLASS_BOX, this_class);
+    
+    // attributes ====
+    CLASS_ATTR_CHAR(this_class,"engine", 0, t_myObj, engine);
+    CLASS_ATTR_ENUMINDEX(this_class, "engine", 0, "virtual_analog_synthesis waveshaping_oscillator 2-op_FM granular_formant_oscillator harmonic_oscillator wavetable_oscillator chord_engine speech_synthesis swarm_engine filtered_noise particle_noise inharmonic_string modal_resonator bass_drum_model snare_drum_model hi_hat_model");
+    CLASS_ATTR_LABEL(this_class, "engine", 0, "synthesis engine");
+    CLASS_ATTR_FILTER_CLIP(this_class, "engine", 0, 15);
+    CLASS_ATTR_ACCESSORS(this_class, "engine", NULL, (method)engine_setter);
+    CLASS_ATTR_SAVE(this_class, "engine", 0);
     
     object_post(NULL, "vb.mi.plts~ by volker böhm --> https://vboehm.net");
     object_post(NULL, "a clone of mutable instruments' 'plaits' module");

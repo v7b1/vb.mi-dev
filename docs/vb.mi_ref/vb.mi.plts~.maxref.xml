@@ -2,12 +2,12 @@
 
 <?xml-stylesheet href="./_c74_ref.xsl" type="text/xsl"?>
 
-<c74object name="vb.mi.plts~" module="msp" category="MSP Operators, MSP Synthesis">
+<c74object name="vb.mi.plts~" module="vb.mi" category="MSP Operators, MSP Synthesis">
 	<digest>
-		a macro oscillator
+		A macro oscillator
 	</digest>
 	<description>
-		Use the <o>vb.mi.plts~</o> object to recreate the sound of mutable instruments' plaits eurorack module in MaxMSP.
+        <o>vb.mi.plts~</o> is a macro oscillator, offering a plethora of high quality synthesis techniques. It's a clone of the 'Plaits' Eurorack module  made by Mutable Instruments. (Original author: Émilie Gillet).
 	</description>
 	
 	

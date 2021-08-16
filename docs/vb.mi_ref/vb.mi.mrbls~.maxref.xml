@@ -7,7 +7,8 @@
 		A source of random gates and sequences
 	</digest>
 	<description>
-        The <o>vb.mi.mrbls~</o> object is a clone of the 'Marbles' Eurorack module made by Mutable Instruments (Original author: Émilie Gillet). You can use <o>vb.mi.mrbls~</o> to create repeatable sequences from random data and to alter this data in many ways...
+        The <o>vb.mi.mrbls~</o> object is a clone of the 'Marbles' Eurorack module made by Mutable Instruments (Original author: Émilie Gillet). <br />
+        You can use <o>vb.mi.mrbls~</o> to create repeatable sequences from random data and to alter this data in many ways...
 	</description>
 	
 	
