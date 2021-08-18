@@ -84,22 +84,6 @@ marbles::Ratio y_divider_ratios[] = {
     { 1, 1 },
 };
 
-int loop_length[] = {
-    1,
-    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-    5, 5, 5, 5,
-    6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-    7, 7,
-    8, 8, 8, 8, 8, 8, 8, 8, 8,
-    10, 10, 10,
-    12, 12, 12, 12, 12, 12, 12,
-    14,
-    16
-};
-
-
 
 struct t_myObj {
     t_pxobject	obj;
@@ -112,6 +96,7 @@ struct t_myObj {
     RandomStream        random_stream;
     TGenerator          t_generator;
     XYGenerator         xy_generator;
+    GroupSettings       x, y;
     
     float               *voltages;
     float               *ramp_buffer;
@@ -126,16 +111,12 @@ struct t_myObj {
     int                 dejavu_length;      // the only one which has no cv input
     
     float               sr;
+    float               y_divider;
     int                 sigvs;      // signal vector size
-    //short               blockCounter;
     void                *info_out;
 };
 
-//unsigned long long rdtsc() {
-//    unsigned int lo,hi;
-//    __asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
-//    return ((unsigned long long)hi << 32) | lo;
-//}
+
 
 void Init(t_myObj *self)
 {
@@ -160,6 +141,33 @@ void Init(t_myObj *self)
     self->voltages = (float*)sysmem_newptrclear(kBlockSize * 4 * sizeof(float));
     self->ramp_buffer = (float*)sysmem_newptrclear(kBlockSize * 4 * sizeof(float));
     self->gates = (bool*)sysmem_newptrclear(kBlockSize * 2 * sizeof(bool));
+    
+    // init paramters
+    self->block.adc_value[ADC_CHANNEL_T_RATE] = 0.5f;
+    self->block.adc_value[ADC_CHANNEL_T_BIAS] = 0.5f;
+    self->block.adc_value[ADC_CHANNEL_T_JITTER] = 0.0f;
+    self->block.adc_value[ADC_CHANNEL_DEJA_VU_AMOUNT] = 0.0f;
+    self->block.adc_value[ADC_CHANNEL_DEJA_VU_LENGTH] = 0.0f;    // X_SPREAD_2
+    self->block.adc_value[ADC_CHANNEL_X_SPREAD] = 0.5f;
+    self->block.adc_value[ADC_CHANNEL_X_BIAS] = 0.5f;
+    self->block.adc_value[ADC_CHANNEL_X_STEPS] = 0.5f;
+    
+    // x
+    self->x.length = 5;
+    self->x.ratio.p = 1;
+    self->x.ratio.q = 1;
+    
+    // y generator init values
+    self->y.bias = 0.5f;
+    self->y.spread = 0.5f;
+    self->y.steps = 0.0f;
+    self->y.ratio = y_divider_ratios[6];
+    self->y.control_mode = CONTROL_MODE_IDENTICAL;
+    self->y.deja_vu = 0.f;
+    self->y.length = 1;
+    self->y.register_mode = false;
+    self->y.register_value = 0.0f;
+    self->y.voltage_range = VOLTAGE_RANGE_FULL;
     
 }
 
@@ -235,18 +243,12 @@ void myObj_int(t_myObj *self, long m)
         case 0:
             self->block.input_patched[0] = (m != 0);        // use external clock
             break;
-        case 1:
-            object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
-            break;
-        case 2:
-            object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
-            break;
-        case 3:
-            object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
-            break;
         case 5:
             // set deja_vu sequence length
-            self->dejavu_length = clamp((int)m, 1, 16);
+            m = clamp((int)m, 1, 16);
+            self->dejavu_length = m;
+            self->t_generator.set_length(m);
+            self->x.length = m;
             break;
         case 9:
             self->block.input_patched[1] = (m != 0);        // use external clock
@@ -257,16 +259,13 @@ void myObj_int(t_myObj *self, long m)
 }
 
 
-// read float inputs at corresponding inlet as attenuverter levels
+// read float inputs at corresponding inlet as pot values
 void myObj_float(t_myObj *self, double m)
 {
     long innum = proxy_getinlet((t_object *)self);
     float *adc_value = self->block.adc_value;
-    //object_post(NULL, "innum: %ld", innum);
     
     switch (innum) {
-        case 0:
-            break;
         case 1:
             // set rate
             adc_value[ADC_CHANNEL_T_RATE] = clamp(m, 0., 1.);
@@ -284,7 +283,9 @@ void myObj_float(t_myObj *self, double m)
             break;
         case 5:
             // deja_vu sequence length (round float to int)
-            self->dejavu_length = clamp(m, 1.0, 16.0) + 0.5;
+//            int len = clamp(m, 1.0, 16.0) + 0.5;
+//            self->dejavu_length = clamp(m, 1.0, 16.0) + 0.5;
+//            myObj_length(self, (long)m);
             break;
         case 6:
             // set x_spread
@@ -299,7 +300,6 @@ void myObj_float(t_myObj *self, double m)
             adc_value[ADC_CHANNEL_X_STEPS] = clamp(m, 0., 1.);
             break;
         default:
-            object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
             break;
     }
 
@@ -312,7 +312,7 @@ void myObj_info(t_myObj *self)
     object_post((t_object*)self, "dejavu amount: \t%f", p[ADC_CHANNEL_DEJA_VU_AMOUNT]);
     object_post((t_object*)self, "dejavu length: \t%d", self->dejavu_length);
     object_post((t_object*)self, "x_ext_input: \t%f", p[ADC_CHANNEL_X_SPREAD_2]);
-    object_post((t_object*)self, "t_rate: \t%f", p[ADC_CHANNEL_T_RATE]);
+    object_post((t_object*)self, "t_rate: \t%f", (p[ADC_CHANNEL_T_RATE]+60.f)/120.0f);
     float bpm = powf(2.0f, p[ADC_CHANNEL_T_RATE] / 12.0f) * 120.f;
     object_post((t_object*)self, "bpm: \t%f", bpm);
     object_post((t_object*)self, "t_bias: \t%f", p[ADC_CHANNEL_T_BIAS]);
@@ -322,8 +322,7 @@ void myObj_info(t_myObj *self)
     object_post((t_object*)self, "x_steps: \t%f", p[ADC_CHANNEL_X_STEPS]);
     
     object_post((t_object*)self, ".......");
-    object_post(NULL, "ADC_GROUP_CV: %d", ADC_GROUP_CV);
-    
+
 }
 
 
@@ -454,70 +453,154 @@ void myObj_x(t_myObj *self, long b) {
 }
 
 
-void myObj_t_model(t_myObj *self, long b) {
-    //b = clamp(b, 0, 2);
-    State* state = self->settings.mutable_state();
-    CONSTRAIN(b, 0, 2);
-    state->t_model = b;
-}
+//void myObj_t_model(t_myObj *self, long b) {
+//    CONSTRAIN(b, 0, 2);
+//    self->settings.mutable_state()->t_model = b;
+//    self->t_generator.set_model(TGeneratorModel(b));
+//
+//}
 
-
-void myObj_t_range(t_myObj *self, long b) {
-    State* state = self->settings.mutable_state();
-    CONSTRAIN(b, 0, 2);
-    state->t_range = b;
-}
-
-
-void myObj_x_range(t_myObj *self, long b) {
-    State* state = self->settings.mutable_state();
-    CONSTRAIN(b, 0, 2);
-    state->x_range = b;
+t_max_err t_model_setter(t_myObj *self, void *attr, long ac, t_atom *av)
+{
+    if (ac && av) {
+        t_atom_long m = atom_getcharfix(av);
+        self->settings.mutable_state()->t_model = m;
+        self->t_generator.set_model(TGeneratorModel(m));
+    }
     
-    // try out ....
-    for (size_t i = 0; i < kNumXChannels; ++i) {
-        OutputChannel& channel = self->xy_generator.output_channel_[i];
-        //const GroupSettings& settings = i < kNumXChannels ? x_settings : y_settings;
+    return MAX_ERR_NONE;
+}
+
+
+//void myObj_t_range(t_myObj *self, long b) {
+//    CONSTRAIN(b, 0, 2);
+//    self->settings.mutable_state()->t_range = b;
+//    self->t_generator.set_range(TGeneratorRange(b));
+//}
+
+t_max_err t_range_setter(t_myObj *self, void *attr, long ac, t_atom *av)
+{
+    if (ac && av) {
+        t_atom_long m = atom_getcharfix(av);
+        self->settings.mutable_state()->t_range = m;
+        self->t_generator.set_range(TGeneratorRange(m));
+    }
+    
+    return MAX_ERR_NONE;
+}
+
+
+//void myObj_x_range(t_myObj *self, long b) {
+//    CONSTRAIN(b, 0, 2);
+//    self->settings.mutable_state()->x_range = b;
+//
+//    for (size_t i = 0; i < kNumXChannels; ++i) {
+//        OutputChannel& channel = self->xy_generator.output_channel_[i];
+//
+//        // TODO: add more ranges?
+//        switch (b) {
+//            case VOLTAGE_RANGE_NARROW:
+//                channel.set_scale_offset(ScaleOffset(2.0f, 0.0f));
+//                break;
+//
+//            case VOLTAGE_RANGE_POSITIVE:
+//                channel.set_scale_offset(ScaleOffset(5.0f, 0.0f));
+//                break;
+//
+//            case VOLTAGE_RANGE_FULL:
+//                channel.set_scale_offset(ScaleOffset(10.0f, -5.0f));
+//                break;
+//
+//            default:
+//                break;
+//        }
+//    }
+//}
+
+t_max_err x_range_setter(t_myObj *self, void *attr, long ac, t_atom *av)
+{
+    if (ac && av) {
+        t_atom_long m = atom_getcharfix(av);
+        self->settings.mutable_state()->x_range = m;
         
-        switch (b) {
-            case VOLTAGE_RANGE_NARROW:
-                channel.set_scale_offset(ScaleOffset(2.0f, 0.0f));
-                break;
-                
-            case VOLTAGE_RANGE_POSITIVE:
-                channel.set_scale_offset(ScaleOffset(5.0f, 0.0f));
-                break;
-                
-            case VOLTAGE_RANGE_FULL:
-                channel.set_scale_offset(ScaleOffset(10.0f, -5.0f));
-                break;
-                
-            default:
-                break;
+        for (size_t i = 0; i < kNumXChannels; ++i) {
+            OutputChannel& channel = self->xy_generator.output_channel_[i];
+            
+            // TODO: add more ranges?
+            switch (m) {
+                case VOLTAGE_RANGE_NARROW:
+                    channel.set_scale_offset(ScaleOffset(2.0f, 0.0f));
+                    break;
+                    
+                case VOLTAGE_RANGE_POSITIVE:
+                    channel.set_scale_offset(ScaleOffset(5.0f, 0.0f));
+                    break;
+                    
+                case VOLTAGE_RANGE_FULL:
+                    channel.set_scale_offset(ScaleOffset(10.0f, -5.0f));
+                    break;
+                    
+                default:
+                    break;
+            }
         }
     }
-    // end try out
+    
+    return MAX_ERR_NONE;
 }
 
-void myObj_x_mode(t_myObj *self, long b) {
-    State* state = self->settings.mutable_state();
-    CONSTRAIN(b, 0, 2);
-    state->x_control_mode = b;
+// controls how the outputs x1, x1 and x3 react to the pots of the X section
+//void myObj_x_mode(t_myObj *self, long b) {
+//    // 0: All channels follow the settings on the control panel.
+//    // 1: X2 follows the control panel, while X1 and X3 take opposite values
+//    // 2: X3 follows the control panel, X1 reacts in the opposite direction, and X2 always stays in the middle (steppy, unbiased, bell-curve)
+//
+//    CONSTRAIN(b, 0, 2);
+//    self->settings.mutable_state()->x_control_mode = b;
+//    self->x.control_mode = ControlMode(b);
+//}
+
+t_max_err x_mode_setter(t_myObj *self, void *attr, long ac, t_atom *av)
+{
+    // 0: All channels follow the settings on the control panel.
+    // 1: X2 follows the control panel, while X1 and X3 take opposite values
+    // 2: X3 follows the control panel, X1 reacts in the opposite direction, and X2 always stays in the middle (steppy, unbiased, bell-curve)
+    if (ac && av) {
+        t_atom_long m = atom_getcharfix(av);
+        self->settings.mutable_state()->x_control_mode = m;
+        self->x.control_mode = ControlMode(m);
+    }
+    
+    return MAX_ERR_NONE;
 }
 
-void myObj_x_scale(t_myObj *self, long b) {
-    State* state = self->settings.mutable_state();
-    int max = kNumScales-1;
-    CONSTRAIN(b, 0, max);
-    state->x_scale = b;
+
+// choose a scale
+//void myObj_x_scale(t_myObj *self, long b) {
+//    int max = kNumScales-1;
+//    CONSTRAIN(b, 0, max);
+//    self->settings.mutable_state()->x_scale = b;
+//    self->x.scale_index = self->y.scale_index = b;
+//}
+
+t_max_err x_scale_setter(t_myObj *self, void *attr, long ac, t_atom *av)
+{
+    if (ac && av) {
+        t_atom_long m = atom_getcharfix(av);
+        self->settings.mutable_state()->x_scale = m;
+        self->x.scale_index = self->y.scale_index = m;
+    }
+    
+    return MAX_ERR_NONE;
 }
+
 
 
 // enable sampling of external cv input
-
 void myObj_x_ext(t_myObj *self, long b) {
-    State* state = self->settings.mutable_state();
-    state->x_register_mode = (b != 0);
+    bool a = (b != 0);
+    self->settings.mutable_state()->x_register_mode = a;
+    self->x.register_mode = a;
 }
 
 
@@ -531,14 +614,10 @@ void myObj_rate(t_myObj* self, double m) {
 }
 
 void myObj_bpm(t_myObj* self, double m) {
-    float bpm = clamp(m, 10., 800.);
-    bpm *= 0.008333f;   // / 120.0
-    float rate = log10f(bpm) * 39.863137f;    // 12.0/log10(2)
-    //object_post(NULL, "t_rate: %f", rate);
-    
-    rate += 60.0f;
-    rate *= 0.008333f;       // / 120.0
-    //object_post(NULL, "rate input: %f", rate);
+    double bpm = clamp(m, 10., 800.);
+    bpm *= 0.008333;   // / 120.0
+    float rate = (log2(bpm) * 12.0 + 60) * 0.008333;
+//    object_post(NULL, "t_rate: %f", rate);
     
     self->block.adc_value[ADC_CHANNEL_T_RATE] = rate;
 }
@@ -558,15 +637,13 @@ void myObj_jitter(t_myObj* self, double m) {
 // set pulse width of t1 and t3 gates
 
 void myObj_pulse_width_mean(t_myObj *self, double m) {
-    State* state = self->settings.mutable_state();
     m = clamp(m, 0.0, 1.0);
-    state->t_pulse_width_mean = int(m*255.0);
+    self->t_generator.set_pulse_width_mean(m);
 }
 
 void myObj_pulse_width_std(t_myObj *self, double m) {
-    State* state = self->settings.mutable_state();
     m = clamp(m, 0.0, 1.0);
-    state->t_pulse_width_std = int(m*255.0);
+    self->t_generator.set_pulse_width_std(m);
 }
 
 
@@ -587,6 +664,9 @@ void myObj_length(t_myObj* self, double m) {
 void myObj_length(t_myObj* self, long m) {
     m = clamp((int)m, 1, 16);
     self->dejavu_length = m;
+    
+    self->t_generator.set_length(m);
+    self->x.length = m;
 }
 
 
@@ -612,15 +692,28 @@ void myObj_xbias(t_myObj* self, double m) {
 
 #pragma mark -------- Y functions --------
 
-void myObj_y_divider(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
-    int div = int(m*255.0 + 0.5);
-    self->settings.mutable_state()->y_divider = div;
+//void myObj_y_divider(t_myObj* self, double m) {
+//    m = clamp(m, 0., 1.);
+//    int div = int(m*255.0 + 0.5);
+//    self->settings.mutable_state()->y_divider = div;
+//}
+
+
+t_max_err y_div_setter(t_myObj *self, void *attr, long ac, t_atom *av)
+{
+    if (ac && av) {
+        t_atom_float m = atom_getfloat(av);
+        self->y_divider = m;
+        self->y.ratio =
+            y_divider_ratios[static_cast<uint16_t>((m * 11.0) + 0.5)];
+        
+    }
+    
+    return MAX_ERR_NONE;
 }
 
 
 #pragma mark ----- dsp loop -----
-
 
 
 void dsp_loop(t_myObj* self, double** ins, double** outs, long blockSize, long offset)
@@ -633,7 +726,8 @@ void dsp_loop(t_myObj* self, double** ins, double** outs, long blockSize, long o
     Block   *block = &self->block;
     ScaleRecorder   *scale_recorder = &self->scale_recorder;
     Ramps           ramps;
-    GroupSettings   x, y;
+    GroupSettings   x = self->x;
+    GroupSettings   y = self->y;
     TGenerator      *t_generator = &self->t_generator;
     
     
@@ -711,26 +805,21 @@ void dsp_loop(t_myObj* self, double** ins, double** outs, long blockSize, long o
     ramps.slave[1] = &ramp_buffer[kBlockSize * 3];
     
     const State& state = self->settings.state();
-    /*
-    int deja_vu_length = self->deja_vu_length_quantizer.Lookup(
-                                                         loop_length,
-                                                         self->dejavu_length,
-                                                         sizeof(loop_length) / sizeof(int));
-     */
+
     
-    int deja_vu_length = self->dejavu_length;
+    // TODO: move this out of dsp loop
+//    int deja_vu_length = self->dejavu_length;
     
-    t_generator->set_model(TGeneratorModel(state.t_model));
-    t_generator->set_range(TGeneratorRange(state.t_range));
+//    t_generator->set_model(TGeneratorModel(state.t_model));
+//    t_generator->set_range(TGeneratorRange(state.t_range));
     t_generator->set_rate(parameters[ADC_CHANNEL_T_RATE]);
     t_generator->set_bias(parameters[ADC_CHANNEL_T_BIAS]);
     t_generator->set_jitter(parameters[ADC_CHANNEL_T_JITTER]);
     t_generator->set_deja_vu(state.t_deja_vu == DEJA_VU_LOCKED
                              ? 0.5f
                              : (state.t_deja_vu == DEJA_VU_ON ? deja_vu : 0.0f));
-    t_generator->set_length(deja_vu_length);
-    t_generator->set_pulse_width_mean(float(state.t_pulse_width_mean) / 256.0f);
-    t_generator->set_pulse_width_std(float(state.t_pulse_width_std) / 256.0f);
+//    t_generator->set_length(deja_vu_length);
+    
     t_generator->Process(
                         block->input_patched[0],
                         t_clock,
@@ -754,7 +843,7 @@ void dsp_loop(t_myObj* self, double** ins, double** outs, long blockSize, long o
             : stmlib::GATE_FLAG_LOW;
             if (gate & stmlib::GATE_FLAG_RISING) {
                 scale_recorder->NewNote(voltage);
-                object_post(NULL, "new note: %f", voltage);
+                object_post((t_object*)self, "new note: %f", voltage);
             }
             if (gate & stmlib::GATE_FLAG_HIGH) {
                 scale_recorder->UpdateVoltage(voltage);
@@ -765,9 +854,9 @@ void dsp_loop(t_myObj* self, double** ins, double** outs, long blockSize, long o
         }
         std::fill(&self->voltages[0], &self->voltages[4 * size], voltage);
     } else {
-        x.control_mode = ControlMode(state.x_control_mode);
-        //x.voltage_range = VoltageRange(state.x_range % 3);  // TODO: can range be something else then 0..2 ?
-        x.register_mode = state.x_register_mode;
+//        x.control_mode = ControlMode(state.x_control_mode);
+        //x.voltage_range = VoltageRange(state.x_range % 3);
+//        x.register_mode = state.x_register_mode;
         x.register_value = u;
         
         x.spread = parameters[ADC_CHANNEL_X_SPREAD];
@@ -776,21 +865,26 @@ void dsp_loop(t_myObj* self, double** ins, double** outs, long blockSize, long o
         x.deja_vu = state.x_deja_vu == DEJA_VU_LOCKED
             ? 0.5f
             : (state.x_deja_vu == DEJA_VU_ON ? deja_vu : 0.0f);
-        x.length = deja_vu_length;
-        x.ratio.p = 1;
-        x.ratio.q = 1;
+//        x.length = deja_vu_length;
+//        x.ratio.p = 1;
+//        x.ratio.q = 1;
         
-        y.control_mode = CONTROL_MODE_IDENTICAL;
-        y.voltage_range = VoltageRange(state.y_range);      // TODO: we never set this manually ?
-        y.register_mode = false;
-        y.register_value = 0.0f;
-        y.spread = float(state.y_spread) / 256.0f;
-        y.bias = float(state.y_bias) / 256.0f;
-        y.steps = float(state.y_steps) / 256.0f;
-        y.deja_vu = 0.0f;
-        y.length = 1;
-        y.ratio = y_divider_ratios[
-                                   static_cast<uint16_t>(state.y_divider) * 12 >> 8];
+//        y.control_mode = CONTROL_MODE_IDENTICAL;
+//        y.voltage_range = VoltageRange(state.y_range);      // TODO: we never set this manually ?
+//        y.register_mode = false;
+//        y.register_value = 0.0f;
+////        y.spread = float(state.y_spread) / 256.0f;
+////        y.bias = float(state.y_bias) / 256.0f;
+////        y.steps = float(state.y_steps) / 256.0f;
+//        y.spread = state.y_spread;
+//        y.bias = state.y_bias;
+//        y.steps = state.y_steps;
+//        y.deja_vu = 0.0f;
+//        y.length = 1;
+////        y.ratio = y_divider_ratios[
+////                                   static_cast<uint16_t>(state.y_divider) * 12 >> 8];
+//        y.ratio = y_divider_ratios[
+//                                   static_cast<uint16_t>((state.y_divider * 11.0) + 0.5)];
         
         if (self->settings.dirty_scale_index() != -1) {
             int i = self->settings.dirty_scale_index();
@@ -799,7 +893,7 @@ void dsp_loop(t_myObj* self, double** ins, double** outs, long blockSize, long o
             self->settings.set_dirty_scale_index(-1);
         }
         
-        y.scale_index = x.scale_index = state.x_scale;
+//        y.scale_index = x.scale_index = state.x_scale;
         
         self->xy_generator.Process(
                              xy_clock_source,
@@ -850,9 +944,6 @@ void myObj_dsp64(t_myObj* self, t_object* dsp64, short* count, double samplerate
         return;
     }
     self->sigvs = maxvectorsize;
-    //self->blockCounter = maxvectorsize / kBlockSize;
-    //object_post(NULL, "vector size div: %d", self->blockCounter);
-    
     
     if(samplerate != self->sr) {
         self->sr = samplerate;
@@ -885,32 +976,32 @@ void myObj_assist(t_myObj* self, void* unused, t_assist_function io, long index,
     if (io == ASSIST_INLET) {
         switch (index) {
             case 0:
-                strncpy(string_dest,"(signal) external clock(1)", ASSIST_STRING_MAXSIZE);
+                strncpy(string_dest,"(signal/float) external clock(1)", ASSIST_STRING_MAXSIZE);
                 break;
             case 1:
-                strncpy(string_dest,"(signal) T_RATE", ASSIST_STRING_MAXSIZE);
+                strncpy(string_dest,"(signal/float) T_RATE", ASSIST_STRING_MAXSIZE);
                 break;
             case 2:
-                strncpy(string_dest,"(signal) T_BIAS", ASSIST_STRING_MAXSIZE);
+                strncpy(string_dest,"(signal/float) T_BIAS", ASSIST_STRING_MAXSIZE);
                 break;
             case 3:
-                strncpy(string_dest,"(signal) T_JITTER",
+                strncpy(string_dest,"(signal/float) T_JITTER",
                  ASSIST_STRING_MAXSIZE);
                 break;
             case 4:
-                strncpy(string_dest,"(signal) DEJA_VU_AMOUNT", ASSIST_STRING_MAXSIZE);
+                strncpy(string_dest,"(signal/float) DEJA_VU_AMOUNT", ASSIST_STRING_MAXSIZE);
                 break;
             case 5:
                 strncpy(string_dest,"(signal) external sampling source, (int) deja_vu length (1-16)", ASSIST_STRING_MAXSIZE);
                 break;
             case 6:
-                strncpy(string_dest,"(signal) X_SPREAD", ASSIST_STRING_MAXSIZE);
+                strncpy(string_dest,"(signal/float) X_SPREAD", ASSIST_STRING_MAXSIZE);
                 break;
             case 7:
-                strncpy(string_dest,"(signal) X_BIAS", ASSIST_STRING_MAXSIZE);
+                strncpy(string_dest,"(signal/float) X_BIAS", ASSIST_STRING_MAXSIZE);
                 break;
             case 8:
-                strncpy(string_dest,"(signal) X_STEPS", ASSIST_STRING_MAXSIZE);
+                strncpy(string_dest,"(signal/float) X_STEPS", ASSIST_STRING_MAXSIZE);
                 break;
             case 9:
                 strncpy(string_dest,"(signal) external clock(2) - for XY outputs", ASSIST_STRING_MAXSIZE);
@@ -966,16 +1057,16 @@ void ext_main(void* r) {
     class_addmethod(this_class, (method)myObj_steps,   "steps",        A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_dejavu,  "dejavu",  A_FLOAT, 0);
     
-    class_addmethod(this_class, (method)myObj_t_model,  "model",  A_LONG, 0);
+//    class_addmethod(this_class, (method)myObj_t_model,  "model",  A_LONG, 0);
     class_addmethod(this_class, (method)myObj_t,  "t",  A_LONG, 0);
     class_addmethod(this_class, (method)myObj_x,  "x",  A_LONG, 0);
-    class_addmethod(this_class, (method)myObj_t_range,  "t_range",  A_LONG, 0);
-    class_addmethod(this_class, (method)myObj_x_range,  "x_range",  A_LONG, 0);
-    class_addmethod(this_class, (method)myObj_pulse_width_mean,  "pw_mean",    A_FLOAT, 0);
-    class_addmethod(this_class, (method)myObj_pulse_width_std,  "pw_std",      A_FLOAT, 0);
+//    class_addmethod(this_class, (method)myObj_t_range,  "t_range",  A_LONG, 0);
+//    class_addmethod(this_class, (method)myObj_x_range,  "x_range",  A_LONG, 0);
+//    class_addmethod(this_class, (method)myObj_pulse_width_mean,  "pw_mean",    A_FLOAT, 0);
+//    class_addmethod(this_class, (method)myObj_pulse_width_std,  "pw_std",      A_FLOAT, 0);
     
-    class_addmethod(this_class, (method)myObj_x_mode,  "x_mode",  A_LONG, 0);
-    class_addmethod(this_class, (method)myObj_x_scale,  "x_scale",  A_LONG, 0);
+//    class_addmethod(this_class, (method)myObj_x_mode,  "x_mode",  A_LONG, 0);
+//    class_addmethod(this_class, (method)myObj_x_scale,  "x_scale",  A_LONG, 0);
     class_addmethod(this_class, (method)myObj_x_ext,  "x_ext",  A_LONG, 0);
     
     class_addmethod(this_class, (method)myObj_int,  "int",          A_LONG, 0);
@@ -988,13 +1079,60 @@ void ext_main(void* r) {
     class_dspinit(this_class);
     class_register(CLASS_BOX, this_class);
     
-    CLASS_ATTR_CHAR(this_class, "y_div", 0, t_myObj, settings.mutable_state()->y_divider);
+    
+    // attributes
+    CLASS_ATTR_CHAR(this_class, "t_model", 0, t_myObj, settings.mutable_state()->t_model);
+    CLASS_ATTR_ENUMINDEX(this_class, "t_model", 0, "coin divide pattern");
+    CLASS_ATTR_FILTER_CLIP(this_class, "t_model", 0, 2);
+    CLASS_ATTR_LABEL(this_class, "t_model", 0, "randomness model");
+    CLASS_ATTR_ACCESSORS(this_class, "t_model", NULL, (method)t_model_setter);
+    CLASS_ATTR_SAVE(this_class, "t_model", 0);
+    
+    CLASS_ATTR_CHAR(this_class, "t_range", 0, t_myObj, settings.mutable_state()->t_range);
+    CLASS_ATTR_ENUMINDEX(this_class, "t_range", 0, "/4 x1 x4");
+    CLASS_ATTR_FILTER_CLIP(this_class, "t_range", 0, 2);
+    CLASS_ATTR_LABEL(this_class, "t_range", 0, "clock division");
+    CLASS_ATTR_ACCESSORS(this_class, "t_range", NULL, (method)t_range_setter);
+    CLASS_ATTR_SAVE(this_class, "t_range", 0);
+    
+    
+    CLASS_ATTR_CHAR(this_class, "x_mode", 0, t_myObj, settings.mutable_state()->x_control_mode);
+    CLASS_ATTR_ENUMINDEX(this_class, "x_mode", 0, "identical bump tilt");
+    CLASS_ATTR_FILTER_CLIP(this_class, "x_mode", 0, 2);
+    CLASS_ATTR_LABEL(this_class, "x_mode", 0, "x section behavior");
+    CLASS_ATTR_ACCESSORS(this_class, "x_mode", NULL, (method)x_mode_setter);
+    CLASS_ATTR_SAVE(this_class, "x_mode", 0);
+    
+    CLASS_ATTR_CHAR(this_class, "x_range", 0, t_myObj, settings.mutable_state()->x_range);
+    CLASS_ATTR_ENUMINDEX(this_class, "x_range", 0, "+2 +5 ±5");
+    CLASS_ATTR_FILTER_CLIP(this_class, "x_range", 0, 2);
+    CLASS_ATTR_LABEL(this_class, "x_range", 0, "x output range");
+    CLASS_ATTR_ACCESSORS(this_class, "x_range", NULL, (method)x_range_setter);
+    CLASS_ATTR_SAVE(this_class, "x_range", 0);
+    
+    CLASS_ATTR_CHAR(this_class, "x_scale", 0, t_myObj, settings.mutable_state()->x_scale);
+    CLASS_ATTR_ENUMINDEX(this_class, "x_scale", 0, "major minor penta gamelan bhairav shree");
+    CLASS_ATTR_FILTER_CLIP(this_class, "x_scale", 0, 5);
+    CLASS_ATTR_LABEL(this_class, "x_scale", 0, "x output range");
+    CLASS_ATTR_ACCESSORS(this_class, "x_scale", NULL, (method)x_scale_setter);
+    CLASS_ATTR_SAVE(this_class, "x_scale", 0);
+    
+
+    CLASS_ATTR_FLOAT(this_class, "y_div", 0, t_myObj, y_divider);
+    CLASS_ATTR_FILTER_CLIP(this_class, "y_div", 0.0, 1.0);
+    CLASS_ATTR_ACCESSORS(this_class, "y_div", NULL, (method)y_div_setter);
     CLASS_ATTR_SAVE(this_class, "y_div", 0);
-    CLASS_ATTR_CHAR(this_class, "y_spread", 0, t_myObj, settings.mutable_state()->y_spread);
+    
+    CLASS_ATTR_FLOAT(this_class, "y_spread", 0, t_myObj, y.spread);
+    CLASS_ATTR_FILTER_CLIP(this_class, "y_spread", 0.0, 1.0);
     CLASS_ATTR_SAVE(this_class, "y_spread", 0);
-    CLASS_ATTR_CHAR(this_class, "y_bias", 0, t_myObj, settings.mutable_state()->y_bias);
+    
+    CLASS_ATTR_FLOAT(this_class, "y_bias", 0, t_myObj, y.bias);
+    CLASS_ATTR_FILTER_CLIP(this_class, "y_bias", 0.0, 1.0);
     CLASS_ATTR_SAVE(this_class, "y_bias", 0);
-    CLASS_ATTR_CHAR(this_class, "y_steps", 0, t_myObj, settings.mutable_state()->y_steps);
+    
+    CLASS_ATTR_FLOAT(this_class, "y_steps", 0, t_myObj, y.steps);
+    CLASS_ATTR_FILTER_CLIP(this_class, "y_steps", 0.0, 1.0);
     CLASS_ATTR_SAVE(this_class, "y_steps", 0);
     
     object_post(NULL, "vb.mi.mrbls~ by volker böhm --> https://vboehm.net");

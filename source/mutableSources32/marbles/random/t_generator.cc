@@ -374,9 +374,6 @@ void TGenerator::Process(
     internal_frequency = rate * one_hertz_ * SemitonesToRatio(rate_);
       //internal_frequency = rate_ / 60.0f * one_hertz_;
       
-      //float bla = SemitonesToRatio(rate_);
-      //std::cout << "rate: " << rate_ << "bla: " << bla << "int.freq: " << internal_frequency << "\n";
-      
   }
   
   use_external_clock_ = use_external_clock;

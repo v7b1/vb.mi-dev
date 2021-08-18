@@ -133,10 +133,10 @@ void OutputChannel::Process(
     }
     
     if (steps >= 0.5f) {
-      *output = quantized_voltage_ * 0.2f;      // vb, scale output to -1..+1 range
+      *output = quantized_voltage_ * 0.1f;      // vb, scale output to -0.5..+0.5 range
     } else {
       const float smoothness = 1.0f - 2.0f * steps;
-      *output = lag_processor_.Process(voltage_, smoothness, *phase) * 0.2f; //vb, scale output to -1..+1 range
+      *output = lag_processor_.Process(voltage_, smoothness, *phase) * 0.1f; //vb, scale output to -0.5..+0.5 range
     }
     output += stride;
     previous_phase_ = *phase++;

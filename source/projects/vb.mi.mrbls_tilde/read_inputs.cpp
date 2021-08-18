@@ -39,28 +39,6 @@ namespace marbles {
         // ADC_CHANNEL_X_STEPS,
         { 0.05f, 1.0f, 0.0f, 0.01f, 0.0f, 1.0f, 0.02f },
     };
-    /*
-    const CvReaderChannel::Settings ReadInputs::channel_settings_[] = {
-        // cv_lp | pot_scale | pot_offset | pot_lp | min | max | hysteresis
-        // ADC_CHANNEL_DEJA_VU_AMOUNT,
-        { 0.05f, 1.0f, 0.0f, 0.01f, 0.0f, 1.0f, 0.00f },
-        // ADC_CHANNEL_X_SPREAD_2 / ADC_CHANNEL_DEJA_VU_LENGTH,
-        { 0.05f, 1.0f, 0.0f, 0.01f, 0.0f, 1.0f, 0.00f },
-        // ADC_CHANNEL_T_RATE,
-        { 0.2f, 120.0f, -60.0f, 0.05f, -120.0f, 120.0f, 0.001f },       // pot_lp: 0.01
-        //{ 0.2f, 1.0f, 0.0f, 0.05f, 10.0f, 500.0f, 0.001f },
-        // ADC_CHANNEL_T_BIAS,
-        { 0.05f, 1.05f, -0.025f, 0.01f, 0.0f, 1.0f, 0.00f },
-        // ADC_CHANNEL_T_JITTER,
-        { 0.05f, 1.0f, 0.0f, 0.01f, 0.0f, 1.0f, 0.00f },
-        // ADC_CHANNEL_X_SPREAD,
-        { 0.1f, 1.0f, 0.0f, 0.01f, 0.0f, 1.0f, 0.01f },
-        // ADC_CHANNEL_X_BIAS,
-        { 0.1f, 1.0f, 0.0f, 0.01f, 0.0f, 1.0f, 0.02f },
-        // ADC_CHANNEL_X_STEPS,
-        { 0.05f, 1.0f, 0.0f, 0.01f, 0.0f, 1.0f, 0.02f },
-    };*/
-    
     
     void ReadInputs::Init(CalibrationData* calibration_data) {
         calibration_data_ = calibration_data;
@@ -81,17 +59,22 @@ namespace marbles {
         // Set virtual attenuverter to a little more than 100% to
         // compensate for op-amp clipping and get full parameter swing.
         // don't need this anymore, vb
-        attenuverter_[ADC_CHANNEL_DEJA_VU_AMOUNT] = 1.01f;
-        attenuverter_[ADC_CHANNEL_T_BIAS] = 1.01f;
-        attenuverter_[ADC_CHANNEL_T_JITTER] = 1.01f;
-        attenuverter_[ADC_CHANNEL_X_SPREAD] = 1.01f;
-        attenuverter_[ADC_CHANNEL_X_BIAS] = 1.01f;
-        attenuverter_[ADC_CHANNEL_X_STEPS] = 1.01f;
+//        attenuverter_[ADC_CHANNEL_DEJA_VU_AMOUNT] = 1.01f;
+//        attenuverter_[ADC_CHANNEL_T_BIAS] = 1.01f;
+//        attenuverter_[ADC_CHANNEL_T_JITTER] = 1.01f;
+//        attenuverter_[ADC_CHANNEL_X_SPREAD] = 1.01f;
+//        attenuverter_[ADC_CHANNEL_X_BIAS] = 1.01f;
+//        attenuverter_[ADC_CHANNEL_X_STEPS] = 1.01f;
     }
 
     
     void ReadInputs::Process(const float* raw_values, float* output) {
-        for (int i = 0; i < ADC_CHANNEL_LAST; ++i) {
+        // T_RATE param
+        output[0] = channel_[0].Process_full(
+                                           raw_values[ADC_GROUP_POT],
+                                           raw_values[ADC_GROUP_CV]);
+        // and the rest
+        for (int i = 1; i < ADC_CHANNEL_LAST; ++i) {
             output[i] = channel_[i].Process_vb(
                                     raw_values[ADC_GROUP_POT + i],
                                     raw_values[ADC_GROUP_CV + i]);

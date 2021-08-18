@@ -88,14 +88,14 @@ class CvReaderChannel {
   void Init(float* cv_scale, float* cv_offset, const Settings& settings) {
     cv_scale_ = cv_scale;
     cv_offset_ = cv_offset;
-      /*
-      std::cout << "cv_reader_channel init:\n";
-      std::cout << "cv_scale: " << *cv_scale_ << "\n";
-      std::cout << "cv_offset: " << *cv_offset_ << "\n";
-      */
+//
+//      std::cout << "cv_reader_channel init:\n";
+//      std::cout << "cv_scale: " << *cv_scale_ << "\n";
+//      std::cout << "cv_offset: " << *cv_offset_ << "\n";
+//
     cv_lp_ = settings.cv_lp;
-    pot_scale_ = settings.pot_scale + 2.0f * settings.hysteresis;
-    pot_offset_ = settings.pot_offset - settings.hysteresis;
+      pot_scale_ = settings.pot_scale; // + 2.0f * settings.hysteresis;
+      pot_offset_ = settings.pot_offset; // - settings.hysteresis;
     pot_lp_ = settings.pot_lp;
     min_ = settings.min;
     max_ = settings.max;
@@ -115,53 +115,32 @@ class CvReaderChannel {
   inline float Process(float pot, float cv) {
     return Process(pot, cv, 1.0f);
   }
+   
+    // vb: only needed for T_RATE
+    inline float Process_full(float pot, float cv) {
+        
+        raw_cv_value_ = cv;
+        ONE_POLE(cv_value_, cv, cv_lp_);
+        ONE_POLE(pot_value_, pot, pot_lp_);
+        
+        stored_pot_value_ = pot_value_;
+        float value = cv_value_ + this->pot();
+        
+        CONSTRAIN(value, min_, max_);
+        
+        return value;
+    }
     
-    // vb: neuer, etwas schlankerer Versuch
+    // vb: for all other params (scale: 1, offset: 0)
+    // ignore the T_BIAS scale + offset
     inline float Process_vb(float pot, float cv) {
 
         raw_cv_value_ = cv;
         ONE_POLE(cv_value_, cv, cv_lp_);
         ONE_POLE(pot_value_, pot, pot_lp_);
         
-        stored_pot_value_ = pot_value_;
-        previous_pot_value_ = pot_value_;
-        /*
-        switch (pot_state_) {
-            case POT_STATE_TRACKING:
-                stored_pot_value_ = pot_value_;
-                previous_pot_value_ = pot_value_;
-                break;
-                
-            case POT_STATE_LOCKED:
-                break;
-                
-            case POT_STATE_CATCHING_UP:
-            {
-                if (fabs(pot_value_ - previous_pot_value_) > 0.01f) {
-                    float delta = pot_value_ - previous_pot_value_;
-                    
-                    float skew_ratio = delta > 0.0f
-                    ? (1.001f - stored_pot_value_) / (1.001f - previous_pot_value_)
-                    : (0.001f + stored_pot_value_) / (0.001f + previous_pot_value_);
-                    CONSTRAIN(skew_ratio, 0.1f, 10.0f);
-                    
-                    stored_pot_value_ += skew_ratio * delta;
-                    CONSTRAIN(stored_pot_value_, 0.0f, 1.0f);
-                    
-                    if (fabs(stored_pot_value_ - pot_value_) < 0.01f) {
-                        pot_state_ = POT_STATE_TRACKING;
-                    }
-                    
-                    previous_pot_value_ = pot_value_;
-                }
-            }
-                break;
-        };
-        
-        float value = hystereis_filter_.Process(
-                                                cv_value_ * attenuverter_value_ + this->pot());*/
-        
-        float value = cv_value_ + this->pot();
+        //stored_pot_value_ = pot_value_;
+        float value = cv_value_ + pot_value_;
         
         CONSTRAIN(value, min_, max_);
         

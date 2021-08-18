@@ -44,7 +44,7 @@ void XYGenerator::Init(RandomStream* random_stream, float sr) {
   }
   ramp_extractor_.Init(8000.0f / sr);
   ramp_divider_.Init();
-  external_clock_stabilization_counter_ = 16;
+//  external_clock_stabilization_counter_ = 16;
     
     fill(
          &use_shifted_sequences_[0],
