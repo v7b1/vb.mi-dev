@@ -206,6 +206,7 @@ void myObj_int(t_myObj *self, long value)
     
     switch (innum) {
         case 0:
+            // TODO: this doesn't seem to set the 'engine' attribute correctly
             self->patch.engine = self->engine = clamp(value, 0L, 15L);
             break;
         case 1:
@@ -240,15 +241,9 @@ void myObj_float(t_myObj *self, double value)
     long innum = proxy_getinlet((t_object *)self);
     
     switch (innum) {
-        case 0:
-            object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
-            break;
         case 1:
             self->transposition_ = clamp(value, -1., 1.);
             calc_note(self);
-            break;
-        case 2:
-            object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
             break;
         case 3:
             self->patch.harmonics = clamp(value, 0., 1.);
@@ -265,9 +260,9 @@ void myObj_float(t_myObj *self, double value)
 }
 
 
-void myObj_choose_engine(t_myObj* self, long e) {
-    self->patch.engine = e;
-}
+//void myObj_choose_engine(t_myObj* self, long e) {
+//    self->patch.engine = e;
+//}
 
 t_max_err engine_setter(t_myObj *self, void *attr, long ac, t_atom *av)
 {
@@ -503,7 +498,7 @@ void ext_main(void* r) {
     class_addmethod(this_class, (method)myObj_get_engine,      "get_engine", 0);
     class_addmethod(this_class, (method)myObj_int,  "int",      A_LONG, 0);
     class_addmethod(this_class, (method)myObj_float,  "float",      A_FLOAT, 0);
-    class_addmethod(this_class, (method)myObj_info,	"info", 0);
+//    class_addmethod(this_class, (method)myObj_info,    "info", 0);
     
     class_dspinit(this_class);
     class_register(CLASS_BOX, this_class);
@@ -515,6 +510,12 @@ void ext_main(void* r) {
     CLASS_ATTR_FILTER_CLIP(this_class, "engine", 0, 15);
     CLASS_ATTR_ACCESSORS(this_class, "engine", NULL, (method)engine_setter);
     CLASS_ATTR_SAVE(this_class, "engine", 0);
+    
+//    CLASS_ATTR_CHAR(this_class,"timbre_patched", 0, t_myObj, modulations.timbre_patched);
+//    CLASS_ATTR_ENUMINDEX(this_class, "timbre_patched", 0, "false true");
+//    CLASS_ATTR_LABEL(this_class, "timbre_patched", 0, "timbre modulation patched");
+//    CLASS_ATTR_FILTER_CLIP(this_class, "timbre_patched", 0, 1);
+//    CLASS_ATTR_SAVE(this_class, "timbre_patched", 0);
     
     object_post(NULL, "vb.mi.plts~ by volker böhm --> https://vboehm.net");
     object_post(NULL, "a clone of mutable instruments' 'plaits' module");
