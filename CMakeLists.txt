@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 
-# Fetch the correct verion of the max-api
+# Fetch the correct verion of the max-sdk-base
 message(STATUS "Updating Git Submodules")
 execute_process(
 	COMMAND				git submodule update --init --recursive
@@ -9,7 +9,7 @@ execute_process(
 
 
 # Misc setup and subroutines
-include(${CMAKE_CURRENT_SOURCE_DIR}/source/max-api/script/max-package.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/source/max-sdk-base/script/max-package.cmake)
 
 
 # Generate a project for every folder in the "source/projects" folder
