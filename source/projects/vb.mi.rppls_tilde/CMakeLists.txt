@@ -1,5 +1,17 @@
 cmake_minimum_required(VERSION 3.0)
 
+set(SKIP_RPPLS FALSE)
+if (APPLE)
+    if (NOT CMAKE_OSX_ARCHITECTURES)
+        set(CMAKE_OSX_ARCHITECTURES x86_64)
+    endif()
+    if (CMAKE_OSX_ARCHITECTURES MATCHES "arm64")
+		set(SKIP_RPPLS TRUE)
+		message("skipping rppls")
+	endif()
+endif()
+
+if(NOT SKIP_RPPLS)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/script/max-pretarget.cmake)
 
@@ -46,3 +58,5 @@ source_group(TREE ${VCV_PATH} FILES ${VCV_SOURCES})
 
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/script/max-posttarget.cmake)
+
+endif()
