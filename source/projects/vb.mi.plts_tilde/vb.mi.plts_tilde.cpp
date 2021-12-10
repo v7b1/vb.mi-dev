@@ -42,6 +42,8 @@
 //#define ENABLE_LFO_MODE
 #pragma warning (disable : 4068 )
 
+using std::clamp;
+
 using namespace c74::max;
 
 

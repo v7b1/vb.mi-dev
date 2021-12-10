@@ -49,6 +49,8 @@
 const uint16_t kBlockSize = 32;        // sig vs can't be smaller than this!
 
 
+using std::clamp;
+
 using namespace c74::max;
 
 

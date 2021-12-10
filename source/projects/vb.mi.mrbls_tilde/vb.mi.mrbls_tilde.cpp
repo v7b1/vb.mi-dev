@@ -61,6 +61,7 @@
 
 #define MAX_NOTE_SIZE 256
 
+using std::clamp;
 
 using namespace c74::max;
 using namespace marbles;

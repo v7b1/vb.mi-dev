@@ -41,6 +41,8 @@
 #include "Accelerate/Accelerate.h"
 #endif
 
+using std::clamp;
+
 using namespace c74::max;
 
 const size_t kBlockSize = elements::kMaxBlockSize;
