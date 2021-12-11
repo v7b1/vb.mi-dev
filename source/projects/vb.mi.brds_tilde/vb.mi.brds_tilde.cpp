@@ -96,7 +96,7 @@ struct t_myObj {
     // settings
     int16_t         timbre, color;
     double          timbre_pot, color_pot;
-    uint8_t         shape, drift, root;
+    uint8_t         shape, drift, root, scale;
     bool            trigger_flag, auto_trig;
     bool            last_trig, trig_connected;
     bool            resamp;
@@ -143,7 +143,8 @@ void* myObj_new(t_symbol *s, long argc, t_atom *argv) {
         self->pd.osc = new braids::MacroOscillator;
         self->pd.osc->Init(kSampleRate);
         self->pd.osc->set_pitch((48 << 7));
-        self->pd.osc->set_shape(braids::MACRO_OSC_SHAPE_VOWEL_FOF);
+        self->shape = 0;
+        self->pd.osc->set_shape(braids::MACRO_OSC_SHAPE_CSAW);
         
         self->pd.signature = 0;
         self->pd.decimation_factor = 1;
@@ -155,6 +156,7 @@ void* myObj_new(t_symbol *s, long argc, t_atom *argv) {
         self->quantizer = new braids::Quantizer;
         self->quantizer->Init();
         self->quantizer->Configure(braids::scales[0]);
+        self->scale = 0;
         
         self->jitter_source.Init();
         
@@ -166,7 +168,6 @@ void* myObj_new(t_symbol *s, long argc, t_atom *argv) {
         self->color = 0;
         self->timbre_pot = 0.0;
         self->color_pot = 0.0;
-        //self->modulation = 0.0;
         self->drift = 0;
         self->auto_trig = true;
         self->trigger_flag = false;
@@ -214,14 +215,6 @@ void myObj_color(t_myObj* self, double m) {
 }
 
 
-// obsolete
-/*
-void myObj_modulation(t_myObj* self, double m) {
-    self->modulation = clamp(m, 0., 1.);
-}*/
-
-
-
 #pragma mark ----- general pots -----
 
 void myObj_coarse(t_myObj* self, double m) {
@@ -257,10 +250,12 @@ void myObj_float(t_myObj *self, double m) {
         case 2:
             self->color_pot = clamp(m, 0., 1.);
             break;
-        case 3:
-            CONSTRAIN(m, 0., 1.);
-            int shape = m * (braids::MACRO_OSC_SHAPE_LAST - 1);
-            self->shape = shape;
+//        case 3:
+//            CONSTRAIN(m, 0., 1.);
+//            int shape = m * (braids::MACRO_OSC_SHAPE_LAST - 1);
+//            self->shape = shape;
+//            break;
+        default:
             break;
     }
 }
@@ -276,9 +271,19 @@ void myObj_shape(t_myObj *self, long n) {
     self->shape = n;
 }
 
-void myObj_set_scale(t_myObj *self, long n) {
-    uint8_t scale = clamp((int)n, 0, 48);
-    self->quantizer->Configure(braids::scales[scale]);
+//void myObj_set_scale(t_myObj *self, long n) {
+//    uint8_t scale = clamp((int)n, 0, 48);
+//    self->quantizer->Configure(braids::scales[scale]);
+//}
+
+t_max_err scale_setter(t_myObj *self, void *attr, long ac, t_atom *av)
+{
+    if (ac && av) {
+        self->scale = atom_getlong(av);
+        self->quantizer->Configure(braids::scales[self->scale]);
+    }
+    
+    return MAX_ERR_NONE;
 }
 
 
@@ -695,20 +700,19 @@ void ext_main(void* r) {
     // timbre pots
     class_addmethod(this_class, (method)myObj_timbre,    "timbre",        A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_color,     "color",        A_FLOAT, 0);
-    //class_addmethod(this_class, (method)myObj_modulation,   "modulation", A_FLOAT, 0);
-    
+
     // general pots
     class_addmethod(this_class, (method)myObj_coarse,   "coarse",    A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_note,     "note",       A_FLOAT, 0);
-    class_addmethod(this_class, (method)myObj_set_scale,"scale",      A_LONG, 0);
-    class_addmethod(this_class, (method)myObj_shape,    "model",      A_LONG, 0);
+//    class_addmethod(this_class, (method)myObj_set_scale,"scale",      A_LONG, 0);
+//    class_addmethod(this_class, (method)myObj_shape,    "model",      A_LONG, 0);
     class_addmethod(this_class, (method)myObj_bang,     "bang",  0);
     class_addmethod(this_class, (method)myObj_float,    "float",    A_FLOAT, 0);
 
     
-    class_addmethod(this_class, (method)myObj_set_sampleRate,    "sr",      A_LONG, 0);
-    class_addmethod(this_class, (method)myObj_set_resolution,    "resolution", A_LONG, 0);
-    class_addmethod(this_class, (method)myObj_signature,    "signature",      A_LONG, 0);
+//    class_addmethod(this_class, (method)myObj_set_sampleRate,    "sr",      A_LONG, 0);
+//    class_addmethod(this_class, (method)myObj_set_resolution,    "resolution", A_LONG, 0);
+//    class_addmethod(this_class, (method)myObj_signature,    "signature",      A_LONG, 0);
 	
 	class_dspinit(this_class);
 	class_register(CLASS_BOX, this_class);
@@ -731,6 +735,21 @@ void ext_main(void* r) {
     CLASS_ATTR_SAVE(this_class, "resamp", 0);
     CLASS_ATTR_STYLE(this_class, "resamp", 0, "onoff");
     
+    
+    CLASS_ATTR_CHAR(this_class,"model", 0, t_myObj, shape);
+    CLASS_ATTR_ENUMINDEX(this_class, "model", 0, "CSAW MORPH SAW_SQUARE SINE_TRIANGLE BUZZ SQUARE_SUB SAW_SUB SQUARE_SYNC SAW_SYNC TRIPLE_SAW TRIPLE_SQUARE TRIPLE_TRIANGLE TRIPLE_SINE TRIPLE_RING_MOD SAW_SWARM SAW_COMB TOY DIGITAL_FILTER_LP DIGITAL_FILTER_PK DIGITAL_FILTER_BP DIGITAL_FILTER_HP VOSIM VOWEL VOWEL_FOF HARMONICS FM FEEDBACK_FM CHAOTIC_FEEDBACK_FM PLUCKED BOWED BLOWN FLUTED STRUCK_BELL STRUCK_DRUM KICK CYMBAL SNARE WAVETABLES WAVE_MAP WAVE_LINE WAVE_PARAPHONIC FILTERED_NOISE TWIN_PEAKS_NOISE CLOCKED_NOISE GRANULAR_CLOUD PARTICLE_NOISE DIGITAL_MODULATION QUESTION_MARK");
+    CLASS_ATTR_LABEL(this_class, "model", 0, "synthesis model");
+    CLASS_ATTR_FILTER_CLIP(this_class, "model", 0, 47);
+    CLASS_ATTR_SAVE(this_class, "model", 0);
+    
+    
+    CLASS_ATTR_CHAR(this_class,"scale", 0, t_myObj, scale);
+    CLASS_ATTR_ENUMINDEX(this_class, "scale", 0, "OFF SEMI IONI DORI PHRY LYDI MIXO AEOL LOCR BLU+ BLU- PEN+ PEN- FOLK JAPA GAME GYPS ARAB FLAM WHOL PYTH EB/4 E_/4 EA/4 BHAI GUNA MARW SHRI PURV BILA YAMA KAFI BHIM DARB RAGE KHAM MIMA PARA RANG GANG KAME PAKA NATB KAUN BAIR BTOD CHAN KTOD JOGE");
+    CLASS_ATTR_LABEL(this_class, "scale", 0, "set scale");
+    CLASS_ATTR_FILTER_CLIP(this_class, "scale", 0, 48);
+    CLASS_ATTR_ACCESSORS(this_class, "scale", NULL, (method)scale_setter);
+    CLASS_ATTR_SAVE(this_class, "scale", 0);
+
     
     object_post(NULL, "vb.mi.brds~ by volker böhm -- https://vboehm.net");
     object_post(NULL, "based on mutable instruments' 'braids' module");

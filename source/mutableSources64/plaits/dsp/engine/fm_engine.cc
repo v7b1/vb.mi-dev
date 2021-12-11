@@ -48,6 +48,9 @@ void FMEngine::Init(BufferAllocator* allocator) {
   previous_amount_ = 0.0;
   previous_feedback_ = 0.0;
   previous_sample_ = 0.0;
+    
+    sub_fir_ = 0.0;
+    carrier_fir_ = 0.0;
 }
 
 void FMEngine::Reset() {

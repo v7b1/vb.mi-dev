@@ -533,7 +533,7 @@ void ext_main(void* r) {
     
     // ext clock
     CLASS_ATTR_CHAR(this_class, "ext_clock", 0, t_myObj, ext_clock);
-    CLASS_ATTR_STYLE_LABEL(this_class, "ext_clock", 0, "onoff", "swing on/off");
+    CLASS_ATTR_STYLE_LABEL(this_class, "ext_clock", 0, "onoff", "ext clock on/off");
     CLASS_ATTR_SAVE(this_class, "ext_clock", 0);
     
     // output config selection

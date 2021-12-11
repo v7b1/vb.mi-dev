@@ -248,10 +248,10 @@
                 Mode of operation: 
 				<br />
 				<br />
-				0 = 'normal'
+				0 = 'Normal'
 				<br />
 				<br />
-				1 = 'euclid'
+				1 = 'Euclid'
                 
             </description>
         </attribute>
@@ -277,11 +277,11 @@
                 Mode of operation: configuration of outlets 4 to 6
 				<br />
 				<br />
-				0 = 'accents'<br />
+				0 = 'Accents'<br />
 				outlet 4: BD accents, outlet 5: SD accents, outlet 6: HH accents
 				<br />
 				<br />
-				1 = 'clock_info'<br />
+				1 = 'Clock_info'<br />
 				outlet 4: all accents, outlet 5: clock output, 6: reset signal
                 
             </description>

@@ -107,6 +107,8 @@ class SyntheticBassDrum {
     fm_pulse_width_ = 0;
     tone_lp_ = 0.0;
     sustain_gain_ = 0.0;
+      
+      transient_env_ = transient_env_lp_ = 0.0; //vb
     
     click_.Init();
     noise_.Init();

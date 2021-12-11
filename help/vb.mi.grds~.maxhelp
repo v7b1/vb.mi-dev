@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 162.0, 45.0, 1074.0, 944.0 ],
+		"rect" : [ 390.0, 45.0, 1074.0, 944.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 13.0,
@@ -74,7 +74,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 162.0, 71.0, 1074.0, 918.0 ],
+						"rect" : [ 390.0, 71.0, 1074.0, 918.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 13.0,
@@ -165,7 +165,7 @@
 									"mode" : 0,
 									"numinlets" : 1,
 									"numoutlets" : 0,
-									"patching_rect" : [ 7.0, 8.0, 562.0, 125.0 ],
+									"patching_rect" : [ 3.0, 3.0, 562.0, 142.0 ],
 									"proportion" : 0.5
 								}
 
@@ -1716,7 +1716,7 @@
 										"gate_mode" : 0,
 										"mode" : 0,
 										"resolution" : 2,
-										"swing" : 0
+										"swing" : 1
 									}
 ,
 									"text" : "vb.mi.grds~ @mode 0"
