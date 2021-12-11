@@ -38,6 +38,7 @@
 #include "read_inputs.hpp"
 
 
+using std::clamp;
 
 using namespace c74::max;
 

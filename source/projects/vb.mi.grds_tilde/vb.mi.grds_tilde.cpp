@@ -45,6 +45,10 @@
 
 using namespace c74::max;
 
+double clamp(double input, double low, double high) {
+    return fmin(fmax(input, low), high);
+}
+
 #define COUNTMAX 4
 
 static t_class* this_class = nullptr;

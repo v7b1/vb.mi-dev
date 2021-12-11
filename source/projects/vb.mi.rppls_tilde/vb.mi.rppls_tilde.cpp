@@ -34,6 +34,7 @@
 // needs further optimization...
 
 
+using std::clamp;
 
 using namespace c74::max;
 

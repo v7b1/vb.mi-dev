@@ -33,6 +33,8 @@
 #include "c74_msp.h"
 #include "reverb.h"
 
+using std::clamp;
+
 using namespace c74::max;
 
 

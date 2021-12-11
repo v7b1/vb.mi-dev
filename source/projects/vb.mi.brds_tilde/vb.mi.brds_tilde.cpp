@@ -67,6 +67,8 @@ const uint16_t bit_reduction_masks[] = {
     0xffff };
 
 
+using std::clamp;
+
 using namespace c74::max;
 
 static t_class* this_class = nullptr;

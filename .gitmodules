@@ -1,6 +1,6 @@
-[submodule "source/max-api"]
-	path = source/max-api
-	url = https://github.com/Cycling74/max-api
 [submodule "source/libs/libsamplerate"]
 	path = source/libs/libsamplerate
 	url = https://github.com/libsndfile/libsamplerate
+[submodule "source/max-sdk-base"]
+	path = source/max-sdk-base
+	url = https://github.com/Cycling74/max-sdk-base

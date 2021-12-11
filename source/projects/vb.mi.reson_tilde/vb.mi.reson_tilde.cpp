@@ -40,6 +40,8 @@
 // TODO: make kNumModes settable
 
 
+using std::clamp;
+
 using namespace c74::max;
 
 
