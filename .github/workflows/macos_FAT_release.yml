@@ -1,4 +1,4 @@
-name: vb.mi-release
+name: vb.mi-FAT-release
 
 on:
   workflow_dispatch:
