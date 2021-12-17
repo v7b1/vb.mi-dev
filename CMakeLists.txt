@@ -3,6 +3,9 @@ cmake_minimum_required(VERSION 3.19)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+string(REGEX REPLACE "(.*)/" "" THIS_FOLDER_NAME "${CMAKE_CURRENT_SOURCE_DIR}")
+project(${THIS_FOLDER_NAME})
+
 # Fetch the correct verion of the max-sdk-base
 message(STATUS "Updating Git Submodules")
 execute_process(

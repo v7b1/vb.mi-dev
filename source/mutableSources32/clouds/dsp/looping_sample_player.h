@@ -154,16 +154,6 @@ class LoopingSamplePlayer {
         int64_t delay_int = (int64_t)(buffer->head() - 4 + buffer->size()) << 12;
         int64_t position = delay_int - static_cast<int32_t>(
               (loop_duration_ - phase_ + loop_point_) * 4096.0f);
-          // vb
-          if(position < 0) {
-              printf("-------------\n");
-              printf("buffer_head: %d\n", buffer->head());
-              printf("buffer_size: %d\n", buffer->size());
-              printf("delay_int: %lld\n", delay_int);
-              printf("position: %lld\n", position);
-              printf("calc delay: %lld\n", ((buffer->head() - 4 + buffer->size()) << 12));
-              
-          }
           
           
         float l = buffer[0].ReadHermite((position >> 12), position << 4);

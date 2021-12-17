@@ -1,6 +1,3 @@
-cmake_minimum_required(VERSION 3.0)
-
-
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/script/max-pretarget.cmake)
 
 # paths to our sources
@@ -81,3 +78,5 @@ endif()
 
         
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/script/max-posttarget.cmake)
+
+message("using CXX_STANDARD ${CMAKE_CXX_STANDARD}")

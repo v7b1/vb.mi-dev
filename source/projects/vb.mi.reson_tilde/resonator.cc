@@ -150,15 +150,15 @@ size_t Resonator::ComputeFilters(double *freqs, double *qs, double *gains) {
                 d_bow_[i].set_delay(period);
                 f_bow_[i].set_g_q(f_[i].g(), 1.0 + partial_frequency * 1500.0);
                 
-                printf("[%zu]: period: %zu -- freq: %f\n", i, period, partial_frequency);
+//                printf("[%zu]: period: %zu -- freq: %f\n", i, period, partial_frequency);
             }
             
         }
 
         num_modes_ = num_modes;
-        printf("num_modes: %zu\n", num_modes);
-        for (size_t i = 0; i < num_modes; ++i)
-            printf("active[%zu]: %hhu\n", i, active_[i]);
+//        printf("num_modes: %zu\n", num_modes);
+//        for (size_t i = 0; i < num_modes; ++i)
+//            printf("active[%zu]: %hhu\n", i, active_[i]);
     }
     
     
