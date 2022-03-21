@@ -42,7 +42,6 @@
 #include "Accelerate/Accelerate.h"
 #endif
 
-using std::clamp;
 
 using namespace c74::max;
 
@@ -229,19 +228,19 @@ void myObj_float(t_myObj *self, double m)
             object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
             break;
         case 1:
-            self->cvinputs[rings::ADC_CHANNEL_POT_FREQUENCY] = clamp(m, 0., 1.);
+            self->cvinputs[rings::ADC_CHANNEL_POT_FREQUENCY] = CLAMP(m, 0., 1.);
             break;
         case 2:
-            self->cvinputs[rings::ADC_CHANNEL_POT_STRUCTURE] = clamp(m, 0., 1.);
+            self->cvinputs[rings::ADC_CHANNEL_POT_STRUCTURE] = CLAMP(m, 0., 1.);
             break;
         case 3:
-            self->cvinputs[rings::ADC_CHANNEL_POT_BRIGHTNESS] = clamp(m, 0., 1.);
+            self->cvinputs[rings::ADC_CHANNEL_POT_BRIGHTNESS] = CLAMP(m, 0., 1.);
             break;
         case 4:
-            self->cvinputs[rings::ADC_CHANNEL_POT_DAMPING] = clamp(m, 0., 1.);
+            self->cvinputs[rings::ADC_CHANNEL_POT_DAMPING] = CLAMP(m, 0., 1.);
             break;
         case 5:
-            self->cvinputs[rings::ADC_CHANNEL_POT_POSITION] = clamp(m, 0., 1.);
+            self->cvinputs[rings::ADC_CHANNEL_POT_POSITION] = CLAMP(m, 0., 1.);
             break;
         default:
             break;
@@ -252,23 +251,23 @@ void myObj_float(t_myObj *self, double m)
 #pragma mark ----- main pots -----
 
 void myObj_frequency(t_myObj* self, double m) {
-    self->cvinputs[rings::ADC_CHANNEL_POT_FREQUENCY] = clamp(m, 0., 1.);
+    self->cvinputs[rings::ADC_CHANNEL_POT_FREQUENCY] = CLAMP(m, 0., 1.);
 }
 
 void myObj_structure(t_myObj* self, double m) {
-    self->cvinputs[rings::ADC_CHANNEL_POT_STRUCTURE] = clamp(m, 0., 1.);
+    self->cvinputs[rings::ADC_CHANNEL_POT_STRUCTURE] = CLAMP(m, 0., 1.);
 }
 
 void myObj_brightness(t_myObj* self, double m) {
-    self->cvinputs[rings::ADC_CHANNEL_POT_BRIGHTNESS] = clamp(m, 0., 1.);
+    self->cvinputs[rings::ADC_CHANNEL_POT_BRIGHTNESS] = CLAMP(m, 0., 1.);
 }
 
 void myObj_damping(t_myObj* self, double m) {
-    self->cvinputs[rings::ADC_CHANNEL_POT_DAMPING] = clamp(m, 0., 1.);
+    self->cvinputs[rings::ADC_CHANNEL_POT_DAMPING] = CLAMP(m, 0., 1.);
 }
 
 void myObj_position(t_myObj* self, double m) {
-    self->cvinputs[rings::ADC_CHANNEL_POT_POSITION] = clamp(m, 0., 1.);
+    self->cvinputs[rings::ADC_CHANNEL_POT_POSITION] = CLAMP(m, 0., 1.);
 }
 
 
@@ -340,12 +339,12 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
         return;
 
     // FM input
-    cvinputs[0] = clamp(ins[1][0], -48., 48.);
+    cvinputs[0] = CLAMP(ins[1][0], -48., 48.);
     
     // read 'cv' input signals, store first value of a sig vector
     for(int i=1; i<5; i++) {
         // cv inputs are expected in -1. to 1. range
-        cvinputs[i] = clamp(ins[i+1][0], -1., 1.);  // leave out first inlet (which is audio in)
+        cvinputs[i] = CLAMP(ins[i+1][0], -1., 1.);  // leave out first inlet (which is audio in)
     }
     // if fm_cv is not patched, set it to a halftone constant (?)
     // so fm_attenuverter can be used as pitch fine control

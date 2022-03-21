@@ -33,7 +33,6 @@
 #include "c74_msp.h"
 #include "reverb.h"
 
-using std::clamp;
 
 using namespace c74::max;
 
@@ -124,39 +123,39 @@ void myObj_bypass(t_myObj *self, long input) {
 #pragma mark ----------- reverb parameters -------------
 
 void myObj_input_gain(t_myObj *self, double input) {
-    self->input_gain = clamp(input, 0.0, 1.0);
+    self->input_gain = CLAMP(input, 0.0, 1.0);
     self->reverb_->set_input_gain(self->input_gain);
 }
 
 void myObj_time(t_myObj *self, double input) {
-    self->reverb_time = clamp(input, 0., 1.25);      // everything above 1.0 grows and distorts!
+    self->reverb_time = CLAMP(input, 0., 1.25);      // everything above 1.0 grows and distorts!
     self->reverb_->set_time(self->reverb_time);
 }
 
 void myObj_diffusion(t_myObj *self, double input) {
-    self->reverb_diffusion = clamp(input, 0.0, 1.0);
+    self->reverb_diffusion = CLAMP(input, 0.0, 1.0);
     self->reverb_->set_diffusion(self->reverb_diffusion);
 }
 
 void myObj_amount(t_myObj *self, double input) {
-    self->reverb_amount = clamp(input, 0.0, 1.0);
+    self->reverb_amount = CLAMP(input, 0.0, 1.0);
     self->reverb_->set_amount(self->reverb_amount);
 }
 
 void myObj_damping(t_myObj *self, double input) {
     input = 1.01 - input;
-    self->reverb_lp = clamp(input, 0.0, 1.0);
+    self->reverb_lp = CLAMP(input, 0.0, 1.0);
     self->reverb_->set_lp(self->reverb_lp);
 }
 
 void myObj_hp(t_myObj *self, double input) {
     input *= input;
-    self->reverb_->set_hp(clamp((1.-input), 0.0, 1.0));
+    self->reverb_->set_hp(CLAMP((1.-input), 0.0, 1.0));
 }
 
 
 void myObj_space(t_myObj *self, double input) {
-    self->space = clamp(input, 0., 1.); // * 2.0;
+    self->space = CLAMP(input, 0., 1.); // * 2.0;
     
     // Compute reverb parameters from the "space" metaparameter.
     

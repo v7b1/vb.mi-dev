@@ -67,7 +67,6 @@ const uint16_t bit_reduction_masks[] = {
     0xffff };
 
 
-using std::clamp;
 
 using namespace c74::max;
 
@@ -209,18 +208,18 @@ void* myObj_new(t_symbol *s, long argc, t_atom *argv) {
 
 // timbre
 void myObj_timbre(t_myObj* self, double m) {
-    self->timbre_pot = clamp(m, 0., 1.);
+    self->timbre_pot = CLAMP(m, 0., 1.);
 }
 
 void myObj_color(t_myObj* self, double m) {
-    self->color_pot = clamp(m, 0., 1.);
+    self->color_pot = CLAMP(m, 0., 1.);
 }
 
 
 #pragma mark ----- general pots -----
 
 void myObj_coarse(t_myObj* self, double m) {
-    m = clamp(m, -4., 4.) * 12.0 + 60.0;   // +/-4 octaves around middle C
+    m = CLAMP(m, -4., 4.) * 12.0 + 60.0;   // +/-4 octaves around middle C
     int16_t pit = (int)m;
     double frac = m - pit;
     self->midi_pitch = (pit << 7) + (int)(frac * 128.0);
@@ -228,7 +227,7 @@ void myObj_coarse(t_myObj* self, double m) {
 
 // this directly sets the pitch via a midi note
 void myObj_note(t_myObj* self, double n) {
-    n = clamp(n, 0., 127.);
+    n = CLAMP(n, 0., 127.);
     int pit = (int)n;
     double frac = n - pit;
     self->midi_pitch = (pit << 7) + (int)(frac * 128.0);
@@ -247,10 +246,10 @@ void myObj_float(t_myObj *self, double m) {
             myObj_note(self, m);        // TODO: good idea?
             break;
         case 1:
-            self->timbre_pot = clamp(m, 0., 1.);
+            self->timbre_pot = CLAMP(m, 0., 1.);
             break;
         case 2:
-            self->color_pot = clamp(m, 0., 1.);
+            self->color_pot = CLAMP(m, 0., 1.);
             break;
 //        case 3:
 //            CONSTRAIN(m, 0., 1.);
@@ -292,17 +291,17 @@ t_max_err scale_setter(t_myObj *self, void *attr, long ac, t_atom *av)
 #pragma mark -------- settings ----------
 
 void myObj_set_sampleRate(t_myObj *self, int input) {
-    uint8_t sample_rate = clamp(input, 0, 6);
+    uint8_t sample_rate = CLAMP(input, 0, 6);
     self->pd.decimation_factor = decimation_factors[sample_rate];
 }
 
 void myObj_set_resolution(t_myObj *self, int input) {
-    uint8_t resolution = clamp(input, 0, 6);
+    uint8_t resolution = CLAMP(input, 0, 6);
     self->pd.bit_mask = bit_reduction_masks[resolution];
 }
 
 void myObj_signature(t_myObj *self, int input) {
-    self->pd.signature = clamp(input, 0, 4) * 4095;
+    self->pd.signature = CLAMP(input, 0, 4) * 4095;
 }
 
 
@@ -390,8 +389,8 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
         output = samples + count;
         
         // set parameters
-        timbre = clamp(timbre_pot + timbre_cv[count], 0.0, 1.0) * 32767.0;
-        color = clamp(color_pot + color_cv[count], 0.0, 1.0) * 32767.0;
+        timbre = CLAMP(timbre_pot + timbre_cv[count], 0.0, 1.0) * 32767.0;
+        color = CLAMP(color_pot + color_cv[count], 0.0, 1.0) * 32767.0;
         osc->set_parameters(timbre, color);
         
         // set shape/model
@@ -409,7 +408,7 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
 
         // add FM mod
         //pitch += (int)(in2[count] * 5.0 * 7680) >> 12;
-        osc->set_pitch( clamp(pitch, 0, 16383) );
+        osc->set_pitch( CLAMP(pitch, 0, 16383) );
         
         // detect trigger
         if(trig_connected) {
@@ -494,8 +493,8 @@ void myObj_perform64_no_resamp(t_myObj* self, t_object* dsp64, double** ins, lon
     for(count = 0; count < vs; count += kAudioBlockSize) {
         
         // set parameters
-        timbre = clamp(timbre_pot + timbre_cv[count], 0.0, 1.0) * 32767.0;
-        color = clamp(color_pot + color_cv[count], 0.0, 1.0) * 32767.0;
+        timbre = CLAMP(timbre_pot + timbre_cv[count], 0.0, 1.0) * 32767.0;
+        color = CLAMP(color_pot + color_cv[count], 0.0, 1.0) * 32767.0;
         osc->set_parameters(timbre, color);
         
         // set shape/model
@@ -521,7 +520,7 @@ void myObj_perform64_no_resamp(t_myObj* self, t_object* dsp64, double** ins, lon
         
         // add FM mod
         //pitch += (int)(in2[count] * 5.0 * 7680) >> 12;
-        osc->set_pitch( clamp(pitch, 0, 16383) );
+        osc->set_pitch( CLAMP(pitch, 0, 16383) );
         
         // detect trigger
         if(trig_connected) {

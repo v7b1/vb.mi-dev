@@ -45,9 +45,9 @@
 
 using namespace c74::max;
 
-double clamp(double input, double low, double high) {
-    return fmin(fmax(input, low), high);
-}
+//double clamp(double input, double low, double high) {
+//    return fmin(fmax(input, low), high);
+//}
 
 #define COUNTMAX 4
 
@@ -191,7 +191,7 @@ void myObj_float(t_myObj* self, double m) {
     long innum = proxy_getinlet((t_object *)self);
 
     if (innum == 0) {
-        double bpm = clamp(m, 20.0, 511.0);
+        double bpm = CLAMP(m, 20.0, 511.0);
 
         if (bpm != self->clock.bpm() && !self->clock.locked()) {
             self->clock.Update_f(bpm, self->c, self->pattern_generator.clock_resolution());
@@ -219,9 +219,9 @@ void myObj_euclid(t_myObj *self, long a, long b, long c) {
 
     grids::PatternGeneratorSettings* settings = self->pattern_generator.mutable_settings();
     
-    uint8_t index = clamp(a, 0L, 2L);
-    uint8_t steps = clamp(b, 1L, 32L);
-    uint8_t notes = clamp(c, 0L, 32L);
+    uint8_t index = CLAMP(a, 0L, 2L);
+    uint8_t steps = CLAMP(b, 1L, 32L);
+    uint8_t notes = CLAMP(c, 0L, 32L);
     
     uint8_t density = ((float)notes / (float)steps) * 255.0;
     settings->options.euclidean_length[index] = (steps - 1) << 3;
@@ -293,7 +293,7 @@ t_max_err resolution_setter(t_myObj *self, void *attr, long ac, t_atom *av)
 {
     if (ac && av) {
         long m = atom_getlong(av);
-        clamp(m, 0L, 2L);
+        CLAMP(m, 0L, 2L);
         self->clock_resolution = m;
         self->pattern_generator.set_clock_resolution(m);
      

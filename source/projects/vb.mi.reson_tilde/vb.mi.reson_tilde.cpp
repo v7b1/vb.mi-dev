@@ -40,7 +40,6 @@
 // TODO: make kNumModes settable
 
 
-using std::clamp;
 
 using namespace c74::max;
 
@@ -193,7 +192,7 @@ void myObj_position(t_myObj *self, double input) {
 }
 
 void myObj_spread(t_myObj *self, double input) {
-    self->spread = clamp(input, 0., 1.);
+    self->spread = CLAMP(input, 0., 1.);
 }
 
 void myObj_bypass(t_myObj *self, long input) {
@@ -228,7 +227,7 @@ int atom_getdouble_array(long ac, t_atom *av, long count, double *vals, double m
     int err = 0;
     
     for(int i=0; i<count; ++i) {
-        *vals++ = clamp( atom_getfloat(av+i), min, max );
+        *vals++ = CLAMP( atom_getfloat(av+i), min, max );
     }
     
     return err;

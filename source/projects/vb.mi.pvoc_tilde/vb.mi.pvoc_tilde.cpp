@@ -49,7 +49,6 @@
 const uint16_t kBlockSize = 32;        // sig vs can't be smaller than this!
 
 
-using std::clamp;
 
 using namespace c74::max;
 
@@ -166,28 +165,28 @@ void myObj_glitch(t_myObj* self, long m) {
 
 
 void myObj_position(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->parameters_.position = m;
 }
 
 void myObj_warp(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->parameters_.size = m;
 }
 
 void myObj_pitch(t_myObj* self, double m) {
-    m = clamp(m, -48.0, 48.0);
+    m = CLAMP(m, -48.0, 48.0);
     self->parameters_.pitch = m;
 }
 
 void myObj_refresh_rate(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->parameters_.density = m;
 }
 
 
 void myObj_quantization(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->parameters_.texture = m;
 }
 
@@ -195,7 +194,7 @@ void myObj_quantization(t_myObj* self, double m) {
 #pragma mark ---------- blend parameters -------------
 
 void myObj_drywet(t_myObj *self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->dry_wet = m;
 }
 
@@ -204,7 +203,7 @@ void myObj_drywet(t_myObj *self, double m) {
 #pragma mark -------- general pots -----------
 
 void myObj_in_gain(t_myObj* self, double m) {
-    m = clamp(m, -18.0, 18.0);
+    m = CLAMP(m, -18.0, 18.0);
     self->in_gain = pow(10.0, (m/20.0));
 }
 

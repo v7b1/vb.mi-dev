@@ -61,7 +61,6 @@
 
 #define MAX_NOTE_SIZE 256
 
-using std::clamp;
 
 using namespace c74::max;
 using namespace marbles;
@@ -246,7 +245,7 @@ void myObj_int(t_myObj *self, long m)
             break;
         case 5:
             // set deja_vu sequence length
-            m = clamp((int)m, 1, 16);
+            m = CLAMP((int)m, 1, 16);
             self->dejavu_length = m;
             self->t_generator.set_length(m);
             self->x.length = m;
@@ -269,18 +268,18 @@ void myObj_float(t_myObj *self, double m)
     switch (innum) {
         case 1:
             // set rate
-            adc_value[ADC_CHANNEL_T_RATE] = clamp(m, 0., 1.);
+            adc_value[ADC_CHANNEL_T_RATE] = CLAMP(m, 0., 1.);
             break;
         case 2:
             // set bias
-            adc_value[ADC_CHANNEL_T_BIAS] = clamp(m, 0., 1.);
+            adc_value[ADC_CHANNEL_T_BIAS] = CLAMP(m, 0., 1.);
             break;
         case 3:
             // jitter amount
-            adc_value[ADC_CHANNEL_T_JITTER] = clamp(m, 0., 1.);
+            adc_value[ADC_CHANNEL_T_JITTER] = CLAMP(m, 0., 1.);
         case 4:
             // deja_vu amount
-            adc_value[ADC_CHANNEL_DEJA_VU_AMOUNT] = clamp(m, 0., 1.);
+            adc_value[ADC_CHANNEL_DEJA_VU_AMOUNT] = CLAMP(m, 0., 1.);
             break;
         case 5:
             // deja_vu sequence length (round float to int)
@@ -290,15 +289,15 @@ void myObj_float(t_myObj *self, double m)
             break;
         case 6:
             // set x_spread
-            adc_value[ADC_CHANNEL_X_SPREAD] = clamp(m, 0., 1.);
+            adc_value[ADC_CHANNEL_X_SPREAD] = CLAMP(m, 0., 1.);
             break;
         case 7:
             // set x_bias
-            adc_value[ADC_CHANNEL_X_BIAS] = clamp(m, 0., 1.);
+            adc_value[ADC_CHANNEL_X_BIAS] = CLAMP(m, 0., 1.);
             break;
         case 8:
             // set x_steps
-            adc_value[ADC_CHANNEL_X_STEPS] = clamp(m, 0., 1.);
+            adc_value[ADC_CHANNEL_X_STEPS] = CLAMP(m, 0., 1.);
             break;
         default:
             break;
@@ -610,12 +609,12 @@ void myObj_x_ext(t_myObj *self, long b) {
 #pragma mark -------- time pots --------
 
 void myObj_rate(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->block.adc_value[ADC_CHANNEL_T_RATE] = m;
 }
 
 void myObj_bpm(t_myObj* self, double m) {
-    double bpm = clamp(m, 10., 800.);
+    double bpm = CLAMP(m, 10., 800.);
     bpm *= 0.008333;   // / 120.0
     float rate = (log2(bpm) * 12.0 + 60) * 0.008333;
 //    object_post(NULL, "t_rate: %f", rate);
@@ -625,12 +624,12 @@ void myObj_bpm(t_myObj* self, double m) {
 
 
 void myObj_t_bias(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->block.adc_value[ADC_CHANNEL_T_BIAS] = m;
 }
 
 void myObj_jitter(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->block.adc_value[ADC_CHANNEL_T_JITTER] = m;
 }
 
@@ -638,12 +637,12 @@ void myObj_jitter(t_myObj* self, double m) {
 // set pulse width of t1 and t3 gates
 
 void myObj_pulse_width_mean(t_myObj *self, double m) {
-    m = clamp(m, 0.0, 1.0);
+    m = CLAMP(m, 0.0, 1.0);
     self->t_generator.set_pulse_width_mean(m);
 }
 
 void myObj_pulse_width_std(t_myObj *self, double m) {
-    m = clamp(m, 0.0, 1.0);
+    m = CLAMP(m, 0.0, 1.0);
     self->t_generator.set_pulse_width_std(m);
 }
 
@@ -652,18 +651,18 @@ void myObj_pulse_width_std(t_myObj *self, double m) {
 #pragma mark -------- seq pots --------
 
 void myObj_dejavu(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->block.adc_value[ADC_CHANNEL_DEJA_VU_AMOUNT] = m;
 }
 /*
 void myObj_length(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     //block.adc_value[ADC_CHANNEL_DEJA_VU_LENGTH] = m;
     self->dejavu_length = m;
 }
 */
 void myObj_length(t_myObj* self, long m) {
-    m = clamp((int)m, 1, 16);
+    m = CLAMP((int)m, 1, 16);
     self->dejavu_length = m;
     
     self->t_generator.set_length(m);
@@ -674,19 +673,19 @@ void myObj_length(t_myObj* self, long m) {
 #pragma mark -------- X pots --------
 
 void myObj_spread(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.0);
+    m = CLAMP(m, 0., 1.0);
     self->block.adc_value[ADC_CHANNEL_X_SPREAD] = m;
 }
 
 
 void myObj_steps(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.0);
+    m = CLAMP(m, 0., 1.0);
     self->block.adc_value[ADC_CHANNEL_X_STEPS] = m;
 }
 
 
 void myObj_xbias(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.0);
+    m = CLAMP(m, 0., 1.0);
     self->block.adc_value[ADC_CHANNEL_X_BIAS] = m;
 }
 
@@ -694,7 +693,7 @@ void myObj_xbias(t_myObj* self, double m) {
 #pragma mark -------- Y functions --------
 
 //void myObj_y_divider(t_myObj* self, double m) {
-//    m = clamp(m, 0., 1.);
+//    m = CLAMP(m, 0., 1.);
 //    int div = int(m*255.0 + 0.5);
 //    self->settings.mutable_state()->y_divider = div;
 //}

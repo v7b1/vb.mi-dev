@@ -41,7 +41,6 @@
 #include "Accelerate/Accelerate.h"
 #endif
 
-using std::clamp;
 
 using namespace c74::max;
 
@@ -242,7 +241,7 @@ void myObj_float(t_myObj *self, double f)
 {
     long innum = proxy_getinlet((t_object *)self);
     //object_post(NULL, "innum: %ld", innum);
-    f = clamp(f, -1., 1.);
+    f = CLAMP(f, -1., 1.);
     
     /* inlets 0 - 5 are for
         0: ext in 1
@@ -295,57 +294,57 @@ void myObj_float(t_myObj *self, double f)
 
 // contour (env_shape)
 void myObj_contour(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->read_inputs.ReadPanelPot(elements::POT_EXCITER_ENVELOPE_SHAPE, m);
 }
 
 // bow level
 void myObj_bow(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->read_inputs.ReadPanelPot(elements::POT_EXCITER_BOW_LEVEL, m);
 }
 
 //blow level
 void myObj_blow(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->read_inputs.ReadPanelPot(elements::POT_EXCITER_BLOW_LEVEL, m);
 }
 
 // strike level
 void myObj_strike(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->read_inputs.ReadPanelPot(elements::POT_EXCITER_STRIKE_LEVEL, m);
 }
 
 // bigger exciter pots ---------------------------
 // blow meta
 void myObj_flow(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->read_inputs.ReadPanelPot(elements::POT_EXCITER_BLOW_META, m);
 }
 
 // strike meta
 void myObj_mallet(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->read_inputs.ReadPanelPot(elements::POT_EXCITER_STRIKE_META, m);
 }
 
 
 // bow timbre
 void myObj_bow_timbre(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->read_inputs.ReadPanelPot(elements::POT_EXCITER_BOW_TIMBRE, m);
 }
 
 // blow timbre
 void myObj_blow_timbre(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->read_inputs.ReadPanelPot(elements::POT_EXCITER_BLOW_TIMBRE, m);
 }
 
 // strike timbre
 void myObj_strike_timbre(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->read_inputs.ReadPanelPot(elements::POT_EXCITER_STRIKE_TIMBRE, m);
 }
 
@@ -353,46 +352,46 @@ void myObj_strike_timbre(t_myObj* self, double m) {
 
 // coarse freq -- 
 void myObj_coarse(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->read_inputs.ReadPanelPot(elements::POT_RESONATOR_COARSE, m*60.0 + 39.0);//120.0);
     // TODO: need correct scaling
 }
 
 // fine freq
 void myObj_fine(t_myObj* self, double m) {
-    m = clamp(m, -1., 1.);
+    m = CLAMP(m, -1., 1.);
     self->read_inputs.ReadPanelPot(elements::POT_RESONATOR_FINE, m);
 }
 
 // fm (big pot, but acts as attenuverter)
 void myObj_fm(t_myObj* self, double m) {
-    m = clamp(m, -1., 1.);
+    m = CLAMP(m, -1., 1.);
     self->read_inputs.ReadPanelPot(elements::POT_RESONATOR_FM_ATTENUVERTER, m);
 }
 
 // geometry
 void myObj_geometry(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->read_inputs.ReadPanelPot(elements::POT_RESONATOR_GEOMETRY, m);
 }
 
 void myObj_brightness(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->read_inputs.ReadPanelPot(elements::POT_RESONATOR_BRIGHTNESS, m);
 }
 
 void myObj_damping(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->read_inputs.ReadPanelPot(elements::POT_RESONATOR_DAMPING, m);
 }
 
 void myObj_position(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->read_inputs.ReadPanelPot(elements::POT_RESONATOR_POSITION, m);
 }
 
 void myObj_space(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->read_inputs.ReadPanelPot(elements::POT_SPACE, m * 1.11);
     // vb, use the last bit to trigger rev freeze
 }

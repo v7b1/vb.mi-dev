@@ -39,7 +39,6 @@
 #include "Accelerate/Accelerate.h"
 #endif
 
-using std::clamp;
 
 using namespace c74::max;
 
@@ -118,53 +117,53 @@ void myObj_button(t_myObj *self, long b) {
 
 // contour (env_shape)
 void myObj_contour(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->part->mutable_patch()->exciter_envelope_shape = m;
 }
 
 // detune
 void myObj_detune(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->part->mutable_patch()->exciter_bow_level = m;
 }
 
 // osc1 level
 void myObj_osc1(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->part->mutable_patch()->exciter_blow_level = m;
 }
 
 // osc2 level
 void myObj_osc2(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->part->mutable_patch()->exciter_strike_level = m;
 }
 
 // ratio1
 void myObj_ratio1(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->part->mutable_patch()->exciter_blow_meta = m;
 }
 
 // ratio2
 void myObj_ratio2(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->part->mutable_patch()->exciter_strike_meta = m;
 }
 
 
 void myObj_fb(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->part->mutable_patch()->exciter_bow_timbre = m;
 }
 
 void myObj_fm1(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->part->mutable_patch()->exciter_blow_timbre = m;
 }
 
 void myObj_fm2(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->part->mutable_patch()->exciter_strike_timbre = m;
 }
 
@@ -172,45 +171,45 @@ void myObj_fm2(t_myObj* self, double m) {
 #pragma mark ----- multimode filter and space -----
 
 void myObj_filter_mode(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->part->mutable_patch()->resonator_geometry = m;
 }
 
 void myObj_cutoff(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->part->mutable_patch()->resonator_brightness = m;
 }
 
 void myObj_filter_env(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->part->mutable_patch()->resonator_damping = m;
 }
 
 void myObj_rotation(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->part->mutable_patch()->resonator_position = m;
 }
 
 void myObj_space(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->part->mutable_patch()->space = m;
 }
 
 // vb: add some scalable resonance to the multimode filter
 void myObj_reson(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->part->mutable_patch()->resonance = m * 10.0;
 }
 
 // vb: add some scalable resonance to the multimode filter
 void myObj_xfb(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->part->mutable_patch()->cross_fb = m;
 }
 
 
 void myObj_strength(t_myObj* self, double m) {
-    m = clamp(m, 0.0, 1.0);
+    m = CLAMP(m, 0.0, 1.0);
     self->ps.strength = m;
 }
 

@@ -38,7 +38,6 @@
 #include "read_inputs.hpp"
 
 
-using std::clamp;
 
 using namespace c74::max;
 
@@ -162,7 +161,7 @@ void myObj_int(t_myObj *self, long value)
 void myObj_float(t_myObj *self, double value)
 {    
     long innum = proxy_getinlet((t_object *)self);
-    value = clamp(value, 0., 1.);
+    value = CLAMP(value, 0., 1.);
     
     switch (innum) {
         case 2:
@@ -187,13 +186,13 @@ void myObj_float(t_myObj *self, double value)
 void myObj_modulation_algo(t_myObj* self, double m) {
     // Selects which signal processing operation is performed on the carrier and modulator.
     m *= 0.125;
-    self->adc_inputs[warps::ADC_ALGORITHM_POT] = clamp(m, 0., 1.);
+    self->adc_inputs[warps::ADC_ALGORITHM_POT] = CLAMP(m, 0., 1.);
 }
 
 void myObj_modulation_timbre(t_myObj* self, double m) {
     // Controls the intensity of the high harmonics created by cross-modulation
     // (or provides another dimension of tone control for some algorithms).
-    self->adc_inputs[warps::ADC_PARAMETER_POT] = clamp(m, 0., 1.);
+    self->adc_inputs[warps::ADC_PARAMETER_POT] = CLAMP(m, 0., 1.);
 }
 
 
@@ -201,7 +200,7 @@ void myObj_modulation_timbre(t_myObj* self, double m) {
 
 void myObj_int_osc_shape(t_myObj* self, long t) {
     // Enables the internal oscillator and selects its waveform.
-    self->carrier_shape = clamp((int)t, 0, 3);
+    self->carrier_shape = CLAMP((int)t, 0, 3);
     
 //    if (!self->easterEgg)
         self->modulator->mutable_parameters()->carrier_shape = self->carrier_shape;
@@ -214,12 +213,12 @@ void myObj_int_osc_shape(t_myObj* self, long t) {
 void myObj_level1(t_myObj* self, double m) {
     // External carrier amplitude or internal oscillator frequency.
     // When the internal oscillator is switched off, this knob controls the amplitude of the carrier, or the amount of amplitude modulation from the channel 1 LEVEL CV input (1). When the internal oscillator is active, this knob controls its frequency.
-    self->adc_inputs[warps::ADC_LEVEL_1_POT] = clamp(m, 0., 1.);
+    self->adc_inputs[warps::ADC_LEVEL_1_POT] = CLAMP(m, 0., 1.);
 }
 
 void myObj_level2(t_myObj* self, double m) {
     // This knob controls the amplitude of the modulator, or the amount of amplitude modulation from the channel 2 LEVEL CV input (2). Past a certain amount of gain, the signal soft clips.
-    self->adc_inputs[warps::ADC_LEVEL_2_POT] = clamp(m, 0., 1.);
+    self->adc_inputs[warps::ADC_LEVEL_2_POT] = CLAMP(m, 0., 1.);
 }
 
 
@@ -227,7 +226,7 @@ void myObj_level2(t_myObj* self, double m) {
 
 void myObj_freq(t_myObj* self, double n) {
     // set freq (in Hz) of internal oscillator
-    self->modulator->mutable_parameters()->note = clamp(n, 0., 15000.);
+    self->modulator->mutable_parameters()->note = CLAMP(n, 0., 15000.);
 }
 
 

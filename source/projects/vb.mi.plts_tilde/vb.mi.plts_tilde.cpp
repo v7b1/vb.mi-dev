@@ -42,7 +42,6 @@
 //#define ENABLE_LFO_MODE
 #pragma warning (disable : 4068 )
 
-using std::clamp;
 
 using namespace c74::max;
 
@@ -209,7 +208,7 @@ void myObj_int(t_myObj *self, long value)
     switch (innum) {
         case 0:
             // TODO: this doesn't seem to set the 'engine' attribute correctly
-            self->patch.engine = self->engine = clamp(value, 0L, 15L);
+            self->patch.engine = self->engine = CLAMP(value, 0L, 15L);
             break;
         case 1:
             object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
@@ -244,17 +243,17 @@ void myObj_float(t_myObj *self, double value)
     
     switch (innum) {
         case 1:
-            self->transposition_ = clamp(value, -1., 1.);
+            self->transposition_ = CLAMP(value, -1., 1.);
             calc_note(self);
             break;
         case 3:
-            self->patch.harmonics = clamp(value, 0., 1.);
+            self->patch.harmonics = CLAMP(value, 0., 1.);
             break;
         case 4:
-            self->patch.timbre = clamp(value, 0., 1.);
+            self->patch.timbre = CLAMP(value, 0., 1.);
             break;
         case 5:
-            self->patch.morph = clamp(value, 0., 1.);
+            self->patch.morph = CLAMP(value, 0., 1.);
             break;
         default:
             break;
@@ -289,33 +288,33 @@ void myObj_get_engine(t_myObj* self) {
 // main pots
 
 void myObj_frequency(t_myObj* self, double m) {
-    self->transposition_ = clamp(m, -1., 1.);
+    self->transposition_ = CLAMP(m, -1., 1.);
     calc_note(self);
 }
 
 void myObj_harmonics(t_myObj* self, double h) {
-    self->patch.harmonics = clamp(h, 0., 1.);
+    self->patch.harmonics = CLAMP(h, 0., 1.);
 }
 
 void myObj_timbre(t_myObj* self, double t) {
-    self->patch.timbre = clamp(t, 0., 1.);
+    self->patch.timbre = CLAMP(t, 0., 1.);
 }
 
 void myObj_morph(t_myObj* self, double m) {
-    self->patch.morph = clamp(m, 0., 1.);
+    self->patch.morph = CLAMP(m, 0., 1.);
 }
 
 // smaller pots
 void myObj_timbre_mod_amount(t_myObj* self, double m) {
-    self->patch.timbre_modulation_amount = clamp(m, -1., 1.);
+    self->patch.timbre_modulation_amount = CLAMP(m, -1., 1.);
 }
 
 void myObj_freq_mod_amount(t_myObj* self, double m) {
-    self->patch.frequency_modulation_amount = clamp(m, -1., 1.);
+    self->patch.frequency_modulation_amount = CLAMP(m, -1., 1.);
 }
 
 void myObj_morph_mod_amount(t_myObj* self, double m) {
-    self->patch.morph_modulation_amount = clamp(m, -1., 1.);
+    self->patch.morph_modulation_amount = CLAMP(m, -1., 1.);
 }
 
 
@@ -324,14 +323,14 @@ void myObj_morph_mod_amount(t_myObj* self, double m) {
 // hidden parameters
 
 void myObj_decay(t_myObj* self, double m) {
-    self->patch.decay = clamp(m, 0., 1.);
+    self->patch.decay = CLAMP(m, 0., 1.);
 }
 void myObj_lpg_colour(t_myObj* self, double m) {
-    self->patch.lpg_colour = clamp(m, 0., 1.);
+    self->patch.lpg_colour = CLAMP(m, 0., 1.);
 }
 
 void myObj_octave(t_myObj* self, double m) {
-    self->octave_ = clamp(m, 0., 1.);
+    self->octave_ = CLAMP(m, 0., 1.);
     calc_note(self);
 }
 

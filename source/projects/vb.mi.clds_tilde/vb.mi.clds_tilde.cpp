@@ -49,7 +49,6 @@
 
 const uint16_t kAudioBlockSize = 32;        // sig vs can't be smaller than this!
 
-using std::clamp;
 
 using namespace c74::max;
 
@@ -210,31 +209,31 @@ void myObj_float(t_myObj* self, double m) {
             self->pot_value_[PARAM_PITCH] = m;
             break;
         case 3:
-            self->pot_value_[PARAM_POSITION] = clamp(m, 0., 1.);
+            self->pot_value_[PARAM_POSITION] = CLAMP(m, 0., 1.);
             break;
         case 4:
-            self->pot_value_[PARAM_SIZE] = clamp(m, 0., 1.);
+            self->pot_value_[PARAM_SIZE] = CLAMP(m, 0., 1.);
             break;
         case 5:
-            self->pot_value_[PARAM_DENSITY] = clamp(m, 0., 1.);
+            self->pot_value_[PARAM_DENSITY] = CLAMP(m, 0., 1.);
             break;
         case 6:
-            self->pot_value_[PARAM_TEXTURE] = clamp(m, 0., 1.);
+            self->pot_value_[PARAM_TEXTURE] = CLAMP(m, 0., 1.);
             break;
         case 7:
-            self->pot_value_[PARAM_DRYWET] = clamp(m, 0., 1.);
+            self->pot_value_[PARAM_DRYWET] = CLAMP(m, 0., 1.);
             break;
     }
     
 }
 
 void myObj_position(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->pot_value_[PARAM_POSITION] = m;
 }
 
 void myObj_size(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->pot_value_[PARAM_SIZE] = m;
 }
 
@@ -243,12 +242,12 @@ void myObj_pitch(t_myObj* self, double m) {
 }
 
 void myObj_density(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->pot_value_[PARAM_DENSITY] = m;
 }
 
 void myObj_texture(t_myObj* self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->pot_value_[PARAM_TEXTURE] = m;
 }
 
@@ -256,21 +255,21 @@ void myObj_texture(t_myObj* self, double m) {
 #pragma mark ---------- blend parameters -------------
 
 void myObj_drywet(t_myObj *self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->pot_value_[PARAM_DRYWET] = m;
 }
 
 void myObj_spread(t_myObj *self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->processor->mutable_parameters()->stereo_spread = m;
 }
 void myObj_reverb(t_myObj *self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->processor->mutable_parameters()->reverb = m;
 }
 
 void myObj_feedback(t_myObj *self, double m) {
-    m = clamp(m, 0., 1.);
+    m = CLAMP(m, 0., 1.);
     self->processor->mutable_parameters()->feedback = m;
     //self->pot_value_[POT_FEEDBACK] = m;
 }
@@ -280,7 +279,7 @@ void myObj_feedback(t_myObj *self, double m) {
 #pragma mark -------- general pots -----------
 
 void myObj_in_gain(t_myObj* self, double m) {
-    m = clamp(m, -18.0, 18.0);
+    m = CLAMP(m, -18.0, 18.0);
     self->in_gain = pow(10.0, (m/20.0));
 }
 
@@ -309,7 +308,7 @@ void myObj_bypass(t_myObj *self, long n) {
 
 
 void myObj_coef(t_myObj *self, double m) {
-    m = 1.f - clamp(m, 0., 1.0) * 0.9;
+    m = 1.f - CLAMP(m, 0., 1.0) * 0.9;
     self->coef = m*m*m*m;
 }
 
