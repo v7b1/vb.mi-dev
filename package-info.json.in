@@ -6,7 +6,7 @@
 	"name" : "vb.mi-dev",
 	"os" : {
 		"macintosh" : {
-			"platform" : [ "x64" ],
+			"platform" : [ "x64", "arm64" ],
 			"min_version" : "none"
 		},
 		"windows" : {
