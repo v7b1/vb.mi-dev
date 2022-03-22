@@ -22,7 +22,15 @@ jobs:
       with:
         length: 7
 
-    - name: build_libsamplerate
+    - name: build_libsamplerate_macos
+      if: matrix.os == 'macos-latest'
+      run: |
+        cd source/libs/libsamplerate
+        mkdir -p build && cd build && cmake -DLIBSAMPLERATE_EXAMPLES=OFF -DBUILD_TESTING=OFF -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64" ..
+        cmake --build . --config 'Release'
+        
+    - name: build_libsamplerate_win
+      if: matrix.os == 'windows-latest'
       run: |
         cd source/libs/libsamplerate
         mkdir -p build && cd build && cmake -DLIBSAMPLERATE_EXAMPLES=OFF -DBUILD_TESTING=OFF ..
