@@ -236,6 +236,16 @@ enum FrequencyApproximation {
         
         // Set frequency and resonance from true units. Various approximations
         // are available to avoid the cost of tanf.
+        // vb
+        inline void set_g_q_g(double g, double resonance, double gain) {
+            g_ = g;
+            r_ = 1.0 / resonance;
+            h_ = 1.0 / (1.0 + r_ * g_ + g_ * g_);
+            gain_ = gain;
+        }
+        
+        // Set frequency and resonance from true units. Various approximations
+        // are available to avoid the cost of tanf.
         // vb, add gain parameter
         template<FrequencyApproximation approximation>
         inline void set_f_q_g(double f, double resonance, double gain) {
@@ -519,7 +529,7 @@ enum FrequencyApproximation {
                 double s = bp * r_;
                 d->Write(s);
                 
-                *out += s * gain * 4.0;     // * 8.0;
+                *out += s * gain * gain_;     // vb, apply gain;
                 ++out;
                 ++in;
             }

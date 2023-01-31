@@ -17,14 +17,15 @@ set(STMLIB_SOURCES
 	${STMLIB_PATH}/dsp/atan.h
 	${STMLIB_PATH}/dsp/units.cc
 	${STMLIB_PATH}/dsp/units.h
+    ${STMLIB_PATH}/dsp/delay_line.h
 
 )
 
 set(MI_SOURCES
 	${MI_PATH}/dsp/dsp.h
-	${MI_PATH}/dsp/fx/diffuser.h
-	${MI_PATH}/dsp/fx/fx_engine.h
-	${MI_PATH}/dsp/fx/reverb.h
+	#${MI_PATH}/dsp/fx/diffuser.h
+	#${MI_PATH}/dsp/fx/fx_engine.h
+	#${MI_PATH}/dsp/fx/reverb.h
 	${MI_PATH}/resources.cc
 	${MI_PATH}/resources.h
 

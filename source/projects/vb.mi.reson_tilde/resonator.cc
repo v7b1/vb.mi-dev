@@ -72,6 +72,7 @@ void Resonator::Init(double sr) {
     calc_wg = calc_res = true;
     
     res_gain_ = wg_gain_ = 0.707;
+    previous_position_ = 0.0;
 }
 
 size_t Resonator::ComputeFilters(double *freqs, double *qs, double *gains) {
@@ -148,7 +149,8 @@ size_t Resonator::ComputeFilters(double *freqs, double *qs, double *gains) {
                 size_t period = 1.0 / partial_frequency;
                 while (period >= kMaxDelayLineSize) period >>= 1;
                 d_bow_[i].set_delay(period);
-                f_bow_[i].set_g_q(f_[i].g(), 1.0 + partial_frequency * 1500.0);
+//                f_bow_[i].set_g_q(f_[i].g(), 1.0 + partial_frequency * 1500.0);
+                f_bow_[i].set_g_q_g(f_[i].g(), 1.0 + partial_frequency * 1500.0, gains[i] * 8.0);
                 
 //                printf("[%zu]: period: %zu -- freq: %f\n", i, period, partial_frequency);
             }
