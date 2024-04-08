@@ -27,14 +27,9 @@
 
 #include "c74_msp.h"
 
-#include "Ripples/ripples.hpp"
+#include "ripples.hpp"
 
 
-// This is consuming a lot of CPU power
-// needs further optimization...
-
-
-using std::clamp;
 
 using namespace c74::max;
 
@@ -99,10 +94,10 @@ void myObj_float(t_myObj *self, double m)
             self->drive = fmax(m, 1.0);
             break;
         case 1:
-            self->frame.freq_knob = clamp(m, 0., 1.);
+            self->frame.freq_knob = CLAMP(m, 0., 1.);
             break;
         case 2:
-            self->frame.res_knob = clamp(m, 0., 1.);
+            self->frame.res_knob = CLAMP(m, 0., 1.);
             break;
         case 3:
 //            self->frame.fm_knob = clamp(m, -1., 1.);
@@ -116,11 +111,11 @@ void myObj_float(t_myObj *self, double m)
 #pragma mark ----- main pots -----
 
 void myObj_frequency(t_myObj* self, double m) {
-    self->frame.freq_knob = clamp(m, 0., 1.);
+    self->frame.freq_knob = CLAMP(m, 0., 1.);
 }
 
 void myObj_resonance(t_myObj* self, double m) {
-    self->frame.res_knob = clamp(m, 0., 1.);
+    self->frame.res_knob = CLAMP(m, 0., 1.);
 }
 
 

@@ -196,7 +196,8 @@ public:
         int oversampling_factor = aa_filter_.GetOversamplingFactor();
         float timestep = sample_time_ / oversampling_factor;
         // Add noise to input to bootstrap self-oscillation
-        float input = frame.input + 1e-6 * (random::uniform() - 0.5f);
+        // vb: somehow the call to random doesn't work... let's get rid of it for now
+        float input = frame.input; // + 1e-6 * (random::uniform() - 0.5f);
         auto inputs = simd::float_4(input, v_oct, i_reso, i_vca);
         inputs *= oversampling_factor;
         simd::float_4 outputs;

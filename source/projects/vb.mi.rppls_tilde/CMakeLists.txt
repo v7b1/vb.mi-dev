@@ -1,4 +1,3 @@
-cmake_minimum_required(VERSION 3.0)
 
 set(SKIP_RPPLS FALSE)
 if (APPLE)
@@ -6,8 +5,8 @@ if (APPLE)
         set(CMAKE_OSX_ARCHITECTURES x86_64)
     endif()
     if (CMAKE_OSX_ARCHITECTURES MATCHES "arm64")
-		set(SKIP_RPPLS TRUE)
-		message("skipping rppls")
+		#set(SKIP_RPPLS TRUE)
+		#message("skipping rppls")
 	endif()
 endif()
 
@@ -16,23 +15,15 @@ if(NOT SKIP_RPPLS)
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/script/max-pretarget.cmake)
 
 # paths to our sources
-set(MUTABLE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../mutableSources32")
-#set(STMLIB_PATH ${MUTABLE_PATH}/stmlib)
-set(VCV_PATH "${CMAKE_CURRENT_SOURCE_DIR}/vcvrack")
+set(RPPLS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/vcvrack/Ripples")
 set(VCV_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/vcvrack/include")
 
 set(VCV_SOURCES 
-	${VCV_PATH}/Ripples/aafilter.hpp
-	${VCV_PATH}/Ripples/ripples.hpp
-	${VCV_PATH}/Ripples/sos.hpp
-	${VCV_PATH}/src/random.cpp
+	${RPPLS_PATH}/aafilter.hpp
+	${RPPLS_PATH}/ripples.hpp
+	${RPPLS_PATH}/sos.hpp
 )
 
-
-
-set(BUILD_SOURCES 
-	${PROJECT_NAME}.cpp
-)
 
 
 add_library( 
@@ -44,14 +35,16 @@ add_library(
 
 include_directories(
     "${C74_INCLUDES}"
-    #${MUTABLE_PATH}
-    ${VCV_PATH}
+    ${RPPLS_PATH}
 	${VCV_INCLUDE}
+    if (CMAKE_OSX_ARCHITECTURES MATCHES "arm64")
+        set(VCV_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/vcvrack/dep")
+    endif()
 )
 
 
 # create groups in our project
-source_group(TREE ${VCV_PATH} FILES ${VCV_SOURCES})
+source_group(TREE ${RPPLS_PATH} FILES ${VCV_SOURCES})
 
 
 #target_link_libraries(${PROJECT_NAME} PUBLIC "-framework Accelerate")
