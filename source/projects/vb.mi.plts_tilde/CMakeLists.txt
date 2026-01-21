@@ -8,7 +8,7 @@ set(MUTABLE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../mutableSources64")
 set(STMLIB_PATH ${MUTABLE_PATH}/stmlib)
 set(MI_PATH ${MUTABLE_PATH}/plaits)
 
-set(STMLIB_SOURCES 
+set(STMLIB_SOURCES
 	${STMLIB_PATH}/stmlib.h
 	${STMLIB_PATH}/utils/random.cc
 	${STMLIB_PATH}/utils/random.h
@@ -21,7 +21,7 @@ set(STMLIB_SOURCES
 
 )
 
-set(MI_SOURCES 
+set(MI_SOURCES
 	${MI_PATH}/resources.cc
 	${MI_PATH}/resources.h
 	${MI_PATH}/dsp/voice.cc
@@ -76,8 +76,22 @@ set(MI_SOURCES
 	${MI_PATH}/dsp/engine/waveshaping_engine.h
 	${MI_PATH}/dsp/engine/wavetable_engine.cc
 	${MI_PATH}/dsp/engine/wavetable_engine.h
+	${MI_PATH}/dsp/engine2/arpeggiator.h
+	${MI_PATH}/dsp/engine2/chiptune_engine.cc
+	${MI_PATH}/dsp/engine2/chiptune_engine.h
+	${MI_PATH}/dsp/engine2/phase_distortion_engine.cc
+	${MI_PATH}/dsp/engine2/phase_distortion_engine.h
+	${MI_PATH}/dsp/engine2/six_op_engine.cc
+	${MI_PATH}/dsp/engine2/six_op_engine.h
+	${MI_PATH}/dsp/engine2/string_machine_engine.cc
+	${MI_PATH}/dsp/engine2/string_machine_engine.h
+	${MI_PATH}/dsp/engine2/virtual_analog_vcf_engine.cc
+	${MI_PATH}/dsp/engine2/virtual_analog_vcf_engine.h
+	${MI_PATH}/dsp/engine2/wave_terrain_engine.cc
+	${MI_PATH}/dsp/engine2/wave_terrain_engine.h
 	${MI_PATH}/dsp/envelope.h
 	${MI_PATH}/dsp/fx/diffuser.h
+	${MI_PATH}/dsp/fx/ensemble.h
 	${MI_PATH}/dsp/fx/fx_engine.h
 	${MI_PATH}/dsp/fx/low_pass_gate.h
 	${MI_PATH}/dsp/fx/overdrive.h
@@ -90,9 +104,11 @@ set(MI_SOURCES
 	${MI_PATH}/dsp/oscillator/formant_oscillator.h
 	${MI_PATH}/dsp/oscillator/grainlet_oscillator.h
 	${MI_PATH}/dsp/oscillator/harmonic_oscillator.h
+	${MI_PATH}/dsp/oscillator/nes_triangle_oscillator.h
 	${MI_PATH}/dsp/oscillator/oscillator.h
 	${MI_PATH}/dsp/oscillator/sine_oscillator.h
 	${MI_PATH}/dsp/oscillator/string_synth_oscillator.h
+	${MI_PATH}/dsp/oscillator/super_square_oscillator.h
 	${MI_PATH}/dsp/oscillator/variable_saw_oscillator.h
 	${MI_PATH}/dsp/oscillator/variable_shape_oscillator.h
 	${MI_PATH}/dsp/oscillator/vosim_oscillator.h
@@ -107,24 +123,36 @@ set(MI_SOURCES
 	${MI_PATH}/dsp/physical_modelling/string.h
 	${MI_PATH}/dsp/physical_modelling/string_voice.cc
 	${MI_PATH}/dsp/physical_modelling/string_voice.h
+	${MI_PATH}/dsp/chords/chord_bank.cc
+	${MI_PATH}/dsp/chords/chord_bank.h
+	${MI_PATH}/dsp/downsampler/4x_downsampler.h
+	${MI_PATH}/dsp/fm/algorithms.cc
+	${MI_PATH}/dsp/fm/algorithms.h
+	${MI_PATH}/dsp/fm/dx_units.cc
+	${MI_PATH}/dsp/fm/dx_units.h
+	${MI_PATH}/dsp/fm/envelope.h
+	${MI_PATH}/dsp/fm/lfo.h
+	${MI_PATH}/dsp/fm/operator.h
+	${MI_PATH}/dsp/fm/patch.h
+	${MI_PATH}/dsp/fm/voice.h
 )
 
 
 
-set(BUILD_SOURCES 
+set(BUILD_SOURCES
 	${PROJECT_NAME}.cpp
 )
 
 
-include_directories( 
+include_directories(
 	"${C74_INCLUDES}"
     ${MUTABLE_PATH}
 )
 
 
 
-add_library( 
-	${PROJECT_NAME} 
+add_library(
+	${PROJECT_NAME}
 	MODULE
 	${STMLIB_SOURCES}
 	${MI_SOURCES}

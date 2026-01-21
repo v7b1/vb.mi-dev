@@ -2724,7 +2724,8 @@
 , 							{
 								"box" : 								{
 									"id" : "obj-139",
-									"items" : [ "virtual_analog_synthesis", ",", "waveshaping_oscillator", ",", "2-op_FM", ",", "granular_formant_oscillator", ",", "harmonic_oscillator", ",", "wavetable_oscillator", ",", "chord_engine", ",", "speech_synthesis", ",", "swarm_engine", ",", "filtered_noise", ",", "particle_noise", ",", "inharmonic_string", ",", "modal_resonator", ",", "bass_drum_model", ",", "snare_drum_model", ",", "hi_hat_model" ],
+									"items" : [ "virtual_analog_with_filter", ",", "phase_distortion_synthesis", ",", "6-op_FM_bank1", ",", "6-op_FM_bank2", ",", "6-op_FM_bank3", ",", "wave_terrain_synthesis", ",", "string_machine_emulation", ",", "chiptune_engine", ",",
+									"virtual_analog_synthesis", ",", "waveshaping_oscillator", ",", "2-op_FM", ",", "granular_formant_oscillator", ",", "harmonic_oscillator", ",", "wavetable_oscillator", ",", "chord_engine", ",", "speech_synthesis", ",", "swarm_engine", ",", "filtered_noise", ",", "particle_noise", ",", "inharmonic_string", ",", "modal_resonator", ",", "bass_drum_model", ",", "snare_drum_model", ",", "hi_hat_model" ],
 									"maxclass" : "umenu",
 									"numinlets" : 1,
 									"numoutlets" : 3,

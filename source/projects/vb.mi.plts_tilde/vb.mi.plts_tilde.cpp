@@ -55,7 +55,7 @@ static t_class* this_class = nullptr;
 
 struct t_myObj {
     t_pxobject	obj;
-    
+
     plaits::Voice       *voice_;
     plaits::Modulations modulations;
     plaits::Patch       patch;
@@ -64,10 +64,10 @@ struct t_myObj {
     long                engine;
     short               trigger_connected;
     short               trigger_toggle;
-    
+
     char                *shared_buffer;
     void                *info_out;
-    
+
     double              sr;
     int                 sigvs;
 };
@@ -76,17 +76,17 @@ struct t_myObj {
 
 void* myObj_new(t_symbol *s, long argc, t_atom *argv) {
     t_myObj* self = (t_myObj*)object_alloc(this_class);
-    
+
     if(self)
     {
         dsp_setup((t_pxobject*)self, 8);
-        
+
         self->info_out = outlet_new((t_object *)self, NULL);
         outlet_new(self, "signal"); // 'out' output
         outlet_new(self, "signal"); // 'aux' output
-        
+
         self->sigvs = sys_getblksize();
-        
+
         if(self->sigvs < kBlockSize) {
             object_error((t_object*)self,
                          "sigvs can't be smaller than %d samples\n", kBlockSize);
@@ -94,25 +94,25 @@ void* myObj_new(t_symbol *s, long argc, t_atom *argv) {
             self = NULL;
             return self;
         }
-        
+
         self->sr = sys_getsr();
         if(self->sr <= 0)
             self->sr = 44100.0;
-        
-        
+
+
         kSampleRate = self->sr;
         a0 = (440.0f / 8.0f) / kSampleRate;
-        
+
         // init some params
         self->transposition_ = 0.;
         self->octave_ = 0.5;
         self->patch.note = 48.0;
         self->patch.harmonics = 0.1;
-        
-        
+
+
         // allocate memory
         self->shared_buffer = sysmem_newptrclear(32768);
-        
+
         if(self->shared_buffer == NULL) {
             object_post((t_object*)self, "mem alloc failed!");
             object_free(self);
@@ -120,10 +120,10 @@ void* myObj_new(t_symbol *s, long argc, t_atom *argv) {
             return self;
         }
         stmlib::BufferAllocator allocator(self->shared_buffer, 32768);
-        
+
         self->voice_ = new plaits::Voice;
         self->voice_->Init(&allocator);
-        
+
         // process attributes
         attr_args_process(self, argc, argv);
 
@@ -132,7 +132,7 @@ void* myObj_new(t_symbol *s, long argc, t_atom *argv) {
         object_free(self);
         self = NULL;
     }
-    
+
     return self;
 }
 
@@ -141,7 +141,7 @@ void myObj_info(t_myObj *self)
 {
     plaits::Patch p = self->patch;
     plaits::Modulations m = self->modulations;
-    
+
     object_post((t_object*)self, "Patch ----------------------->");
     object_post((t_object*)self, "note: %f", p.note);
     object_post((t_object*)self, "harmonics: %f", p.harmonics);
@@ -150,11 +150,11 @@ void myObj_info(t_myObj *self)
     object_post((t_object*)self, "freq_mod_amount: %f", p.frequency_modulation_amount);
     object_post((t_object*)self, "timbre_mod_amount: %f", p.timbre_modulation_amount);
     object_post((t_object*)self, "morph_mod_amount: %f", p.morph_modulation_amount);
-    
+
     object_post((t_object*)self, "engine: %d", p.engine);
     object_post((t_object*)self, "decay: %f", p.decay);
     object_post((t_object*)self, "lpg_colour: %f", p.lpg_colour);
-    
+
     object_post((t_object*)self, "Modulations ------------>");
     object_post((t_object*)self, "engine: %f", m.engine);
     object_post((t_object*)self, "note: %f", m.note);
@@ -170,8 +170,8 @@ void myObj_info(t_myObj *self)
     object_post((t_object*)self, "trigger_patched: %d", m.trigger_patched);
     object_post((t_object*)self, "level_patched: %d", m.level_patched);
     object_post((t_object*)self, "-----");
-    
-    
+
+
 }
 
 void calc_note(t_myObj* self)
@@ -204,11 +204,11 @@ void calc_note(t_myObj* self)
 void myObj_int(t_myObj *self, long value)
 {
     long innum = proxy_getinlet((t_object *)self);
-    
+
     switch (innum) {
         case 0:
             // TODO: this doesn't seem to set the 'engine' attribute correctly
-            self->patch.engine = self->engine = CLAMP(value, 0L, 15L);
+            self->patch.engine = self->engine = CLAMP(value, 0L, 23L);
             break;
         case 1:
             object_post((t_object*)self, "inlet %ld: nothing to do...", innum);
@@ -240,7 +240,7 @@ void myObj_int(t_myObj *self, long value)
 void myObj_float(t_myObj *self, double value)
 {
     long innum = proxy_getinlet((t_object *)self);
-    
+
     switch (innum) {
         case 1:
             self->transposition_ = CLAMP(value, -1., 1.);
@@ -271,16 +271,16 @@ t_max_err engine_setter(t_myObj *self, void *attr, long ac, t_atom *av)
         t_atom_long m = atom_getlong(av);
         self->patch.engine = self->engine = m;
     }
-    
+
     return MAX_ERR_NONE;
 }
 
 void myObj_get_engine(t_myObj* self) {
-    
+
     t_atom argv;
     atom_setlong(&argv, self->voice_->active_engine());
     outlet_anything(self->info_out, gensym("active_engine"), 1, &argv);
-    
+
 }
 
 
@@ -349,25 +349,25 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     double *out = outs[0];
     double *aux = outs[1];
     double *trig_input = ins[6];
-    
+
     long    vs = sampleframes;
     size_t  size = plaits::kBlockSize;
     //double  pitch_lp_ = 0.; //self->pitch_lp_;
     uint16_t count = 0;
-    
+
     if (self->obj.z_disabled)
         return;
-    
-    
+
+
     // copy first value of signal inlets into corresponding params
     double* destination = &self->modulations.engine;
-    
+
     for(count=0; count < vs; count += size) {
-        
+
         for(int i=0; i<8; i++) {
             destination[i] = ins[i][count];
         }
-        
+
         if(self->modulations.trigger_patched) {
             // calc sum of trigger input
             double vectorsum = 0.0;
@@ -379,15 +379,15 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
 #endif
             self->modulations.trigger = vectorsum;
         }
-        
+
         // smooth out pitch changes
         //ONE_POLE(pitch_lp_, self->modulations.note, 0.7);
-        
+
         //self->modulations.note = pitch_lp_;
-        
+
         self->voice_->Render(self->patch, self->modulations, out+count, aux+count, size);
     }
-    
+
 }
 
 
@@ -397,7 +397,7 @@ void myObj_dsp64(t_myObj* self, t_object* dsp64, short* count, double samplerate
 {
     self->trigger_connected = count[6];
     self->modulations.trigger_patched = self->trigger_toggle && self->trigger_connected;
-    
+
     if(maxvectorsize < kBlockSize) {
         object_error((t_object*)self, "sigvs can't be smaller than %d samples, sorry!", kBlockSize);
         return;
@@ -408,7 +408,7 @@ void myObj_dsp64(t_myObj* self, t_object* dsp64, short* count, double samplerate
         kSampleRate = self->sr;
         a0 = (440.0f / 8.0f) / kSampleRate;
     }
-    
+
     object_method_direct(void, (t_object*, t_object*, t_perfroutine64, long, void*),
                          dsp64, gensym("dsp_add64"), (t_object*)self, (t_perfroutine64)myObj_perform64, 0, NULL);
 }
@@ -473,51 +473,75 @@ void myObj_assist(t_myObj* self, void* unused, t_assist_function io, long index,
 
 void ext_main(void* r) {
     this_class = class_new("vb.mi.plts~", (method)myObj_new, (method)myObj_free, sizeof(t_myObj), 0, A_GIMME, 0);
-    
+
     class_addmethod(this_class, (method)myObj_assist,	"assist",	A_CANT,		0);
     class_addmethod(this_class, (method)myObj_dsp64,	"dsp64",	A_CANT,		0);
-    
+
     // main pots
     class_addmethod(this_class, (method)myObj_frequency,        "frequency",        A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_harmonics,	"harmonics",	A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_timbre,       "timbre",       A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_morph,        "morph",        A_FLOAT, 0);
-    
+
     // small pots
     class_addmethod(this_class, (method)myObj_morph_mod_amount,        "morph_mod",        A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_timbre_mod_amount,        "timbre_mod",        A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_freq_mod_amount,        "freq_mod",        A_FLOAT, 0);
-    
+
     // hidden parameters
     class_addmethod(this_class, (method)myObj_octave,        "octave",        A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_lpg_colour,   "lpg_colour",        A_FLOAT, 0);
     class_addmethod(this_class, (method)myObj_decay,        "decay",        A_FLOAT, 0);
-    
+
     class_addmethod(this_class, (method)myObj_note,	"note",	A_FLOAT, 0);
-    
+
 //    class_addmethod(this_class, (method)myObj_choose_engine,      "engine",      A_LONG, 0);
     class_addmethod(this_class, (method)myObj_get_engine,      "get_engine", 0);
     class_addmethod(this_class, (method)myObj_int,  "int",      A_LONG, 0);
     class_addmethod(this_class, (method)myObj_float,  "float",      A_FLOAT, 0);
 //    class_addmethod(this_class, (method)myObj_info,    "info", 0);
-    
+
     class_dspinit(this_class);
     class_register(CLASS_BOX, this_class);
-    
+
     // attributes ====
     CLASS_ATTR_CHAR(this_class,"engine", 0, t_myObj, engine);
-    CLASS_ATTR_ENUMINDEX(this_class, "engine", 0, "virtual_analog_synthesis waveshaping_oscillator 2-op_FM granular_formant_oscillator harmonic_oscillator wavetable_oscillator chord_engine speech_synthesis swarm_engine filtered_noise particle_noise inharmonic_string modal_resonator bass_drum_model snare_drum_model hi_hat_model");
+    CLASS_ATTR_ENUMINDEX(this_class, "engine", 0,
+        "virtual_analog_with_filter"
+        " phase_distortion_synthesis"
+        " 6-op_FM_bank1"
+        " 6-op_FM_bank2"
+        " 6-op_FM_bank3"
+        " wave_terrain_synthesis"
+        " string_machine_emulation"
+        " chiptune_engine"
+        " virtual_analog_synthesis"
+        " waveshaping_oscillator"
+        " 2-op_FM"
+        " granular_formant_oscillator"
+        " harmonic_oscillator"
+        " wavetable_oscillator"
+        " chord_engine"
+        " speech_synthesis"
+        " swarm_engine"
+        " filtered_noise"
+        " particle_noise"
+        " inharmonic_string"
+        " modal_resonator"
+        " bass_drum_model"
+        " snare_drum_model"
+        " hi_hat_model");
     CLASS_ATTR_LABEL(this_class, "engine", 0, "synthesis engine");
-    CLASS_ATTR_FILTER_CLIP(this_class, "engine", 0, 15);
+    CLASS_ATTR_FILTER_CLIP(this_class, "engine", 0, 23);
     CLASS_ATTR_ACCESSORS(this_class, "engine", NULL, (method)engine_setter);
     CLASS_ATTR_SAVE(this_class, "engine", 0);
-    
+
 //    CLASS_ATTR_CHAR(this_class,"timbre_patched", 0, t_myObj, modulations.timbre_patched);
 //    CLASS_ATTR_ENUMINDEX(this_class, "timbre_patched", 0, "false true");
 //    CLASS_ATTR_LABEL(this_class, "timbre_patched", 0, "timbre modulation patched");
 //    CLASS_ATTR_FILTER_CLIP(this_class, "timbre_patched", 0, 1);
 //    CLASS_ATTR_SAVE(this_class, "timbre_patched", 0);
-    
+
     object_post(NULL, "vb.mi.plts~ by volker böhm --> https://vboehm.net");
     object_post(NULL, "a clone of mutable instruments' 'plaits' module");
 }

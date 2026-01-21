@@ -8,10 +8,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -19,7 +19,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-// 
+//
 // See http://creativecommons.org/licenses/MIT/ for more information.
 //
 // -----------------------------------------------------------------------------
@@ -35,7 +35,7 @@
 #include "stmlib/dsp/polyblep.h"
 
 #include "plaits/dsp/oscillator/oscillator.h"
-#include "plaits/resources.h"
+#include "plaits/dsp/oscillator/sine_oscillator.h"
 
 
 namespace plaits {
@@ -49,13 +49,13 @@ class GrainletOscillator {
     carrier_phase_ = 0.0;
     formant_phase_ = 0.0;
     next_sample_ = 0.0;
-  
+
     carrier_frequency_ = 0.0;
     formant_frequency_ = 0.0;
     carrier_shape_ = 0.0;
     carrier_bleed_ = 0.0;
   }
-  
+
   void Render(
       double carrier_frequency,
       double formant_frequency,
@@ -69,7 +69,7 @@ class GrainletOscillator {
     if (formant_frequency >= kMaxFrequency) {
       formant_frequency = kMaxFrequency;
     }
-    
+
     stmlib::ParameterInterpolator carrier_frequency_modulation(
         &carrier_frequency_,
         carrier_frequency,
@@ -88,20 +88,20 @@ class GrainletOscillator {
         size);
 
     double next_sample = next_sample_;
-    
+
     while (size--) {
       bool reset = false;
       double reset_time = 0.0;
 
       double this_sample = next_sample;
       next_sample = 0.0;
-    
+
       const double f0 = carrier_frequency_modulation.Next();
       const double f1 = formant_frequency_modulation.Next();
-    
+
       carrier_phase_ += f0;
       reset = carrier_phase_ >= 1.0;
-      
+
       if (reset) {
         carrier_phase_ -= 1.0;
         reset_time = carrier_phase_ / f0;
@@ -127,7 +127,7 @@ class GrainletOscillator {
           formant_phase_ -= 1.0;
         }
       }
-      
+
       next_sample += Grainlet(
           carrier_phase_,
           formant_phase_,
@@ -135,7 +135,7 @@ class GrainletOscillator {
           carrier_bleed_modulation.Next());
       *out++ = this_sample;
     }
-    
+
     next_sample_ = next_sample;
   }
 
@@ -144,12 +144,12 @@ class GrainletOscillator {
     return stmlib::InterpolateWrap(lut_sine, phase, 1024.0);
       //return std::sin(phase*2*M_PI);
   }
-  
+
   inline double Carrier(double phase, double shape) {
     shape *= 3.0;
     MAKE_INTEGRAL_FRACTIONAL(shape);
     double t = 1.0 - shape_fractional;
-    
+
     if (shape_integral == 0) {
       phase = phase * (1.0 + t * t * t * 15.0);
       if (phase >= 1.0) {
@@ -192,10 +192,10 @@ class GrainletOscillator {
   double formant_frequency_;
   double carrier_shape_;
   double carrier_bleed_;
-  
+
   DISALLOW_COPY_AND_ASSIGN(GrainletOscillator);
 };
-  
+
 }  // namespace plaits
 
 #endif  // PLAITS_DSP_OSCILLATOR_GRAINLET_OSCILLATOR_H_

@@ -8,10 +8,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -19,7 +19,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-// 
+//
 // See http://creativecommons.org/licenses/MIT/ for more information.
 //
 // -----------------------------------------------------------------------------
@@ -33,6 +33,7 @@
 #include "stmlib/dsp/parameter_interpolator.h"
 
 #include "plaits/dsp/oscillator/oscillator.h"
+#include "plaits/dsp/oscillator/sine_oscillator.h"
 #include "plaits/resources.h"
 
 
@@ -48,13 +49,13 @@ class VOSIMOscillator {
     carrier_phase_ = 0.0;
     formant_1_phase_ = 0.0;
     formant_2_phase_ = 0.0;
-  
+
     carrier_frequency_ = 0.0;
     formant_1_frequency_ = 0.0;
     formant_2_frequency_ = 0.0;
     carrier_shape_ = 0.0;
   }
-  
+
   void Render(
       double carrier_frequency,
       double formant_frequency_1,
@@ -93,7 +94,7 @@ class VOSIMOscillator {
       const double f0 = f0_modulation.Next();
       const double f1 = f1_modulation.Next();
       const double f2 = f2_modulation.Next();
-    
+
       carrier_phase_ += carrier_frequency;
       if (carrier_phase_ >= 1.0) {
         carrier_phase_ -= 1.0;
@@ -110,7 +111,7 @@ class VOSIMOscillator {
           formant_2_phase_ -= 1.0;
         }
       }
-      
+
       double carrier = Sine(carrier_phase_ * 0.5 + 0.25) + 1.0;
       double reset_phase = 0.75 - 0.25 * carrier_shape_modulation.Next();
       double reset_amplitude = Sine(reset_phase);
@@ -121,10 +122,6 @@ class VOSIMOscillator {
   }
 
  private:
-  inline double Sine(double phase) {
-    return stmlib::InterpolateWrap(lut_sine, phase, 1024.0);
-  }
-
   // Oscillator state.
   double carrier_phase_;
   double formant_1_phase_;
@@ -135,10 +132,10 @@ class VOSIMOscillator {
   double formant_1_frequency_;
   double formant_2_frequency_;
   double carrier_shape_;
-  
+
   DISALLOW_COPY_AND_ASSIGN(VOSIMOscillator);
 };
-  
+
 }  // namespace plaits
 
 #endif  // PLAITS_DSP_OSCILLATOR_VOSIM_OSCILLATOR_H_

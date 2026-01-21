@@ -8,10 +8,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -19,7 +19,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-// 
+//
 // See http://creativecommons.org/licenses/MIT/ for more information.
 //
 // -----------------------------------------------------------------------------
@@ -35,7 +35,7 @@
 #include "stmlib/dsp/parameter_interpolator.h"
 #include "stmlib/dsp/polyblep.h"
 
-#include "plaits/resources.h"
+#include "plaits/dsp/oscillator/sine_oscillator.h"
 
 
 namespace plaits {
@@ -50,13 +50,13 @@ class ZOscillator {
     discontinuity_phase_ = 0.0;
     formant_phase_ = 0.0;
     next_sample_ = 0.0;
-  
+
     carrier_frequency_ = 0.0;
     formant_frequency_ = 0.0;
     carrier_shape_ = 0.0;
     mode_ = 0.0;
   }
-  
+
   void Render(
       double carrier_frequency,
       double formant_frequency,
@@ -70,7 +70,7 @@ class ZOscillator {
     if (formant_frequency >= kMaxFrequency) {
       formant_frequency = kMaxFrequency;
     }
-    
+
     stmlib::ParameterInterpolator carrier_frequency_modulation(
         &carrier_frequency_,
         carrier_frequency,
@@ -89,25 +89,25 @@ class ZOscillator {
         size);
 
     double next_sample = next_sample_;
-    
+
     while (size--) {
       bool reset = false;
       double reset_time = 0.0;
 
       double this_sample = next_sample;
       next_sample = 0.0;
-    
+
       const double f0 = carrier_frequency_modulation.Next();
       const double f1 = formant_frequency_modulation.Next();
-    
+
       discontinuity_phase_ += 2.0 * f0;
       carrier_phase_ += f0;
       reset = discontinuity_phase_ >= 1.0;
-      
+
       if (reset) {
         discontinuity_phase_ -= 1.0;
         reset_time = discontinuity_phase_ / (2.0 * f0);
-        
+
         double carrier_phase_before = carrier_phase_ >= 1.0 ? 1.0 : 0.5;
         double carrier_phase_after = carrier_phase_ >= 1.0 ? 0.0 : 0.5;
         double before = Z(
@@ -128,7 +128,7 @@ class ZOscillator {
         this_sample += discontinuity * stmlib::ThisBlepSample(reset_time);
         next_sample += discontinuity * stmlib::NextBlepSample(reset_time);
         formant_phase_ = reset_time * f1;
-        
+
         if (carrier_phase_ > 1.0) {
           carrier_phase_ = discontinuity_phase_ * 0.5;
         }
@@ -138,11 +138,11 @@ class ZOscillator {
           formant_phase_ -= 1.0;
         }
       }
-      
+
       if (carrier_phase_ >= 1.0) {
         carrier_phase_ -= 1.0;
       }
-      
+
       next_sample += Z(
           carrier_phase_,
           discontinuity_phase_,
@@ -151,19 +151,15 @@ class ZOscillator {
           mode_modulation.Next());
       *out++ = this_sample;
     }
-    
+
     next_sample_ = next_sample;
   }
 
  private:
-  inline double Sine(double phase) {
-    return stmlib::InterpolateWrap(lut_sine, phase, 1024.0);
-      //return std::sin(phase*2*M_PI);
-  }
 
   inline double Z(double c, double d, double f, double shape, double mode) {
     double ramp_down = 0.5 * (1.0 + Sine(0.5 * d + 0.25));
-    
+
     double offset;
     double phase_shift;
     if (mode < 0.333) {
@@ -176,7 +172,7 @@ class ZOscillator {
       phase_shift = 0.7495 - (mode - 0.33) * 0.75;
       offset = 0.001;
     }
-    
+
     double discontinuity = Sine(f + phase_shift);
     double contour;
     if (shape < 0.5) {
@@ -202,10 +198,10 @@ class ZOscillator {
   double formant_frequency_;
   double carrier_shape_;
   double mode_;
-  
+
   DISALLOW_COPY_AND_ASSIGN(ZOscillator);
 };
-  
+
 }  // namespace plaits
 
 #endif  // PLAITS_DSP_OSCILLATOR_Z_OSCILLATOR_H_

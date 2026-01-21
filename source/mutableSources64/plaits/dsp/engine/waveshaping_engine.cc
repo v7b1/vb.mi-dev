@@ -8,10 +8,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -19,7 +19,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-// 
+//
 // See http://creativecommons.org/licenses/MIT/ for more information.
 //
 // -----------------------------------------------------------------------------
@@ -33,6 +33,7 @@
 #include "stmlib/dsp/parameter_interpolator.h"
 #include "stmlib/utils/dsp.h"
 
+#include "plaits/dsp/oscillator/sine_oscillator.h"
 #include "plaits/resources.h"
 
 
@@ -50,7 +51,7 @@ void WaveshapingEngine::Init(BufferAllocator* allocator) {
 }
 
 void WaveshapingEngine::Reset() {
-  
+
 }
 
 double Tame(double f0, double harmonics, double order) {
@@ -68,10 +69,10 @@ void WaveshapingEngine::Render(
     size_t size,
     bool* already_enveloped) {
   const double root = parameters.note;
-  
+
   const double f0 = NoteToFrequency(root);
   const double pw = parameters.morph * 0.45 + 0.5;
-  
+
   // Start from bandlimited slope signal.
   slope_.Render<OSCILLATOR_SHAPE_SLOPE>(f0, pw, out, size);
   triangle_.Render<OSCILLATOR_SHAPE_SLOPE>(f0, 0.5, aux, size);
@@ -86,7 +87,7 @@ void WaveshapingEngine::Render(
       f0,
       slope * (3.0 + shape_amount * shape_amount_attenuation * 5.0),
       12.0);
-  
+
   // Apply waveshaper / wavefolder.
   ParameterInterpolator shape_modulation(
       &previous_shape_,
@@ -101,18 +102,18 @@ void WaveshapingEngine::Render(
       &previous_overtone_gain_,
       overtone_gain * (2.0 - overtone_gain),
       size);
-  
+
   for (size_t i = 0; i < size; ++i) {
     double shape = shape_modulation.Next() * 3.9999;
     MAKE_INTEGRAL_FRACTIONAL(shape);
-    
+
     const int16_t* shape_1 = lookup_table_i16_table[shape_integral];
     const int16_t* shape_2 = lookup_table_i16_table[shape_integral + 1];
-    
+
     double ws_index = 127.0 * out[i] + 128.0;
     MAKE_INTEGRAL_FRACTIONAL(ws_index)
     ws_index_integral &= 255;
-    
+
     double x0 = static_cast<double>(shape_1[ws_index_integral]) / 32768.0;
     double x1 = static_cast<double>(shape_1[ws_index_integral + 1]) / 32768.0;
     double x = x0 + (x1 - x0) * ws_index_fractional;
@@ -120,15 +121,15 @@ void WaveshapingEngine::Render(
     double y0 = static_cast<double>(shape_2[ws_index_integral]) / 32768.0;
     double y1 = static_cast<double>(shape_2[ws_index_integral + 1]) / 32768.0;
     double y = y0 + (y1 - y0) * ws_index_fractional;
-    
+
     double mix = x + (y - x) * shape_fractional;
     double index = mix * wf_gain_modulation.Next() + 0.5;
     double fold = InterpolateHermite(
         lut_fold + 1, index, 512.0);
     double fold_2 = -InterpolateHermite(
         lut_fold_2 + 1, index, 512.0);
-    
-    double sine = InterpolateWrap(lut_sine, aux[i] * 0.25 + 0.5, 1024.0);
+
+    double sine = Sine(aux[i] * 0.25 + 0.5);
     out[i] = fold;
     aux[i] = sine + (fold_2 - sine) * overtone_gain_modulation.Next();
   }
