@@ -54,16 +54,16 @@ template<int order>
 inline double Pow2Fast(double x) {
   union {
     double f;
-    int32_t w;
+    int64_t w;
   } r;
 
 
   if (order == 1) {
-    r.w = double(1 << 23) * (127.0 + x);
+    r.w = double(1L << 52) * (1023.0 + x);
     return r.f;
   }
 
-  int32_t x_integral = static_cast<int32_t>(x);
+  int64_t x_integral = static_cast<int64_t>(x);
   if (x < 0.0) {
     --x_integral;
   }
@@ -76,7 +76,7 @@ inline double Pow2Fast(double x) {
   } else if (order == 3) {
     r.f = 1.0 + x * (0.6958 + x * (0.2251 + x * 0.0791));
   }
-  r.w += x_integral << 23;
+  r.w += x_integral << 52;
   return r.f;
 }
 
@@ -174,7 +174,7 @@ inline double KeyboardScaling(double note, const Patch::KeyboardScaling& ks) {
 
   double t = std::abs(x);
   if (curve == 1 || curve == 2) {
-    t = std::min(t * 0.010467f, 1.0);
+    t = std::min(t * 0.010467, 1.0);
     t = t * t * t;
     t *= 96.0;
   }
