@@ -62,8 +62,8 @@ class ChordBank {
   inline void Sort() {
     for (int i = 0; i < kChordNumNotes; ++i) {
       double r = ratio(i);
-      while (r > 2.0f) {
-        r *= 0.5f;
+      while (r > 2.0) {
+        r *= 0.5;
       }
       sorted_ratios_[i] = r;
     }
@@ -71,7 +71,7 @@ class ChordBank {
   }
 
   inline void set_chord(double parameter) {
-    chord_index_quantizer_.Process(parameter * 1.02f);
+    chord_index_quantizer_.Process(parameter * 1.02);
   }
 
   inline int chord_index() const {

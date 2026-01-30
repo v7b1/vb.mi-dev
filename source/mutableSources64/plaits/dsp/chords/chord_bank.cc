@@ -40,43 +40,43 @@ using namespace stmlib;
 /* static */
 const double ChordBank::chords_[kChordNumChords][kChordNumNotes] = {
   // Fixed Intervals
-  { 0.00f, 0.01f, 11.99f, 12.00f },  // Octave
-  { 0.00f, 7.00f,  7.01f, 12.00f },  // Fifth
+  { 0.00, 0.01, 11.99, 12.00 },  // Octave
+  { 0.00, 7.00,  7.01, 12.00 },  // Fifth
   // Minor
-  { 0.00f, 3.00f,  7.00f, 12.00f },  // Minor
-  { 0.00f, 3.00f,  7.00f, 10.00f },  // Minor 7th
-  { 0.00f, 3.00f, 10.00f, 14.00f },  // Minor 9th
-  { 0.00f, 3.00f, 10.00f, 17.00f },  // Minor 11th
+  { 0.00, 3.00,  7.00, 12.00 },  // Minor
+  { 0.00, 3.00,  7.00, 10.00 },  // Minor 7th
+  { 0.00, 3.00, 10.00, 14.00 },  // Minor 9th
+  { 0.00, 3.00, 10.00, 17.00 },  // Minor 11th
   // Major
-  { 0.00f, 4.00f,  7.00f, 12.00f },  // Major
-  { 0.00f, 4.00f,  7.00f, 11.00f },  // Major 7th
-  { 0.00f, 4.00f, 11.00f, 14.00f },  // Major 9th
+  { 0.00, 4.00,  7.00, 12.00 },  // Major
+  { 0.00, 4.00,  7.00, 11.00 },  // Major 7th
+  { 0.00, 4.00, 11.00, 14.00 },  // Major 9th
   // Colour Chords
-  { 0.00f, 5.00f,  7.00f, 12.00f },  // Sus4
-  { 0.00f, 2.00f,  9.00f, 16.00f },  // 69
-  { 0.00f, 4.00f,  7.00f,  9.00f },  // 6th
-  { 0.00f, 7.00f, 16.00f, 23.00f },  // 10th (Spread maj7)
-  { 0.00f, 4.00f,  7.00f, 10.00f },  // Dominant 7th
-  { 0.00f, 7.00f, 10.00f, 13.00f },  // Dominant 7th (b9)
-  { 0.00f, 3.00f,  6.00f, 10.00f },  // Half Diminished
-  { 0.00f, 3.00f,  6.00f,  9.00f },  // Fully Diminished
+  { 0.00, 5.00,  7.00, 12.00 },  // Sus4
+  { 0.00, 2.00,  9.00, 16.00 },  // 69
+  { 0.00, 4.00,  7.00,  9.00 },  // 6th
+  { 0.00, 7.00, 16.00, 23.00 },  // 10th (Spread maj7)
+  { 0.00, 4.00,  7.00, 10.00 },  // Dominant 7th
+  { 0.00, 7.00, 10.00, 13.00 },  // Dominant 7th (b9)
+  { 0.00, 3.00,  6.00, 10.00 },  // Half Diminished
+  { 0.00, 3.00,  6.00,  9.00 },  // Fully Diminished
 };
 
 #else
 
 /* static */
 const double ChordBank::chords_[kChordNumChords][kChordNumNotes] = {
-  { 0.00f, 0.01f, 11.99f, 12.00f },  // OCT
-  { 0.00f, 7.00f,  7.01f, 12.00f },  // 5
-  { 0.00f, 5.00f,  7.00f, 12.00f },  // sus4
-  { 0.00f, 3.00f,  7.00f, 12.00f },  // m
-  { 0.00f, 3.00f,  7.00f, 10.00f },  // m7
-  { 0.00f, 3.00f, 10.00f, 14.00f },  // m9
-  { 0.00f, 3.00f, 10.00f, 17.00f },  // m11
-  { 0.00f, 2.00f,  9.00f, 16.00f },  // 69
-  { 0.00f, 4.00f, 11.00f, 14.00f },  // M9
-  { 0.00f, 4.00f,  7.00f, 11.00f },  // M7
-  { 0.00f, 4.00f,  7.00f, 12.00f },  // M
+  { 0.00, 0.01, 11.99, 12.00 },  // OCT
+  { 0.00, 7.00,  7.01, 12.00 },  // 5
+  { 0.00, 5.00,  7.00, 12.00 },  // sus4
+  { 0.00, 3.00,  7.00, 12.00 },  // m
+  { 0.00, 3.00,  7.00, 10.00 },  // m7
+  { 0.00, 3.00, 10.00, 14.00 },  // m9
+  { 0.00, 3.00, 10.00, 17.00 },  // m11
+  { 0.00, 2.00,  9.00, 16.00 },  // 69
+  { 0.00, 4.00, 11.00, 14.00 },  // M9
+  { 0.00, 4.00,  7.00, 11.00 },  // M7
+  { 0.00, 4.00,  7.00, 12.00 },  // M
 };
 
 #endif  // JON_CHORDS
@@ -86,7 +86,7 @@ void ChordBank::Init(BufferAllocator* allocator) {
   note_count_ = allocator->Allocate<int>(kChordNumChords);
   sorted_ratios_ = allocator->Allocate<double>(kChordNumNotes);
 
-  chord_index_quantizer_.Init(kChordNumChords, 0.075f, false);
+  chord_index_quantizer_.Init(kChordNumChords, 0.075, false);
 }
 
 void ChordBank::Reset() {
@@ -94,8 +94,8 @@ void ChordBank::Reset() {
     int count = 0;
     for (int j = 0; j < kChordNumNotes; ++j) {
       ratios_[i * kChordNumNotes + j] = SemitonesToRatio(chords_[i][j]);
-      if (chords_[i][j] !=  0.01f && chords_[i][j] !=  7.01f && \
-          chords_[i][j] != 11.99f && chords_[i][j] != 12.00f) {
+      if (chords_[i][j] !=  0.01 && chords_[i][j] !=  7.01 && \
+          chords_[i][j] != 11.99 && chords_[i][j] != 12.00) {
         ++count;
       }
     }
@@ -116,21 +116,21 @@ int ChordBank::ComputeChordInversion(
   int num_rotations = inversion_integral / kChordNumNotes;
   int rotated_note = inversion_integral % kChordNumNotes;
 
-  const double kBaseGain = 0.25f;
+  const double kBaseGain = 0.25;
 
   int mask = 0;
 
   for (int i = 0; i < kChordNumNotes; ++i) {
-    double transposition = 0.25f * static_cast<double>(
+    double transposition = 0.25 * static_cast<double>(
         1 << ((kChordNumNotes - 1 + inversion_integral - i) / kChordNumNotes));
     int target_voice = (i - num_rotations + kChordNumVoices) % kChordNumVoices;
     int previous_voice = (target_voice - 1 + kChordNumVoices) % kChordNumVoices;
 
     if (i == rotated_note) {
       ratios[target_voice] = base_ratio[i] * transposition;
-      ratios[previous_voice] = ratios[target_voice] * 2.0f;
+      ratios[previous_voice] = ratios[target_voice] * 2.0;
       amplitudes[previous_voice] = kBaseGain * inversion_fractional;
-      amplitudes[target_voice] = kBaseGain * (1.0f - inversion_fractional);
+      amplitudes[target_voice] = kBaseGain * (1.0 - inversion_fractional);
     } else if (i < rotated_note) {
       ratios[previous_voice] = base_ratio[i] * transposition;
       amplitudes[previous_voice] = kBaseGain;
