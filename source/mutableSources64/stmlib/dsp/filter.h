@@ -496,10 +496,11 @@ class NaiveSvf {
   // are available to avoid the cost of sinf.
   template<FrequencyApproximation approximation>
   inline void set_f_q(double f, double resonance) {
-    f = f < 0.49 ? f : 0.497;
+    f = f < 0.497 ? f : 0.497;
     if (approximation == FREQUENCY_EXACT) {
       f_ = 2.0 * sin(M_PI * f);
     } else {
+        f = f < 0.158 ? f : 0.158;
       f_ = 2.0 * M_PI * f;
     }
     damp_ = 1.0 / resonance;
