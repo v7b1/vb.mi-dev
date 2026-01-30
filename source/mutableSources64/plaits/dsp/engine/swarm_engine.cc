@@ -8,10 +8,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -19,7 +19,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-// 
+//
 // See http://creativecommons.org/licenses/MIT/ for more information.
 //
 // -----------------------------------------------------------------------------
@@ -36,14 +36,16 @@ using namespace std;
 using namespace stmlib;
 
 void SwarmEngine::Init(BufferAllocator* allocator) {
+    swarm_voice_ = allocator->Allocate<SwarmVoice>(kNumSwarmVoices);
+}
+
+void SwarmEngine::Reset() {
   const double n = (kNumSwarmVoices - 1) / 2;
   for (int i = 0; i < kNumSwarmVoices; ++i) {
     double rank = (static_cast<double>(i) - n) / n;
     swarm_voice_[i].Init(rank);
   }
 }
-
-void SwarmEngine::Reset() { }
 
 void SwarmEngine::Render(
     const EngineParameters& parameters,
@@ -59,13 +61,13 @@ void SwarmEngine::Render(
       parameters.harmonics;
   double size_ratio = 0.25 * SemitonesToRatio(
       (1.0 - parameters.morph) * 84.0);
-  
+
   const bool burst_mode = !(parameters.trigger & TRIGGER_UNPATCHED);
   const bool start_burst = parameters.trigger & TRIGGER_RISING_EDGE;
 
   fill(&out[0], &out[size], 0.0);
   fill(&aux[0], &aux[size], 0.0);
-  
+
   for (int i = 0; i < kNumSwarmVoices; ++i) {
     swarm_voice_[i].Render(
         f0,

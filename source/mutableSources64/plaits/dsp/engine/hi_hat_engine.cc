@@ -8,10 +8,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -19,7 +19,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-// 
+//
 // See http://creativecommons.org/licenses/MIT/ for more information.
 //
 // -----------------------------------------------------------------------------
@@ -36,12 +36,11 @@ using namespace stmlib;
 void HiHatEngine::Init(BufferAllocator* allocator) {
   hi_hat_1_.Init();
   hi_hat_2_.Init();
-  temp_buffer_[0] = allocator->Allocate<double>(kMaxBlockSize);
-  temp_buffer_[1] = allocator->Allocate<double>(kMaxBlockSize);
+  temp_buffer_ = allocator->Allocate<double>(kMaxBlockSize * 2);
 }
 
 void HiHatEngine::Reset() {
-  
+
 }
 
 void HiHatEngine::Render(
@@ -51,7 +50,7 @@ void HiHatEngine::Render(
     size_t size,
     bool* already_enveloped) {
   const double f0 = NoteToFrequency(parameters.note);
-  
+
   hi_hat_1_.Render(
       parameters.trigger & TRIGGER_UNPATCHED,
       parameters.trigger & TRIGGER_RISING_EDGE,
@@ -60,11 +59,11 @@ void HiHatEngine::Render(
       parameters.timbre,
       parameters.morph,
       parameters.harmonics,
-      temp_buffer_[0],
-      temp_buffer_[1],
+      temp_buffer_,
+      temp_buffer_ + size,
       out,
       size);
-  
+
   hi_hat_2_.Render(
       parameters.trigger & TRIGGER_UNPATCHED,
       parameters.trigger & TRIGGER_RISING_EDGE,
@@ -73,8 +72,8 @@ void HiHatEngine::Render(
       parameters.timbre,
       parameters.morph,
       parameters.harmonics,
-      temp_buffer_[0],
-      temp_buffer_[1],
+      temp_buffer_,
+      temp_buffer_ + size,
       aux,
       size);
 }

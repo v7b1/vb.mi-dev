@@ -8,10 +8,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -19,7 +19,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-// 
+//
 // See http://creativecommons.org/licenses/MIT/ for more information.
 //
 // -----------------------------------------------------------------------------
@@ -44,7 +44,7 @@ void ParticleEngine::Init(BufferAllocator* allocator) {
 }
 
 void ParticleEngine::Reset() {
-  diffuser_.Clear();
+  diffuser_.Reset();
 }
 
 void ParticleEngine::Render(
@@ -69,10 +69,10 @@ void ParticleEngine::Render(
       ? raw_diffusion
       : 0.0;
   const bool sync = parameters.trigger & TRIGGER_RISING_EDGE;
-  
+
   fill(&out[0], &out[size], 0.0);
   fill(&aux[0], &aux[size], 0.0);
-  
+
   for (int i = 0; i < kNumParticles; ++i) {
     particle_[i].Render(
         sync,
@@ -85,10 +85,10 @@ void ParticleEngine::Render(
         aux,
         size);
   }
-  
+
   post_filter_.set_f_q<FREQUENCY_DIRTY>(min(f0, 0.49), 0.5);
   post_filter_.Process<FILTER_MODE_LOW_PASS>(out, out, size);
-  
+
   diffuser_.Process(
       0.8 * diffusion * diffusion,
       0.5 * diffusion + 0.25,

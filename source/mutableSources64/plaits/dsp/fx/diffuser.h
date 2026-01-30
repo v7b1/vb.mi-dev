@@ -8,10 +8,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -19,7 +19,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-// 
+//
 // See http://creativecommons.org/licenses/MIT/ for more information.
 //
 // -----------------------------------------------------------------------------
@@ -39,17 +39,17 @@ class Diffuser {
  public:
   Diffuser() { }
   ~Diffuser() { }
-  
+
   void Init(uint16_t* buffer) {
     engine_.Init(buffer);
     engine_.SetLFOFrequency(LFO_1, 0.3 / 48000.0);
     lp_decay_ = 0.0;
   }
-  
-  void Clear() {
+
+  void Reset() {
     engine_.Clear();
   }
-  
+
   void Process(double amount, double rt, double* in_out, size_t size) {
     typedef E::Reserve<126,
       E::Reserve<180,
@@ -94,12 +94,12 @@ class Diffuser {
     }
     lp_decay_ = lp;
   }
-  
+
  private:
   typedef FxEngine<8192, FORMAT_12_BIT> E;
   E engine_;
   double lp_decay_;
-  
+
   DISALLOW_COPY_AND_ASSIGN(Diffuser);
 };
 

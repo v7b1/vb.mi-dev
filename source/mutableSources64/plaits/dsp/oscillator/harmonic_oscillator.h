@@ -8,10 +8,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -19,7 +19,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-// 
+//
 // See http://creativecommons.org/licenses/MIT/ for more information.
 //
 // -----------------------------------------------------------------------------
@@ -34,7 +34,7 @@
 #include "stmlib/dsp/dsp.h"
 #include "stmlib/dsp/parameter_interpolator.h"
 
-#include "plaits/resources.h"
+#include "plaits/dsp/oscillator/sine_oscillator.h"
 
 
 namespace plaits {
@@ -52,7 +52,7 @@ class HarmonicOscillator {
       amplitude_[i] = 0.0;
     }
   }
-  
+
   template<int first_harmonic_index>
   void Render(
       double frequency,
@@ -62,10 +62,10 @@ class HarmonicOscillator {
     if (frequency >= 0.5) {
       frequency = 0.5;
     }
-    
+
     stmlib::ParameterInterpolator am[num_harmonics];
     stmlib::ParameterInterpolator fm(&frequency_, frequency, size);
-    
+
     for (int i = 0; i < num_harmonics; ++i) {
       double f = frequency * static_cast<double>(first_harmonic_index + i);
       if (f >= 0.5) {
@@ -79,18 +79,17 @@ class HarmonicOscillator {
       if (phase_ >= 1.0) {
         phase_ -= 1.0;
       }
-      const double two_x = 2.0 * stmlib::Interpolate(lut_sine, phase_, 1024.0);
+      const double two_x = 2.0 * SineNoWrap(phase_);
       double previous, current;
       if (first_harmonic_index == 1) {
         previous = 1.0;
         current = two_x * 0.5;
       } else {
         const double k = first_harmonic_index;
-        previous = stmlib::InterpolateWrap(
-            lut_sine, phase_ * (k - 1.0) + 0.25, 1024.0);
-        current = stmlib::InterpolateWrap(lut_sine, phase_ * k, 1024.0);
+        previous = Sine(phase_ * (k - 1.0) + 0.25);
+        current = Sine(phase_ * k);
       }
-      
+
       double sum = 0.0;
       for (int i = 0; i < num_harmonics; ++i) {
         sum += am[i].Next() * current;
@@ -113,7 +112,7 @@ class HarmonicOscillator {
   // For interpolation of parameters.
   double frequency_;
   double amplitude_[num_harmonics];
-  
+
   DISALLOW_COPY_AND_ASSIGN(HarmonicOscillator);
 };
 

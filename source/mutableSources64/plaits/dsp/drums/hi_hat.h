@@ -8,10 +8,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -19,7 +19,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-// 
+//
 // See http://creativecommons.org/licenses/MIT/ for more information.
 //
 // -----------------------------------------------------------------------------
@@ -54,13 +54,13 @@ class SquareNoise {
   void Init() {
     std::fill(&phase_[0], &phase_[6], 0);
   }
-    
+
   void Render(double f0, double* temp_1, double* temp_2, double* out, size_t size) {
     const double ratios[6] = {
         // Nominal f0: 414 Hz
         1.0, 1.304, 1.466, 1.787, 1.932, 2.536
     };
-  
+
     uint32_t increment[6];
     uint32_t phase[6];
     for (int i = 0; i < 6; ++i) {
@@ -86,7 +86,7 @@ class SquareNoise {
       noise += (phase[5] >> 31);
       *out++ = 0.33 * static_cast<double>(noise) - 1.0;
     }
-  
+
     for (int i = 0; i < 6; ++i) {
       phase_[i] = phase[i];
     }
@@ -108,7 +108,7 @@ class RingModNoise {
       oscillator_[i].Init();
     }
   }
-  
+
   void Render(double f0, double* temp_1, double* temp_2, double* out, size_t size) {
     const double ratio = f0 / (0.01 + f0);
     const double f1a = 200.0 / kSampleRate * ratio;
@@ -117,31 +117,33 @@ class RingModNoise {
     const double f2b = 8075.0 / kSampleRate * ratio;
     const double f3a = 730.0 / kSampleRate * ratio;
     const double f3b = 10500.0 / kSampleRate * ratio;
-    
+    const double f[3][2] = { { f1a, f1b }, { f2a, f2b }, { f3a, f3b } };
+
     std::fill(&out[0], &out[size], 0.0);
-    
-    RenderPair(&oscillator_[0], f1a, f1b, temp_1, temp_2, out, size);
-    RenderPair(&oscillator_[2], f2a, f2b, temp_1, temp_2, out, size);
-    RenderPair(&oscillator_[4], f3a, f3b, temp_1, temp_2, out, size);
+    // RenderPair(&oscillator_[0], f1a, f1b, temp_1, temp_2, out, size);
+    // RenderPair(&oscillator_[2], f2a, f2b, temp_1, temp_2, out, size);
+    // RenderPair(&oscillator_[4], f3a, f3b, temp_1, temp_2, out, size);
+    for (int i = 0; i < 3; ++i) {
+        RenderPair(&oscillator_[2 * i], f[i], temp_1, temp_2, out, size);
+    }
   }
 
  private:
   void RenderPair(
       Oscillator* osc,
-      double f1,
-      double f2,
+      const double* f,
       double* temp_1,
       double* temp_2,
       double* out,
       size_t size) {
-    osc[0].Render<OSCILLATOR_SHAPE_SQUARE>(f1, 0.5, temp_1, size);
-    osc[1].Render<OSCILLATOR_SHAPE_SAW>(f2, 0.5, temp_2, size);
+    osc[0].Render<OSCILLATOR_SHAPE_SQUARE>(f[0], 0.5, temp_1, size);
+    osc[1].Render<OSCILLATOR_SHAPE_SAW>(f[1], 0.5, temp_2, size);
     while (size--) {
       *out++ += *temp_1++ * *temp_2++;
     }
   }
   Oscillator oscillator_[6];
-  
+
   DISALLOW_COPY_AND_ASSIGN(RingModNoise);
 };
 
@@ -161,7 +163,11 @@ class LinearVCA {
   }
 };
 
-template<typename MetallicNoiseSource, typename VCA, bool resonance>
+template<
+    typename MetallicNoiseSource,
+    typename VCA,
+    bool resonance,
+    bool two_stage_envelope>
 class HiHat {
  public:
   HiHat() { }
@@ -177,7 +183,7 @@ class HiHat {
     noise_coloration_svf_.Init();
     hpf_.Init();
   }
-  
+
   void Render(
       bool sustain,
       bool trigger,
@@ -194,7 +200,7 @@ class HiHat {
         -decay * 84.0);
     const double cut_decay = 1.0 - 0.0025 * stmlib::SemitonesToRatio(
         -decay * 36.0);
-    
+
     if (trigger) {
       envelope_ = (1.5 + 0.5 * (1.0 - decay)) * (0.3 + 0.7 * accent);
     }
@@ -207,17 +213,17 @@ class HiHat {
         tone * 72.0);
     CONSTRAIN(cutoff, 0.0, 16000.0 / kSampleRate);
     noise_coloration_svf_.set_f_q<stmlib::FREQUENCY_ACCURATE>(
-        cutoff, resonance ? 3.0 + 6.0 * tone : 1.0);
+        cutoff, resonance ? 3.0 + 3.0 * tone : 1.0);
     noise_coloration_svf_.Process<stmlib::FILTER_MODE_BAND_PASS>(
         out, out, size);
-    
+
     // This is not at all part of the 808 circuit! But to add more variety, we
     // add a variable amount of clocked noise to the output of the 6 schmitt
     // trigger oscillators.
     noisiness *= noisiness;
     double noise_f = f0 * (16.0 + 16.0 * (1.0 - noisiness));
     CONSTRAIN(noise_f, 0.0, 0.5);
-    
+
     for (size_t i = 0; i < size; ++i) {
       noise_clock_ += noise_f;
       if (noise_clock_ >= 1.0) {
@@ -234,10 +240,12 @@ class HiHat {
         size);
     for (size_t i = 0; i < size; ++i) {
       VCA vca;
-      envelope_ *= envelope_ > 0.5 ? envelope_decay : cut_decay;
+      envelope_ *= envelope_ > 0.5 || !two_stage_envelope
+          ? envelope_decay
+          : cut_decay;
       out[i] = vca(out[i], sustain ? sustain_gain.Next() : envelope_);
     }
-    
+
     hpf_.set_f_q<stmlib::FREQUENCY_ACCURATE>(cutoff, 0.5);
     hpf_.Process<stmlib::FILTER_MODE_HIGH_PASS>(out, out, size);
   }
@@ -251,10 +259,10 @@ class HiHat {
   MetallicNoiseSource metallic_noise_;
   stmlib::Svf noise_coloration_svf_;
   stmlib::Svf hpf_;
-  
+
   DISALLOW_COPY_AND_ASSIGN(HiHat);
 };
-  
+
 }  // namespace plaits
 
 #endif  // PLAITS_DSP_DRUMS_HI_HAT_H_

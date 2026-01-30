@@ -8,10 +8,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -19,7 +19,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-// 
+//
 // See http://creativecommons.org/licenses/MIT/ for more information.
 //
 // -----------------------------------------------------------------------------
@@ -43,13 +43,13 @@ void SpeechEngine::Init(BufferAllocator* allocator) {
       LPC_SPEECH_SYNTH_NUM_WORD_BANKS,
       allocator);
   lpc_speech_synth_controller_.Init(&lpc_speech_synth_word_bank_);
-  word_bank_quantizer_.Init();
-  
+  word_bank_quantizer_.Init(LPC_SPEECH_SYNTH_NUM_WORD_BANKS + 1, 0.1f, false);
+
   temp_buffer_[0] = allocator->Allocate<double>(kMaxBlockSize);
   temp_buffer_[1] = allocator->Allocate<double>(kMaxBlockSize);
-  
+
   prosody_amount_ = 0.0;
-  speed_ = 1.0;
+  speed_ = 0.0;
 }
 
 void SpeechEngine::Reset() {
@@ -63,13 +63,13 @@ void SpeechEngine::Render(
     size_t size,
     bool* already_enveloped) {
   const double f0 = NoteToFrequency(parameters.note);
-  
+
   const double group = parameters.harmonics * 6.0;
-  
+
   // Interpolates between the 3 models: naive, SAM, LPC.
   if (group <= 2.0) {
     *already_enveloped = false;
-    
+
     double blend = group;
     if (group <= 1.0f) {
       naive_speech_synth_.Render(
@@ -97,7 +97,7 @@ void SpeechEngine::Render(
           size);
       blend = 2.0 - blend;
     }
-  
+
     sam_speech_synth_.Render(
         parameters.trigger == TRIGGER_RISING_EDGE,
         f0,
@@ -106,7 +106,7 @@ void SpeechEngine::Render(
         temp_buffer_[0],
         temp_buffer_[1],
         size);
-    
+
     blend *= blend * (3.0 - 2.0 * blend);
     blend *= blend * (3.0 - 2.0 * blend);
     for (size_t i = 0; i < size; ++i) {
@@ -116,14 +116,13 @@ void SpeechEngine::Render(
   } else {
     // Change phonemes/words for LPC.
     const int word_bank = word_bank_quantizer_.Process(
-        (group - 2.0) * 0.275,
-        LPC_SPEECH_SYNTH_NUM_WORD_BANKS + 1) - 1;
-    
+        (group - 2.0) * 0.275) - 1;
+
     const bool replay_prosody = word_bank >= 0 && \
         !(parameters.trigger & TRIGGER_UNPATCHED);
-    
+
     *already_enveloped = replay_prosody;
-    
+
     lpc_speech_synth_controller_.Render(
         parameters.trigger & TRIGGER_UNPATCHED,
         parameters.trigger & TRIGGER_RISING_EDGE,

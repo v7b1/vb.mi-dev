@@ -8,10 +8,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -19,7 +19,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-// 
+//
 // See http://creativecommons.org/licenses/MIT/ for more information.
 //
 // -----------------------------------------------------------------------------
@@ -45,7 +45,7 @@ using namespace std;
 using namespace stmlib;
 
 /* static */
-NaiveSpeechSynth::Phoneme NaiveSpeechSynth::phonemes_[][kNaiveSpeechNumRegisters] = {
+const NaiveSpeechSynth::Phoneme NaiveSpeechSynth::phonemes_[][kNaiveSpeechNumRegisters] = {
   {
     { { { 74, 255 }, { 83, 114 }, { 97, 90 }, { 98, 90 }, { 100, 25 } } },
     { { { 75, 255 }, { 84, 128 }, { 100, 114 }, { 101, 101 }, { 103, 20 } } },
@@ -87,7 +87,7 @@ void NaiveSpeechSynth::Init() {
   pulse_.Init();
   frequency_ = 0.0;
   click_duration_ = 0;
-  
+
   for (int i = 0; i < kNaiveSpeechNumFormants; ++i) {
     filter_[i].Init();
   }
@@ -108,11 +108,11 @@ void NaiveSpeechSynth::Render(
       click_duration_ = kSampleRate * 0.05;
   }
   click_duration_ -= min(click_duration_, size);
-  
+
   if (click_duration_) {
     frequency *= 0.5f;
   }
-  
+
   // Generate excitation signal (glottal pulse).
   pulse_.Render<OSCILLATOR_SHAPE_IMPULSE_TRAIN>(
       frequency, 0.5f, excitation, size);
@@ -121,13 +121,13 @@ void NaiveSpeechSynth::Render(
   for (size_t i = 0; i < size; ++i) {
     excitation[i] *= 4.0f;
   }
-  
+
   double p = phoneme * (kNaiveSpeechNumPhonemes - 1.001);
   double r = vocal_register * (kNaiveSpeechNumRegisters - 1.001);
-  
+
   MAKE_INTEGRAL_FRACTIONAL(p);
   MAKE_INTEGRAL_FRACTIONAL(r);
-  
+
   fill(&output[0], &output[size], 0.0);
   for (int i = 0; i < kNaiveSpeechNumFormants; ++i) {
     const Formant& p0r0 = phonemes_[p_integral][r_integral].formant[i];
@@ -146,7 +146,7 @@ void NaiveSpeechSynth::Render(
     double p1r_a = p1r0.amplitude + \
         (p1r1.amplitude - p1r0.amplitude) * r_fractional;
     double a = (p0r_a + (p1r_a - p0r_a) * p_fractional) / 256.0;
-    
+
     if (f >= 160.0) {
       f = 160.0;
     }

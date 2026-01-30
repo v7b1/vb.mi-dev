@@ -8,10 +8,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -19,7 +19,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-// 
+//
 // See http://creativecommons.org/licenses/MIT/ for more information.
 //
 // -----------------------------------------------------------------------------
@@ -107,13 +107,13 @@ class LPCSpeechSynthWordBank {
       const LPCSpeechSynthWordBankData* word_banks,
       int num_banks,
       stmlib::BufferAllocator* allocator);
-  
+
   bool Load(int index);
   void Reset();
-  
+
   inline int num_frames() const { return num_frames_; }
   inline const LPCSpeechSynth::Frame* frames() const { return frames_; }
-  
+
   inline void GetWordBoundaries(double address, int* start, int* end) {
     if (num_words_ == 0) {
       *start = *end = -1;
@@ -126,41 +126,41 @@ class LPCSpeechSynthWordBank {
       *end = word_boundaries_[word + 1] - 1;
     }
   }
-  
+
  private:
   size_t LoadNextWord(const uint8_t* data);
-  
+
   const LPCSpeechSynthWordBankData* word_banks_;
-  
+
   int num_banks_;
   int loaded_bank_;
   int num_frames_;
   int num_words_;
-  int word_boundaries_[kLPCSpeechSynthMaxWords];
-  
+  int* word_boundaries_;
+
   LPCSpeechSynth::Frame* frames_;
-  
-  static uint8_t energy_lut_[16];
-  static uint8_t period_lut_[64];
-  static int16_t k0_lut_[32];
-  static int16_t k1_lut_[32];
-  static int8_t k2_lut_[16];
-  static int8_t k3_lut_[16];
-  static int8_t k4_lut_[16];
-  static int8_t k5_lut_[16];
-  static int8_t k6_lut_[16];
-  static int8_t k7_lut_[8];
-  static int8_t k8_lut_[8];
-  static int8_t k9_lut_[8];
+
+  static const uint8_t energy_lut_[16];
+  static const uint8_t period_lut_[64];
+  static const int16_t k0_lut_[32];
+  static const int16_t k1_lut_[32];
+  static const int8_t k2_lut_[16];
+  static const int8_t k3_lut_[16];
+  static const int8_t k4_lut_[16];
+  static const int8_t k5_lut_[16];
+  static const int8_t k6_lut_[16];
+  static const int8_t k7_lut_[8];
+  static const int8_t k8_lut_[8];
+  static const int8_t k9_lut_[8];
 };
 
 class LPCSpeechSynthController {
  public:
   LPCSpeechSynthController() { }
   ~LPCSpeechSynthController() { }
-  
+
   void Init(LPCSpeechSynthWordBank* word_bank);
-  
+
   void Render(
       bool free_running,
       bool trigger,
@@ -174,7 +174,7 @@ class LPCSpeechSynthController {
       double* excitation,
       double* output,
       size_t size);
-  
+
  private:
   double clock_phase_;
   double sample_[2];
@@ -187,9 +187,9 @@ class LPCSpeechSynthController {
   size_t remaining_frame_samples_;
 
   LPCSpeechSynthWordBank* word_bank_;
-  
+
   static const LPCSpeechSynth::Frame phonemes_[kLPCSpeechSynthNumPhonemes];
-  
+
   DISALLOW_COPY_AND_ASSIGN(LPCSpeechSynthController);
 };
 

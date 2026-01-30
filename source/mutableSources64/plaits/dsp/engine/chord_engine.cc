@@ -8,10 +8,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -19,7 +19,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-// 
+//
 // See http://creativecommons.org/licenses/MIT/ for more information.
 //
 // -----------------------------------------------------------------------------
@@ -37,70 +37,19 @@ namespace plaits {
 using namespace std;
 using namespace stmlib;
 
-#ifdef JON_CHORDS
-    
-    // Alternative chord table by Jon Butler jonbutler88@gmail.com
-    const double chords[kChordNumChords][kChordNumNotes] = {
-        // Fixed Intervals
-        { 0.00, 0.01, 11.99, 12.00 },  // Octave
-        { 0.00, 7.01,  7.00, 12.00 },  // Fifth
-        // Minor
-        { 0.00, 3.00,  7.00, 12.00 },  // Minor
-        { 0.00, 3.00,  7.00, 10.00 },  // Minor 7th
-        { 0.00, 3.00, 10.00, 14.00 },  // Minor 9th
-        { 0.00, 3.00, 10.00, 17.00 },  // Minor 11th
-        // Major
-        { 0.00, 4.00,  7.00, 12.00 },  // Major
-        { 0.00, 4.00,  7.00, 11.00 },  // Major 7th
-        { 0.00, 4.00, 11.00, 14.00 },  // Major 9th
-        // Colour Chords
-        { 0.00, 5.00,  7.00, 12.00 },  // Sus4
-        { 0.00, 2.00,  9.00, 16.00 },  // 69
-        { 0.00, 4.00,  7.00,  9.00 },  // 6th
-        { 0.00, 7.00, 16.00, 23.00 },  // 10th (Spread maj7)
-        { 0.00, 4.00,  7.00, 10.00 },  // Dominant 7th
-        { 0.00, 7.00, 10.00, 13.00 },  // Dominant 7th (b9)
-        { 0.00, 3.00,  6.00, 10.00 },  // Half Diminished
-        { 0.00, 3.00,  6.00,  9.00 },  // Fully Diminished
-    };
-    
-#else
-    
-const double chords[kChordNumChords][kChordNumNotes] = {
-  { 0.00, 0.01, 11.99, 12.00 },  // OCT
-  { 0.00, 7.01,  7.00, 12.00 },  // 5
-  { 0.00, 5.00,  7.00, 12.00 },  // sus4
-  { 0.00, 3.00,  7.00, 12.00 },  // m
-  { 0.00, 3.00,  7.00, 10.00 },  // m7
-  { 0.00, 3.00, 10.00, 14.00 },  // m9
-  { 0.00, 3.00, 10.00, 17.00 },  // m11
-  { 0.00, 2.00,  9.00, 16.00 },  // 69
-  { 0.00, 4.00, 11.00, 14.00 },  // M9
-  { 0.00, 4.00,  7.00, 11.00 },  // M7
-  { 0.00, 4.00,  7.00, 12.00 },  // M
-};
-    
-#endif  // JON_CHORDS
-
-    
 void ChordEngine::Init(BufferAllocator* allocator) {
   for (int i = 0; i < kChordNumVoices; ++i) {
     divide_down_voice_[i].Init();
     wavetable_voice_[i].Init();
   }
-  chord_index_quantizer_.Init();
+  chords_.Init(allocator);
+
   morph_lp_ = 0.0;
   timbre_lp_ = 0.0;
-  
-  ratios_ = allocator->Allocate<double>(kChordNumChords * kChordNumNotes);
 }
 
 void ChordEngine::Reset() {
-    for (int i = 0; i < kChordNumChords; ++i) {
-        for (int j = 0; j < kChordNumNotes; ++j) {
-            ratios_[i * kChordNumNotes + j] = SemitonesToRatio(chords[i][j]);
-        }
-    }
+    chords_.Reset();
 }
 
 const double fade_point[kChordNumVoices] = {
@@ -124,7 +73,7 @@ void ChordEngine::ComputeRegistration(
     double* amplitudes) {
   registration *= (kRegistrationTableSize - 1.001);
   MAKE_INTEGRAL_FRACTIONAL(registration);
-  
+
   for (int i = 0; i < kChordNumHarmonics * 2; ++i) {
     double a = registrations[registration_integral][i];
     double b = registrations[registration_integral + 1][i];
@@ -132,57 +81,9 @@ void ChordEngine::ComputeRegistration(
   }
 }
 
-int ChordEngine::ComputeChordInversion(
-    int chord_index,
-    double inversion,
-    double* ratios,
-    double* amplitudes) {
-  const double* base_ratio = &ratios_[chord_index * kChordNumNotes];
-  inversion = inversion * double(kChordNumNotes * 5);
+#define WAVE(bank, row, column) &wav_integrated_waves[(bank * 64 + row * 8 + column) * 132]
 
-  MAKE_INTEGRAL_FRACTIONAL(inversion);
-  
-  int num_rotations = inversion_integral / kChordNumNotes;
-  int rotated_note = inversion_integral % kChordNumNotes;
-  
-  const double kBaseGain = 0.25f;
-  
-  int mask = 0;
-  
-  for (int i = 0; i < kChordNumNotes; ++i) {
-    double transposition = 0.25f * static_cast<double>(
-        1 << ((kChordNumNotes - 1 + inversion_integral - i) / kChordNumNotes));
-    int target_voice = (i - num_rotations + kChordNumVoices) % kChordNumVoices;
-    int previous_voice = (target_voice - 1 + kChordNumVoices) % kChordNumVoices;
-    
-    if (i == rotated_note) {
-      ratios[target_voice] = base_ratio[i] * transposition;
-      ratios[previous_voice] = ratios[target_voice] * 2.0;
-      amplitudes[previous_voice] = kBaseGain * inversion_fractional;
-      amplitudes[target_voice] = kBaseGain * (1.0 - inversion_fractional);
-    } else if (i < rotated_note) {
-      ratios[previous_voice] = base_ratio[i] * transposition;
-      amplitudes[previous_voice] = kBaseGain;
-    } else {
-      ratios[target_voice] = base_ratio[i] * transposition;
-      amplitudes[target_voice] = kBaseGain;
-    }
-    
-    if (i == 0) {
-      if (i >= rotated_note) {
-        mask |= 1 << target_voice;
-      }
-      if (i <= rotated_note) {
-        mask |= 1 << previous_voice;
-      }
-    }
-  }
-  return mask;
-}
-
-#define WAVE(bank, row, column) &wav_integrated_waves[(bank * 64 + row * 8 + column) * 260]
-
-const int16_t* wavetable[] = {
+const int16_t* const wavetable[] = {
   WAVE(2, 6, 1),
   WAVE(2, 6, 6),
   WAVE(2, 6, 4),
@@ -209,41 +110,39 @@ void ChordEngine::Render(
   ONE_POLE(morph_lp_, parameters.morph, 0.1f);
   ONE_POLE(timbre_lp_, parameters.timbre, 0.1f);
 
-  const int chord_index = chord_index_quantizer_.Process(
-      parameters.harmonics * 1.02, kChordNumChords);
+  chords_.set_chord(parameters.harmonics);
 
   double harmonics[kChordNumHarmonics * 2 + 2];
   double note_amplitudes[kChordNumVoices];
   double registration = max(1.0 - morph_lp_ * 2.15, 0.0);
-  
+
   ComputeRegistration(registration, harmonics);
   harmonics[kChordNumHarmonics * 2] = 0.0;
 
   double ratios[kChordNumVoices];
-  int aux_note_mask = ComputeChordInversion(
-      chord_index,
+  int aux_note_mask = chords_.ComputeChordInversion(
       timbre_lp_,
       ratios,
       note_amplitudes);
-  
+
   fill(&out[0], &out[size], 0.0);
   fill(&aux[0], &aux[size], 0.0);
-  
+
   const double f0 = NoteToFrequency(parameters.note) * 0.998;
   const double waveform = max((morph_lp_ - 0.535) * 2.15, 0.0);
-  
+
   for (int note = 0; note < kChordNumVoices; ++note) {
     double wavetable_amount = 50.0 * (morph_lp_ - fade_point[note]);
     CONSTRAIN(wavetable_amount, 0.0, 1.0);
 
     double divide_down_amount = 1.0 - wavetable_amount;
     double* destination = (1 << note) & aux_note_mask ? aux : out;
-    
+
     const double note_f0 = f0 * ratios[note];
     double divide_down_gain = 4.0 - note_f0 * 32.0;
     CONSTRAIN(divide_down_gain, 0.0, 1.0);
     divide_down_amount *= divide_down_gain;
-    
+
     if (wavetable_amount) {
       wavetable_voice_[note].Render(
           note_f0 * 1.004,
@@ -253,7 +152,7 @@ void ChordEngine::Render(
           destination,
           size);
     }
-    
+
     if (divide_down_amount) {
       divide_down_voice_[note].Render(
           note_f0,
@@ -263,7 +162,7 @@ void ChordEngine::Render(
           size);
     }
   }
-  
+
   for (size_t i = 0; i < size; ++i) {
     out[i] += aux[i];
     aux[i] *= 3.0;

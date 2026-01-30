@@ -8,10 +8,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -19,7 +19,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-// 
+//
 // See http://creativecommons.org/licenses/MIT/ for more information.
 //
 // -----------------------------------------------------------------------------
@@ -31,8 +31,7 @@
 #include <algorithm>
 
 #include "stmlib/dsp/cosine_oscillator.h"
-
-#include "plaits/resources.h"
+#include "plaits/dsp/oscillator/sine_oscillator.h"
 
 
 namespace plaits {
@@ -41,17 +40,17 @@ using namespace std;
 using namespace stmlib;
 
 void AdditiveEngine::Init(BufferAllocator* allocator) {
-  fill(
-      &amplitudes_[0],
-      &amplitudes_[kNumHarmonics],
-      0.0);
+  amplitudes_ = allocator->Allocate<double>(kNumHarmonics);
   for (int i = 0; i < kNumHarmonicOscillators; ++i) {
     harmonic_oscillator_[i].Init();
   }
 }
 
 void AdditiveEngine::Reset() {
-    
+    fill(
+        &amplitudes_[0],
+        &amplitudes_[kNumHarmonics],
+        0.0);
 }
 
 void AdditiveEngine::UpdateAmplitudes(
@@ -74,14 +73,14 @@ void AdditiveEngine::UpdateAmplitudes(
     gain *= gain;
 
     double b = 0.25 + order * bumps;
-    double bump_factor = 1.0 + InterpolateWrap(lut_sine, b, 1024.0);
+    double bump_factor = 1.0 + Sine(b);
 
     gain *= bump_factor;
     gain *= gain;
     gain *= gain;
-    
+
     int j = harmonic_indices[i];
-    
+
     // Warning about the following line: this is not a proper LP filter because
     // of the normalization. But in spite of its strange working, this line
     // turns out ot be absolutely essential.
@@ -89,7 +88,7 @@ void AdditiveEngine::UpdateAmplitudes(
     // I have tried both normalizing the LP-ed spectrum, and LP-ing the
     // normalized spectrum, and both of them cause more annoyances than this
     // "incorrect" solution.
-    
+
     ONE_POLE(amplitudes[j], gain, 0.001);
     sum += amplitudes[j];
   }

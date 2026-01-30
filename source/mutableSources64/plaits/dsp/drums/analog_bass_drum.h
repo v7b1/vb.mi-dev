@@ -8,10 +8,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -19,7 +19,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-// 
+//
 // See http://creativecommons.org/licenses/MIT/ for more information.
 //
 // -----------------------------------------------------------------------------
@@ -61,7 +61,7 @@ class AnalogBassDrum {
     resonator_.Init();
     oscillator_.Init();
   }
-  
+
   inline double Diode(double x) {
     if (x >= 0.0) {
       return x;
@@ -70,7 +70,7 @@ class AnalogBassDrum {
       return 0.7 * x / (1.0 + fabs(x));
     }
   }
-  
+
   void Render(
       bool sustain,
       bool trigger,
@@ -88,14 +88,14 @@ class AnalogBassDrum {
     const double kPulseDecayTime = 0.2e-3 * kSampleRate;
     const double kPulseFilterTime = 0.1e-3 * kSampleRate;
     const double kRetrigPulseDuration = 0.05 * kSampleRate;
-    
+
     const double scale = 0.001 / f0;
     const double q = 1500.0 * stmlib::SemitonesToRatio(decay * 80.0);
     const double tone_f = std::min(
         4.0 * f0 * stmlib::SemitonesToRatio(tone * 108.0),
         1.0);
     const double exciter_leak = 0.08 * (tone + 0.25);
-      
+
 
     if (trigger) {
       pulse_remaining_samples_ = kTriggerPulseDuration;
@@ -103,12 +103,12 @@ class AnalogBassDrum {
       pulse_height_ = 3.0 + 7.0 * accent;
       lp_out_ = 0.0;
     }
-    
+
     stmlib::ParameterInterpolator sustain_gain(
         &sustain_gain_,
         accent * decay,
         size);
-    
+
     while (size--) {
       // Q39 / Q40
       double pulse = 0.0;
@@ -123,7 +123,7 @@ class AnalogBassDrum {
       if (sustain) {
         pulse = 0.0;
       }
-      
+
       // C40 / R163 / R162 / D83
       ONE_POLE(pulse_lp_, pulse, 1.0 / kPulseFilterTime);
       pulse = Diode((pulse - pulse_lp_) + pulse * 0.044);
@@ -164,9 +164,9 @@ class AnalogBassDrum {
             &resonator_out,
             &lp_out_);
       }
-      
+
       ONE_POLE(tone_lp_, pulse * exciter_leak + resonator_out, tone_f);
-      
+
       *out++ = tone_lp_;
     }
   }
@@ -182,15 +182,15 @@ class AnalogBassDrum {
   double lp_out_;
   double tone_lp_;
   double sustain_gain_;
-  
+
   stmlib::Svf resonator_;
-  
+
   // Replace the resonator in "free running" (sustain) mode.
   SineOscillator oscillator_;
-  
+
   DISALLOW_COPY_AND_ASSIGN(AnalogBassDrum);
 };
-  
+
 }  // namespace plaits
 
 #endif  // PLAITS_DSP_DRUMS_ANALOG_BASS_DRUM_H_

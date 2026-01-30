@@ -8,10 +8,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -19,7 +19,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-// 
+//
 // See http://creativecommons.org/licenses/MIT/ for more information.
 //
 // -----------------------------------------------------------------------------
@@ -48,7 +48,7 @@ class GrainEnvelope {
  public:
   GrainEnvelope() { }
   ~GrainEnvelope() { }
-  
+
   void Init() {
     from_ = 0.0;
     interval_ = 1.0;
@@ -56,9 +56,9 @@ class GrainEnvelope {
     fm_ = 0.0;
     amplitude_ = 0.5;
     previous_size_ratio_ = 0.0;
-      filter_coefficient_ = 0.5; // vb, add initialization
+      filter_coefficient_ = 0.0; // vb, add initialization
   }
-  
+
   inline void Step(double rate, bool burst_mode, bool start_burst) {
     bool randomize = false;
     if (start_burst) {
@@ -72,7 +72,7 @@ class GrainEnvelope {
         randomize = true;
       }
     }
-    
+
     if (randomize) {
       from_ += interval_;
       interval_ = stmlib::Random::GetDouble() - from_;
@@ -84,7 +84,7 @@ class GrainEnvelope {
       }
     }
   }
-  
+
   inline double frequency(double size_ratio) const {
     // We approximate two overlapping grains of frequencies f1 and f2
     // By a continuous tone ramping from f1 to f2. This allows a continuous
@@ -95,27 +95,26 @@ class GrainEnvelope {
       return from_;
     }
   }
-  
+
   inline double amplitude(double size_ratio) {
     double target_amplitude = 1.0;
     if (size_ratio >= 1.0) {
       double phase = (phase_ - 0.5) * size_ratio;
       CONSTRAIN(phase, -1.0, 1.0);
-      double e = stmlib::InterpolateWrap(
-          lut_sine, 0.5 * phase + 1.25, 1024.0);
+      double e = Sine(0.5 * phase + 1.25);
       target_amplitude = 0.5 * (e + 1.0);
     }
-    
+
     if ((size_ratio >= 1.0) ^ (previous_size_ratio_ >= 1.0)) {
       filter_coefficient_ = 0.5;
     }
     filter_coefficient_ *= 0.95;
-    
+
     previous_size_ratio_ = size_ratio;
     ONE_POLE(amplitude_, target_amplitude, 0.5 - filter_coefficient_);
     return amplitude_;
   }
-  
+
  private:
   double from_;
   double interval_;
@@ -124,7 +123,7 @@ class GrainEnvelope {
   double amplitude_;
   double previous_size_ratio_;
   double filter_coefficient_;
-  
+
   DISALLOW_COPY_AND_ASSIGN(GrainEnvelope);
 };
 
@@ -161,7 +160,7 @@ class AdditiveSawOscillator {
       const double frequency = fm.Next();
 
       phase += frequency;
-  
+
       if (phase >= 1.0) {
         phase -= 1.0;
         double t = phase / frequency;
@@ -192,14 +191,14 @@ class SwarmVoice {
  public:
   SwarmVoice() { }
   ~SwarmVoice() { }
-  
+
   void Init(double rank) {
     rank_ = rank;
     envelope_.Init();
     saw_.Init();
     sine_.Init();
   }
-  
+
   void Render(
       double f0,
       double density,
@@ -211,20 +210,20 @@ class SwarmVoice {
       double* sine,
       size_t size) {
     envelope_.Step(density, burst_mode, start_burst);
-    
+
     const double scale = 1.0 / kNumSwarmVoices;
     const double amplitude = envelope_.amplitude(size_ratio) * scale;
 
     const double expo_amount = envelope_.frequency(size_ratio);
     f0 *= stmlib::SemitonesToRatio(48.0 * expo_amount * spread * rank_);
-    
+
     const double linear_amount = rank_ * (rank_ + 0.01) * spread * 0.25;
     f0 *= 1.0 + linear_amount;
 
     saw_.Render(f0, amplitude, saw, size);
     sine_.Render(f0, amplitude, sine, size);
   };
-  
+
  private:
   double rank_;
 
@@ -237,7 +236,7 @@ class SwarmEngine : public Engine {
  public:
   SwarmEngine() { }
   ~SwarmEngine() { }
-  
+
   virtual void Init(stmlib::BufferAllocator* allocator);
   virtual void Reset();
   virtual void Render(const EngineParameters& parameters,
@@ -245,10 +244,10 @@ class SwarmEngine : public Engine {
       double* aux,
       size_t size,
       bool* already_enveloped);
-  
+
  private:
-  SwarmVoice swarm_voice_[kNumSwarmVoices];
-  
+  SwarmVoice* swarm_voice_;
+
   DISALLOW_COPY_AND_ASSIGN(SwarmEngine);
 };
 

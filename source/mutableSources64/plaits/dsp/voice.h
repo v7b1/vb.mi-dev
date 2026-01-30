@@ -8,10 +8,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -19,7 +19,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-// 
+//
 // See http://creativecommons.org/licenses/MIT/ for more information.
 //
 // -----------------------------------------------------------------------------
@@ -53,6 +53,13 @@
 #include "plaits/dsp/engine/waveshaping_engine.h"
 #include "plaits/dsp/engine/wavetable_engine.h"
 
+#include "plaits/dsp/engine2/chiptune_engine.h"
+#include "plaits/dsp/engine2/phase_distortion_engine.h"
+#include "plaits/dsp/engine2/six_op_engine.h"
+#include "plaits/dsp/engine2/string_machine_engine.h"
+#include "plaits/dsp/engine2/virtual_analog_vcf_engine.h"
+#include "plaits/dsp/engine2/wave_terrain_engine.h"
+
 #include "plaits/dsp/envelope.h"
 
 #include "plaits/dsp/fx/low_pass_gate.h"
@@ -60,7 +67,7 @@
 
 namespace plaits {
 
-const int kMaxEngines = 16;
+const int kMaxEngines = 24;
 const int kMaxTriggerDelay = 8;
 const int kTriggerDelay = 5;
 
@@ -68,16 +75,16 @@ class ChannelPostProcessor {
  public:
   ChannelPostProcessor() { }
   ~ChannelPostProcessor() { }
-  
+
   void Init() {
     lpg_.Init();
     Reset();
   }
-  
+
   void Reset() {
     limiter_.Init();
   }
-  
+
   void Process(
       double gain,
       bool bypass_lpg,
@@ -108,7 +115,7 @@ class ChannelPostProcessor {
       }
     }
   }
-    
+
     // new process, vb
     void Process(
                  double gain,
@@ -136,11 +143,11 @@ class ChannelPostProcessor {
         }
     }
     //
-  
+
  private:
   stmlib::Limiter limiter_;
   LowPassGate lpg_;
-  
+
   DISALLOW_COPY_AND_ASSIGN(ChannelPostProcessor);
 };
 
@@ -179,14 +186,17 @@ class Voice {
  public:
   Voice() { }
   ~Voice() { }
-  
-    
+
+
   struct Frame {
     short out;
     short aux;
   };
-  
+
   void Init(stmlib::BufferAllocator* allocator);
+  void ReloadUserData() {
+    reload_user_data_ = true;
+  }
     /*
   void RenderOld(
       const Patch& patch,
@@ -201,13 +211,13 @@ class Voice {
                 double* out, double* aux,
                 size_t size);
     //
-    
-    
+
+
   inline int active_engine() const { return previous_engine_index_; }
-    
+
  private:
   void ComputeDecayParameters(const Patch& settings);
-  
+
   inline double ApplyModulations(
       double base_value,
       double modulation_amount,
@@ -222,7 +232,7 @@ class Voice {
 //    modulation_amount *= std::max(fabs(modulation_amount) - 0.05, 0.05);
 //      modulation_amount *= 1.05;
       modulation_amount *= fabs(modulation_amount);     // vb
-    
+
     double modulation = use_external_modulation
         ? external_modulation
         : (use_internal_envelope ? envelope : default_internal_modulation);
@@ -230,49 +240,57 @@ class Voice {
     CONSTRAIN(value, minimum_value, maximum_value);
     return value;
   }
-  
-  AdditiveEngine additive_engine_;
 
-  BassDrumEngine bass_drum_engine_;
-  ChordEngine chord_engine_;
-  FMEngine fm_engine_;
-  GrainEngine grain_engine_;
-  HiHatEngine hi_hat_engine_;
-  ModalEngine modal_engine_;
-  NoiseEngine noise_engine_;
-  ParticleEngine particle_engine_;
-  SnareDrumEngine snare_drum_engine_;
-  SpeechEngine speech_engine_;
-  StringEngine string_engine_;
-  SwarmEngine swarm_engine_;
   VirtualAnalogEngine virtual_analog_engine_;
   WaveshapingEngine waveshaping_engine_;
+  FMEngine fm_engine_;
+  GrainEngine grain_engine_;
+  AdditiveEngine additive_engine_;
   WavetableEngine wavetable_engine_;
-     
+  ChordEngine chord_engine_;
+  SpeechEngine speech_engine_;
 
-  stmlib::HysteresisQuantizer engine_quantizer_;
-  
+  SwarmEngine swarm_engine_;
+  NoiseEngine noise_engine_;
+  ParticleEngine particle_engine_;
+  StringEngine string_engine_;
+  ModalEngine modal_engine_;
+  BassDrumEngine bass_drum_engine_;
+  SnareDrumEngine snare_drum_engine_;
+  HiHatEngine hi_hat_engine_;
+
+  VirtualAnalogVCFEngine virtual_analog_vcf_engine_;
+  PhaseDistortionEngine phase_distortion_engine_;
+  SixOpEngine six_op_engine_;
+  WaveTerrainEngine wave_terrain_engine_;
+  StringMachineEngine string_machine_engine_;
+  ChiptuneEngine chiptune_engine_;
+
+
+  stmlib::HysteresisQuantizer2 engine_quantizer_;
+
+  bool reload_user_data_;
   int previous_engine_index_;
   double engine_cv_;
-  
+
   double previous_note_;
   bool trigger_state_;
-  
+
   DecayEnvelope decay_envelope_;
   LPGEnvelope lpg_envelope_;
-  
+
   double trigger_delay_line_[kMaxTriggerDelay];
   DelayLine<double, kMaxTriggerDelay> trigger_delay_;
-  
+
   ChannelPostProcessor out_post_processor_;
   ChannelPostProcessor aux_post_processor_;
-  
+
   EngineRegistry<kMaxEngines> engines_;
-  
+
   // we don't use these anymore
   //double out_buffer_[kMaxBlockSize];
   //double aux_buffer_[kMaxBlockSize];
-  
+
   DISALLOW_COPY_AND_ASSIGN(Voice);
 };
 
