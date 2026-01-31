@@ -108,6 +108,13 @@ void* myObj_new(t_symbol *s, long argc, t_atom *argv) {
         self->octave_ = 0.5;
         self->patch.note = 48.0;
         self->patch.harmonics = 0.1;
+        self->patch.decay = 0.333;
+        self->patch.morph = 0.0;
+        self->patch.timbre = 0.0;
+        self->patch.lpg_colour = 0.5;
+        self->patch.frequency_modulation_amount = 0.0;
+        self->patch.timbre_modulation_amount = 0.0;
+        self->patch.morph_modulation_amount = 0.0;
 
 
         // allocate memory
