@@ -37,32 +37,32 @@ using namespace stmlib;
 void Voice::Init(BufferAllocator* allocator) {
   engines_.Init();
 
-  engines_.RegisterInstance(&virtual_analog_vcf_engine_, false, 1.0f, 1.0f);
-  engines_.RegisterInstance(&phase_distortion_engine_, false, 0.7f, 0.7f);
-  engines_.RegisterInstance(&six_op_engine_, true, 1.0f, 1.0f);
-  engines_.RegisterInstance(&six_op_engine_, true, 1.0f, 1.0f);
-  engines_.RegisterInstance(&six_op_engine_, true, 1.0f, 1.0f);
-  engines_.RegisterInstance(&wave_terrain_engine_, false, 0.7f, 0.7f);
-  engines_.RegisterInstance(&string_machine_engine_, false, 0.8f, 0.8f);
-  engines_.RegisterInstance(&chiptune_engine_, false, 0.5f, 0.5f);
+  engines_.RegisterInstance(&virtual_analog_vcf_engine_, false, 1.0, 1.0);
+  engines_.RegisterInstance(&phase_distortion_engine_, false, 0.7, 0.7);
+  engines_.RegisterInstance(&six_op_engine_, true, 1.0, 1.0);
+  engines_.RegisterInstance(&six_op_engine_, true, 1.0, 1.0);
+  engines_.RegisterInstance(&six_op_engine_, true, 1.0, 1.0);
+  engines_.RegisterInstance(&wave_terrain_engine_, false, 0.7, 0.7);
+  engines_.RegisterInstance(&string_machine_engine_, false, 0.8, 0.8);
+  engines_.RegisterInstance(&chiptune_engine_, false, 0.5, 0.5);
 
-  engines_.RegisterInstance(&virtual_analog_engine_, false, 0.8f, 0.8f);
-  engines_.RegisterInstance(&waveshaping_engine_, false, 0.7f, 0.6f);
-  engines_.RegisterInstance(&fm_engine_, false, 0.6f, 0.6f);
-  engines_.RegisterInstance(&grain_engine_, false, 0.7f, 0.6f);
-  engines_.RegisterInstance(&additive_engine_, false, 0.8f, 0.8f);
-  engines_.RegisterInstance(&wavetable_engine_, false, 0.6f, 0.6f);
-  engines_.RegisterInstance(&chord_engine_, false, 0.8f, 0.8f);
-  engines_.RegisterInstance(&speech_engine_, false, -0.7f, 0.8f);
+  engines_.RegisterInstance(&virtual_analog_engine_, false, 0.8, 0.8);
+  engines_.RegisterInstance(&waveshaping_engine_, false, 0.7, 0.6);
+  engines_.RegisterInstance(&fm_engine_, false, 0.6, 0.6);
+  engines_.RegisterInstance(&grain_engine_, false, 0.7, 0.6);
+  engines_.RegisterInstance(&additive_engine_, false, 0.8, 0.8);
+  engines_.RegisterInstance(&wavetable_engine_, false, 0.6, 0.6);
+  engines_.RegisterInstance(&chord_engine_, false, 0.8, 0.8);
+  engines_.RegisterInstance(&speech_engine_, false, -0.7, 0.8);
 
-  engines_.RegisterInstance(&swarm_engine_, false, -3.0f, 1.0f);
-  engines_.RegisterInstance(&noise_engine_, false, -1.0f, -1.0f);
-  engines_.RegisterInstance(&particle_engine_, false, -2.0f, 1.0f);
-  engines_.RegisterInstance(&string_engine_, true, -1.0f, 0.8f);
-  engines_.RegisterInstance(&modal_engine_, true, -1.0f, 0.8f);
-  engines_.RegisterInstance(&bass_drum_engine_, true, 0.8f, 0.8f);
-  engines_.RegisterInstance(&snare_drum_engine_, true, 0.8f, 0.8f);
-  engines_.RegisterInstance(&hi_hat_engine_, true, 0.8f, 0.8f);
+  engines_.RegisterInstance(&swarm_engine_, false, -3.0, 1.0);
+  engines_.RegisterInstance(&noise_engine_, false, -1.0, -1.0);
+  engines_.RegisterInstance(&particle_engine_, false, -2.0, 1.0);
+  engines_.RegisterInstance(&string_engine_, true, -1.0, 0.8);
+  engines_.RegisterInstance(&modal_engine_, true, -1.0, 0.8);
+  engines_.RegisterInstance(&bass_drum_engine_, true, 0.8, 0.8);
+  engines_.RegisterInstance(&snare_drum_engine_, true, 0.8, 0.8);
+  engines_.RegisterInstance(&hi_hat_engine_, true, 0.8, 0.8);
 
   for (int i = 0; i < engines_.size(); ++i) {
     // All engines will share the same RAM space.
@@ -168,7 +168,7 @@ void Voice::Init(BufferAllocator* allocator) {
         //                                     1.3 * modulations.level / (0.3 + fabs(modulations.level)),
         //                                     0.0);
         double compressed_level = 1.3 * modulations.level / (0.3 + abs(modulations.level));
-        CONSTRAIN(compressed_level, 0.0f, 1.0f);
+        CONSTRAIN(compressed_level, 0.0, 1.0);
         p.accent = modulations.level_patched ? compressed_level : 0.8;
 
         bool use_internal_envelope = modulations.trigger_patched;

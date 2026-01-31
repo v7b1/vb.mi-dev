@@ -41,7 +41,7 @@
 
 namespace plaits {
 
-  const double kSineLUTSize = 512.0f;
+  const double kSineLUTSize = 512.0;
   const size_t kSineLUTQuadrature = 128;
   const size_t kSineLUTBits = 9;
 
@@ -57,7 +57,7 @@ namespace plaits {
 
   // With positive of negative phase modulation up to an index of 32.
   inline double SinePM(uint32_t phase, double pm) {
-    const double max_uint32 = 4294967296.0f;
+    const double max_uint32 = 4294967296.0;
     const int max_index = 32;
     const double offset = double(max_index);
     const double scale = max_uint32 / double(max_index * 2);
@@ -103,8 +103,8 @@ class SineOscillator {
   }
 
   inline void Next(double frequency, double amplitude, double* sin, double* cos) {
-    if (frequency >= 0.5f) {
-      frequency = 0.5f;
+    if (frequency >= 0.5) {
+      frequency = 0.5;
     }
 
     phase_ += frequency;

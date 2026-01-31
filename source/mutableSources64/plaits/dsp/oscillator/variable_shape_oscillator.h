@@ -69,7 +69,7 @@ void Render(
     double waveshape,
     double* out,
     size_t size) {
-    Render<false, false>(0.0f, frequency, pw, waveshape, 0.0f, out, size);
+    Render<false, false>(0.0, frequency, pw, waveshape, 0.0, out, size);
 }
 
 void Render(
@@ -127,7 +127,7 @@ void Render(
       double reset_time = 0.0;
 
       double this_sample = next_sample;
-      next_sample = 0.0f;
+      next_sample = 0.0;
 
       const double master_frequency = master_fm.Next();
       const double slave_frequency = fm.Next();
@@ -140,8 +140,8 @@ void Render(
 
       if (enable_sync) {
         master_phase_ += master_frequency;
-        if (master_phase_ >= 1.0f) {
-          master_phase_ -= 1.0f;
+        if (master_phase_ >= 1.0) {
+          master_phase_ -= 1.0;
           reset_time = master_phase_ / master_frequency;
 
           double slave_phase_at_reset = slave_phase_ + \

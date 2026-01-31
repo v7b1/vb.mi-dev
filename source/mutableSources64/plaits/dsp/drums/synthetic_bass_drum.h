@@ -120,7 +120,7 @@ class SyntheticBassDrum {
     phase = phase_fractional;
     double triangle = (phase < 0.5 ? phase : 1.0 - phase) * 4.0 - 1.0;
     double sine = 2.0 * triangle / (1.0 + fabs(triangle));
-    double clean_sine = Sine(phase + 0.75f);
+    double clean_sine = Sine(phase + 0.75);
     return sine + (1.0 - dirtiness) * (clean_sine - sine);
   }
 
@@ -186,7 +186,7 @@ class SyntheticBassDrum {
       } else {
         if (fm_pulse_width_) {
           --fm_pulse_width_;
-          phase_ = 0.25f;
+          phase_ = 0.25;
         } else {
           fm_ *= fm_decay;
           double fm = 1.0 + fm_envelope_amount * 3.5 * fm_lp_;
