@@ -61,6 +61,9 @@ struct t_myObj {
     plaits::Patch       patch;
     double              transposition_;
     double              octave_;
+    double              morph_pot;
+    double              harm_pot;
+    double              timb_pot;
     long                engine;
     short               trigger_connected;
     short               trigger_toggle;
@@ -115,6 +118,10 @@ void* myObj_new(t_symbol *s, long argc, t_atom *argv) {
         self->patch.frequency_modulation_amount = 0.0;
         self->patch.timbre_modulation_amount = 0.0;
         self->patch.morph_modulation_amount = 0.0;
+        
+        self->morph_pot = 0.0;
+        self->harm_pot = 0.0;
+        self->timb_pot = 0.0;
 
 
         // allocate memory
@@ -254,13 +261,13 @@ void myObj_float(t_myObj *self, double value)
             calc_note(self);
             break;
         case 3:
-            self->patch.harmonics = CLAMP(value, 0., 1.);
+            self->harm_pot = CLAMP(value, 0., 1.);
             break;
         case 4:
-            self->patch.timbre = CLAMP(value, 0., 1.);
+            self->timb_pot = CLAMP(value, 0., 1.);
             break;
         case 5:
-            self->patch.morph = CLAMP(value, 0., 1.);
+            self->morph_pot = CLAMP(value, 0., 1.);
             break;
         default:
             break;
@@ -300,15 +307,15 @@ void myObj_frequency(t_myObj* self, double m) {
 }
 
 void myObj_harmonics(t_myObj* self, double h) {
-    self->patch.harmonics = CLAMP(h, 0., 1.);
+    self->harm_pot = CLAMP(h, 0., 1.);
 }
 
 void myObj_timbre(t_myObj* self, double t) {
-    self->patch.timbre = CLAMP(t, 0., 1.);
+    self->timb_pot = CLAMP(t, 0., 1.);
 }
 
 void myObj_morph(t_myObj* self, double m) {
-    self->patch.morph = CLAMP(m, 0., 1.);
+    self->morph_pot = CLAMP(m, 0., 1.);
 }
 
 // smaller pots
@@ -359,7 +366,10 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
 
     long    vs = sampleframes;
     size_t  size = plaits::kBlockSize;
-    //double  pitch_lp_ = 0.; //self->pitch_lp_;
+    plaits::Patch *p = &self->patch;
+    double morph_pot = self->morph_pot;
+    double harm_pot = self->harm_pot;
+    double timb_pot = self->timb_pot;
     uint16_t count = 0;
 
     if (self->obj.z_disabled)
@@ -370,6 +380,11 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
     double* destination = &self->modulations.engine;
 
     for(count=0; count < vs; count += size) {
+        
+        // parameter smoothing
+        ONE_POLE(p->morph, morph_pot, 0.012);
+        ONE_POLE(p->harmonics, harm_pot, 0.012);
+        ONE_POLE(p->timbre, timb_pot, 0.012);
 
         for(int i=0; i<8; i++) {
             destination[i] = ins[i][count];
@@ -387,12 +402,7 @@ void myObj_perform64(t_myObj* self, t_object* dsp64, double** ins, long numins, 
             self->modulations.trigger = vectorsum;
         }
 
-        // smooth out pitch changes
-        //ONE_POLE(pitch_lp_, self->modulations.note, 0.7);
-
-        //self->modulations.note = pitch_lp_;
-
-        self->voice_->Render(self->patch, self->modulations, out+count, aux+count, size);
+        self->voice_->Render(*p, self->modulations, out+count, aux+count, size);
     }
 
 }
