@@ -37,15 +37,6 @@ using namespace stmlib;
 void Voice::Init(BufferAllocator* allocator) {
   engines_.Init();
 
-  engines_.RegisterInstance(&virtual_analog_vcf_engine_, false, 1.0, 1.0);
-  engines_.RegisterInstance(&phase_distortion_engine_, false, 0.7, 0.7);
-  engines_.RegisterInstance(&six_op_engine_, true, 1.0, 1.0);
-  engines_.RegisterInstance(&six_op_engine_, true, 1.0, 1.0);
-  engines_.RegisterInstance(&six_op_engine_, true, 1.0, 1.0);
-  engines_.RegisterInstance(&wave_terrain_engine_, false, 0.7, 0.7);
-  engines_.RegisterInstance(&string_machine_engine_, false, 0.8, 0.8);
-  engines_.RegisterInstance(&chiptune_engine_, false, 0.5, 0.5);
-
   engines_.RegisterInstance(&virtual_analog_engine_, false, 0.8, 0.8);
   engines_.RegisterInstance(&waveshaping_engine_, false, 0.7, 0.6);
   engines_.RegisterInstance(&fm_engine_, false, 0.6, 0.6);
@@ -63,6 +54,15 @@ void Voice::Init(BufferAllocator* allocator) {
   engines_.RegisterInstance(&bass_drum_engine_, true, 0.8, 0.8);
   engines_.RegisterInstance(&snare_drum_engine_, true, 0.8, 0.8);
   engines_.RegisterInstance(&hi_hat_engine_, true, 0.8, 0.8);
+    
+    engines_.RegisterInstance(&virtual_analog_vcf_engine_, false, 1.0, 1.0);
+    engines_.RegisterInstance(&phase_distortion_engine_, false, 0.7, 0.7);
+    engines_.RegisterInstance(&six_op_engine_, true, 1.0, 1.0);
+    engines_.RegisterInstance(&six_op_engine_, true, 1.0, 1.0);
+    engines_.RegisterInstance(&six_op_engine_, true, 1.0, 1.0);
+    engines_.RegisterInstance(&wave_terrain_engine_, false, 0.7, 0.7);
+    engines_.RegisterInstance(&string_machine_engine_, false, 0.8, 0.8);
+    engines_.RegisterInstance(&chiptune_engine_, false, 0.5, 0.5);
 
   for (int i = 0; i < engines_.size(); ++i) {
     // All engines will share the same RAM space.
@@ -135,8 +135,8 @@ void Voice::Init(BufferAllocator* allocator) {
 
         if (engine_index != previous_engine_index_ || reload_user_data_) {
             const uint8_t* data = NULL;
-            if (!data && engine_index >= 2 && engine_index <= 4) {
-              data = fm_patches_table[engine_index - 2];
+            if (!data && engine_index >= 18 && engine_index <= 20) {    // vb: these are the three 6-op FM engines
+              data = fm_patches_table[engine_index - 2 - 16];           // vb: repositioned the new batch of engines to the end of the pile
             }
             e->LoadUserData(data);
             e->Reset();
@@ -181,7 +181,7 @@ void Voice::Init(BufferAllocator* allocator) {
         double internal_envelope_amplitude = 1.0;
 
         double internal_envelope_amplitude_timbre = 1.0;
-        if (engine_index == 15) {
+        if (engine_index == 7) {        // was: 15
             internal_envelope_amplitude = 2.0 - p.harmonics * 6.0;
             CONSTRAIN(internal_envelope_amplitude, 0.0, 1.0);
             speech_engine_.set_prosody_amount(
@@ -190,7 +190,7 @@ void Voice::Init(BufferAllocator* allocator) {
             speech_engine_.set_speed(
                                      !modulations.trigger_patched || modulations.morph_patched ?
                                      0.0 : patch.morph_modulation_amount);
-        } else if (engine_index == 7) {
+        } else if (engine_index == 23) {     // was: 7
           if (modulations.trigger_patched && !modulations.timbre_patched) {
             // Disable internal envelope on TIMBRE, and enable the envelope generator
             // built into the chiptune engine.

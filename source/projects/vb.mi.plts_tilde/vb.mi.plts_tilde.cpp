@@ -523,16 +523,33 @@ void ext_main(void* r) {
 
     // attributes ====
     CLASS_ATTR_CHAR(this_class,"engine", 0, t_myObj, engine);
+//    CLASS_ATTR_ENUMINDEX(this_class, "engine", 0,
+//        "virtual_analog_with_filter"
+//        " phase_distortion_synthesis"
+//        " 6-op_FM_bank1"
+//        " 6-op_FM_bank2"
+//        " 6-op_FM_bank3"
+//        " wave_terrain_synthesis"
+//        " string_machine_emulation"
+//        " chiptune_engine"
+//        " virtual_analog_synthesis"
+//        " waveshaping_oscillator"
+//        " 2-op_FM"
+//        " granular_formant_oscillator"
+//        " harmonic_oscillator"
+//        " wavetable_oscillator"
+//        " chord_engine"
+//        " speech_synthesis"
+//        " swarm_engine"
+//        " filtered_noise"
+//        " particle_noise"
+//        " inharmonic_string"
+//        " modal_resonator"
+//        " bass_drum_model"
+//        " snare_drum_model"
+//        " hi_hat_model");
     CLASS_ATTR_ENUMINDEX(this_class, "engine", 0,
-        "virtual_analog_with_filter"
-        " phase_distortion_synthesis"
-        " 6-op_FM_bank1"
-        " 6-op_FM_bank2"
-        " 6-op_FM_bank3"
-        " wave_terrain_synthesis"
-        " string_machine_emulation"
-        " chiptune_engine"
-        " virtual_analog_synthesis"
+        "virtual_analog_synthesis"
         " waveshaping_oscillator"
         " 2-op_FM"
         " granular_formant_oscillator"
@@ -547,7 +564,15 @@ void ext_main(void* r) {
         " modal_resonator"
         " bass_drum_model"
         " snare_drum_model"
-        " hi_hat_model");
+        " hi_hat_model"
+        " virtual_analog_with_filter"
+        " phase_distortion_synthesis"
+        " 6-op_FM_bank1"
+        " 6-op_FM_bank2"
+        " 6-op_FM_bank3"
+        " wave_terrain_synthesis"
+        " string_machine_emulation"
+        " chiptune_engine");
     CLASS_ATTR_LABEL(this_class, "engine", 0, "synthesis engine");
     CLASS_ATTR_FILTER_CLIP(this_class, "engine", 0, 23);
     CLASS_ATTR_ACCESSORS(this_class, "engine", NULL, (method)engine_setter);
