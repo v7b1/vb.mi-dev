@@ -140,10 +140,10 @@ class GrainletOscillator {
   }
 
  private:
-  inline double Sine(double phase) {
-    return stmlib::InterpolateWrap(lut_sine, phase, 1024.0);
-      //return std::sin(phase*2*M_PI);
-  }
+//  inline double Sine(double phase) {
+//    return stmlib::InterpolateWrap(lut_sine, phase, 1024.0);
+//      //return std::sin(phase*2*M_PI);
+//  }
 
   inline double Carrier(double phase, double shape) {
     shape *= 3.0;
@@ -161,7 +161,7 @@ class GrainletOscillator {
       if (phase < breakpoint) {
         phase *= (0.5 / breakpoint);
       } else {
-        phase = 0.5 + (phase - breakpoint) * 0.5f / (1.0 - breakpoint);
+        phase = 0.5 + (phase - breakpoint) * 0.5 / (1.0 - breakpoint);
       }
       phase += 0.75;
     } else {
