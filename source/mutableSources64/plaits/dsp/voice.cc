@@ -136,7 +136,7 @@ void Voice::Init(BufferAllocator* allocator) {
         if (engine_index != previous_engine_index_ || reload_user_data_) {
             const uint8_t* data = NULL;
             if (!data && engine_index >= 18 && engine_index <= 20) {    // vb: these are the three 6-op FM engines
-              data = fm_patches_table[engine_index - 2 - 16];           // vb: repositioned the new batch of engines to the end of the pile
+              data = fm_patches_table[engine_index - 2 - 16];               // vb: repositioned the new batch of engines to the end of the pile
             }
             e->LoadUserData(data);
             e->Reset();

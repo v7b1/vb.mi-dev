@@ -138,7 +138,9 @@ class ChannelPostProcessor {
                          size);
         } else {
             while (size--) {
-                *in_out++ *= post_gain;
+                double s = *in_out * post_gain;
+                CONSTRAIN(s, -1.0, 1.0);
+                *in_out++ = s;
             }
         }
     }

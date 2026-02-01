@@ -46,7 +46,7 @@ class Differentiator {
   ~Differentiator() { }
 
   void Init() {
-    previous_ = 0.0;
+    previous_ = 0.0;        // this causes a heavy spike (in the wavetable_engine) after Init() 
     lp_ = 0.0;
   }
 
