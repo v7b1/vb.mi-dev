@@ -103,7 +103,7 @@ jobs:
         if exist support cp -r support %PACKAGE_NAME%
         if exist tests cp -r tests %PACKAGE_NAME%
         
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v4
       with:
         name: ${{ github.event.repository.name }}-${{ steps.short-sha.outputs.sha }}-${{ matrix.config }}
         path: ${{ github.event.repository.name }}
