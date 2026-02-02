@@ -111,7 +111,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     needs: package
-    #if: ${{ contains( github.ref, 'refs/tags/' ) }}
+    # if: ${{ contains( github.ref, 'refs/tags/' ) }}
 
     steps:
     - uses: actions/checkout@v4
@@ -137,19 +137,19 @@ jobs:
       working-directory: ${{ github.event.repository.name }}
 
     - name: zip
-      #run: zip -r ${{ github.event.repository.name }}-package-for-max-${{ steps.short-sha.outputs.sha }}.zip ${{ github.event.repository.name }}
+      # run: zip -r ${{ github.event.repository.name }}-package-for-max-${{ steps.short-sha.outputs.sha }}.zip ${{ github.event.repository.name }}
       run: zip -r ${{ github.event.repository.name }}-package-for-max-${{ steps.get_version.outputs.version }}.zip ${{ github.event.repository.name
 
     - uses: actions/upload-artifact@v4
       with:
-        #name: ${{ github.event.repository.name }}-${{ steps.short-sha.outputs.sha }}-zipped-release
-        #path: ${{ github.event.repository.name }}-package-for-max-${{ steps.short-sha.outputs.sha }}.zip
+        # name: ${{ github.event.repository.name }}-${{ steps.short-sha.outputs.sha }}-zipped-release
+        # path: ${{ github.event.repository.name }}-package-for-max-${{ steps.short-sha.outputs.sha }}.zip
         name: ${{ github.event.repository.name }}-${{ steps.get_version.outputs.version }}-zipped-release
         path: ${{ github.event.repository.name }}-package-for-max-${{ steps.get_version.outputs.version }}.zip
 
     - uses: ncipollo/release-action@v1.7.1
       with:
-        #artifacts: ${{ github.event.repository.name }}-package-for-max-${{ steps.short-sha.outputs.sha }}.zip
+        # artifacts: ${{ github.event.repository.name }}-package-for-max-${{ steps.short-sha.outputs.sha }}.zip
         artifacts: ${{ github.event.repository.name }}-package-for-max-${{ steps.get_version.outputs.version }}.zip
         body: "Max Package for all supported platforms"
         token: ${{ secrets.GITHUB_TOKEN }}
