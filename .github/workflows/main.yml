@@ -138,7 +138,7 @@ jobs:
 
     - name: zip
       # run: zip -r ${{ github.event.repository.name }}-package-for-max-${{ steps.short-sha.outputs.sha }}.zip ${{ github.event.repository.name }}
-      run: zip -r ${{ github.event.repository.name }}-package-for-max-${{ steps.get_version.outputs.version }}.zip ${{ github.event.repository.name
+      run: zip -r ${{ github.event.repository.name }}-package-for-max-${{ steps.get_version.outputs.version }}.zip ${{ github.event.repository.name }}
 
     - uses: actions/upload-artifact@v4
       with:
