@@ -11,6 +11,11 @@ if (APPLE)
 	endif()
 endif()
 
+if (MSVC)
+    set(SKIP_RPPLS TRUE)
+    message("skipping rppls")
+endif()
+
 if(NOT SKIP_RPPLS)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../max-sdk-base/script/max-pretarget.cmake)
