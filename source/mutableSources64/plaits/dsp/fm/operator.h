@@ -75,7 +75,7 @@ void RenderOperators(
     const double* modulation,
     double* out,
     size_t size) {
-  double previous_0, previous_1;
+  double previous_0 = 0.0, previous_1 = 0.0;        // vb: add initialization
 
   if (modulation_source >= Operator::MODULATION_SOURCE_FEEDBACK) {
     previous_0 = fb_state[0];
